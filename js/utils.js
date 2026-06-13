@@ -21,17 +21,17 @@ export function estimateTokens(text) {
  * Format byte count into human-readable string (e.g. "1.5 MB").
  */
 export function formatBytes(bytes) {
-  if (bytes === 0) return '0 B';
+  if (bytes === 0) return "0 B";
   const k = 1024;
-  const sizes = ['B', 'KB', 'MB', 'GB'];
+  const sizes = ["B", "KB", "MB", "GB"];
   const i = Math.floor(Math.log(bytes) / Math.log(k));
   return `${(bytes / Math.pow(k, i)).toFixed(1)} ${sizes[i]}`;
 }
 
 /**
  * Extract only the new text from accumulated text.
- * Used for streaming: TextStreamer's callback_function receives the FULL accumulated text
- * on each token, so we diff against the previous value to get the delta.
+ * The onToken callback receives the FULL accumulated text after generation
+ * completes, so we diff against the previous value to get the delta.
  */
 export function getNewText(fullText, previousText) {
   return fullText.slice(previousText.length);

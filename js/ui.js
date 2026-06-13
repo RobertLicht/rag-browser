@@ -182,8 +182,8 @@ export function renderAssistantMessage(
 /**
  * Create a streaming message element and return a controller object.
  *
- * The TextStreamer's callback_function receives the FULL accumulated text
- * on each token, so we diff against the previous value to get the delta.
+ * The onToken callback receives the FULL accumulated text after generation
+ * completes, so we diff against the previous value to extract new content.
  *
  * @returns {Object} Controller with onToken, finalize, and messageEl
  */
@@ -207,7 +207,13 @@ export function renderStreamingMessage() {
 
   return {
     messageEl: el,
-    // Called by TextStreamer's callback_function with FULL accumulated text
+    // Show "Thinking..." loading state during model generation
+    showThinking: () => {
+      contentEl.insertBefore(document.createTextNode("Thinking..."), cursor);
+      scrollConversation();
+    },
+    // Called with the final FULL accumulated text after generation completes.
+    // Previously called per-token during streaming; now called once with full text.
     onToken: (fullText) => {
       const newText = fullText.slice(previousText.length);
       previousText = fullText;

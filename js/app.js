@@ -236,23 +236,35 @@ async function handleQuery(query) {
     // Create streaming message renderer
     const messageRenderer = renderStreamingMessage();
 
+    // Show loading state while model generates (no more streaming tokens)
+    messageRenderer.showThinking();
+
     // Run retrieval + generation pipeline
-    const { sourceChunks, similarity } = await retrieveAndGenerate(
+    let completed = false;
+    const pipelineResult = await retrieveAndGenerate(
       query,
       db,
       messageRenderer.onToken,
-      (fullText) => {
-        // onComplete callback
+      (fullText, { sourceChunks, similarity }) => {
+        // onComplete callback — sourceChunks and similarity are passed
+        // as arguments here, avoiding the temporal dead zone problem
+        // that occurs when referencing the destructured variables before
+        // the await resolves.
+        completed = true;
         messageRenderer.finalize(sourceChunks, similarity);
         addMessage("assistant", fullText, sourceChunks);
       },
     );
 
+    const { sourceChunks, similarity } = pipelineResult;
+
     // If onComplete wasn't called (e.g. generation was stopped), finalize with partial text
-    const partialText = messageRenderer.getFullText();
-    if (partialText) {
-      messageRenderer.finalize(sourceChunks, similarity);
-      addMessage("assistant", partialText, sourceChunks);
+    if (!completed) {
+      const partialText = messageRenderer.getFullText();
+      if (partialText) {
+        messageRenderer.finalize(sourceChunks, similarity);
+        addMessage("assistant", partialText, sourceChunks);
+      }
     }
   } catch (error) {
     console.error("Query failed:", error);

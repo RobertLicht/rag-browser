@@ -142,7 +142,14 @@ export async function retrieveAndGenerate(query, db, onToken, onComplete) {
   ];
 
   // Step 6: Generate response via LLM
-  await generateResponse(messages, onToken, onComplete);
+  await generateResponse(messages, onToken, (fullText) => {
+    if (onComplete) {
+      onComplete(fullText, {
+        sourceChunks: results.hits.map((hit) => hit.document),
+        similarity: results.hits.map((hit) => hit.score),
+      });
+    }
+  });
 
   return {
     sourceChunks: results.hits.map((hit) => hit.document),

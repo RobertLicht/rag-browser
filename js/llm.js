@@ -1,28 +1,39 @@
-// llm.js — LLM model loader, generation with streaming, and disposal
+// llm.js — LLM model loader, generation (batch decode), and disposal
 
 import {
-  pipeline,
-  TextStreamer,
+  AutoProcessor,
+  Qwen3_5ForConditionalGeneration,
   InterruptableStoppingCriteria,
 } from "https://cdn.jsdelivr.net/npm/@huggingface/transformers@4.2.0/+esm";
 
-let generator = null;
+let processor = null;
+let model = null;
 let currentStoppingCriteria = null;
 
 /**
- * Qwen3.5-2B ONNX model.
- * Using the huggingworld export for optimal WebGPU performance.
+ * Qwen3.5-2B ONNX model (multi-modal).
+ * Uses huggingworld export for optimal WebGPU performance.
+ *
+ * IMPORTANT: The pipeline() API does NOT correctly handle Qwen3_5ForConditionalGeneration
+ * (multi-modal architecture). This module uses the low-level processor + model API
+ * directly to ensure proper tokenization, chat templating, and generation.
+ *
+ * Reference: data/minimal-qwen3.5-2b.html
  */
 const MODEL_ID = "huggingworld/Qwen3.5-2B-ONNX";
 
 /**
- * Load the LLM model via text-generation pipeline.
- * The pipeline handles tokenization, chat templates, and generation automatically.
+ * Load the LLM processor and model.
+ *
+ * Qwen3.5 requires AutoProcessor (not AutoTokenizer) because it's a multi-modal
+ * model. The processor handles chat templating and tokenization for the model.
+ *
  * @param {Object} config - Hardware config with llmDtype and device
  * @param {Function} [onProgress] - Optional progress callback from transformers.js
  */
 export async function loadLLM(config, onProgress) {
-  generator = await pipeline("text-generation", MODEL_ID, {
+  processor = await AutoProcessor.from_pretrained(MODEL_ID);
+  model = await Qwen3_5ForConditionalGeneration.from_pretrained(MODEL_ID, {
     dtype: config.llmDtype,
     device: config.device,
     progress_callback: onProgress,
@@ -30,14 +41,24 @@ export async function loadLLM(config, onProgress) {
 }
 
 /**
- * Generate a streaming response from the LLM.
+ * Generate a response from the LLM.
  *
- * The TextStreamer's callback_function receives the FULL accumulated text
- * on each new token, NOT just the delta.
- *
- * @param {Array} messages - Conversation messages in format:
+ * Messages are expected in the format:
  *   [{ role: 'system', content: [{ type: 'text', text: '...' }] }, ...]
- * @param {Function} onToken - Callback receiving full accumulated text on each token
+ *
+ * Internally, messages are transformed to the flat format expected by
+ * processor.apply_chat_template(): [{ role: 'system', content: '...' }]
+ *
+ * NOTE: We do NOT use TextStreamer for generation. TextStreamer performs
+ * incremental token-by-token decoding, which corrupts output with Qwen3.5's
+ * BPE tokenizer. The BPE merge rules are not applied correctly during
+ * incremental decoding, producing garbled/fragmented text. Instead, we
+ * collect all generated token IDs and decode them in one batch after
+ * generation completes. This matches the official Python reference code:
+ *   processor.decode(outputs[0][input_ids.shape[-1]:], skip_special_tokens=True)
+ *
+ * @param {Array} messages - Conversation messages
+ * @param {Function} onToken - Callback receiving final full text (called once after generation)
  * @param {Function} onComplete - Callback receiving final full response text
  * @returns {Promise<string>} The full generated response text
  */
@@ -45,25 +66,53 @@ export async function generateResponse(messages, onToken, onComplete) {
   // Create interruptible stopping criteria for stop-generation support
   currentStoppingCriteria = new InterruptableStoppingCriteria();
 
-  // TextStreamer streams decoded text as tokens are generated.
-  // callback_function receives the accumulated decoded text (not individual tokens).
-  const streamer = new TextStreamer(generator.tokenizer, {
-    skip_prompt: true,
-    skip_special_tokens: true,
-    callback_function: (text) => {
-      if (onToken) onToken(text);
-    },
+  // Transform messages to flat format expected by processor.apply_chat_template().
+  // Our app uses nested content arrays: { role, content: [{ type: 'text', text: '...' }] }
+  // The processor expects flat format: { role, content: '...' }
+  const formattedMessages = messages.map((msg) => ({
+    role: msg.role,
+    content:
+      typeof msg.content === "string"
+        ? msg.content
+        : msg.content?.[0]?.type === "text"
+          ? msg.content[0].text
+          : "",
+  }));
+
+  // Apply the model's chat template (handles special tokens, formatting, etc.)
+  const text = processor.apply_chat_template(formattedMessages, {
+    add_generation_prompt: true,
   });
 
-  // Pipeline handles chat template, tokenization, and generation
-  const result = await generator(messages, {
+  // Tokenize the formatted text
+  const inputs = await processor(text);
+
+  // Record input sequence length so we can extract only the generated tokens
+  const inputLength = inputs.input_ids.dims[1];
+
+  // Generate using the model directly (low-level API for multi-modal models).
+  // IMPORTANT: No streamer is used. TextStreamer corrupts Qwen3.5 output
+  // due to buggy incremental BPE decoding in transformers.js.
+  const output = await model.generate({
+    ...inputs,
     max_new_tokens: 512,
     do_sample: false,
-    streamer,
     stopping_criteria: [currentStoppingCriteria],
   });
 
-  const fullText = result[0].generated_text;
+  // Decode all generated tokens in one shot using the tokenizer.
+  // This avoids the incremental decoding bug in TextStreamer.
+  //
+  // Extract the raw token IDs from the output tensor, slice off the input
+  // prefix, and decode the remaining generated tokens as a single batch.
+  const rawOutput = Array.from(output.data);
+  const generatedTokenIds = rawOutput.slice(inputLength);
+  const fullText = processor.tokenizer.decode(generatedTokenIds, {
+    skip_special_tokens: true,
+  });
+
+  // Dispatch to UI callbacks
+  if (onToken) onToken(fullText);
   if (onComplete) onComplete(fullText);
 
   currentStoppingCriteria = null;
@@ -81,12 +130,16 @@ export function stopGeneration() {
 }
 
 /**
- * Dispose the LLM model and free memory.
+ * Dispose the LLM model and processor, freeing memory.
  */
 export async function unloadLLM() {
-  if (generator) {
-    await generator.dispose();
-    generator = null;
+  if (model) {
+    await model.dispose();
+    model = null;
+  }
+  if (processor) {
+    await processor.dispose();
+    processor = null;
   }
 }
 
@@ -94,5 +147,5 @@ export async function unloadLLM() {
  * Check if the LLM model is currently loaded.
  */
 export function isLLMLoaded() {
-  return generator !== null;
+  return model !== null;
 }
