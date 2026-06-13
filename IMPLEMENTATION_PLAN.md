@@ -19,6 +19,18 @@ The following corrections were applied after additional verification against off
 | 4 | `callback_function` receives accumulated text, not individual tokens | Medium — changes token streaming logic | §6.3 |
 | 5 | Pipeline approach handles chat templates automatically | Medium — simplifies message formatting | §3.4 |
 
+### Refinement Notes (v1.2)
+
+Additional corrections applied after comparing with a working minimal implementation (`data/minimal-pipe-qwen3.5-0.8b.html`) and verifying against v4.2.0-specific behavior:
+
+| # | Finding | Impact | Section Updated |
+|---|---------|--------|-----------------|
+| 6 | `pipeline("text-generation")` supports Qwen3.5 models in v4.2.0 (was unsupported in v4.0.0-next.5) | High — validates pipeline approach for Qwen3.5 | §1.3, §1.5, §8.7 |
+| 7 | `TextStreamer.skip_special_tokens` defaults to `true`, NOT `false` as shown in some model cards | Medium — corrects streaming behavior | §1.3, §1.5, §3.4 |
+| 8 | Qwen3.5-0.8B-ONNX is a valid, lighter alternative model for low-memory devices | Medium — expands model options | §1.3 |
+| 9 | Pipeline returns `generated_text` as full conversation array; response is last element's `content` field | Medium — changes output parsing | §3.4, §5.1 |
+| 10 | `pipe.dispose()` is the correct disposal method for pipeline instances | Low — clarifies cleanup | §3.4 |
+
 ---
 
 ## Table of Contents
@@ -80,14 +92,28 @@ All facts below were verified against primary sources (Hugging Face model cards,
 | dtype Options | Per-component: `embed_tokens: "q4"`, `vision_encoder: "fp16"`, `decoder_model_merged: "q4"` | Model card |
 | Text-only Mode | Omit image from processor call; use `processor(text)` instead of `processor(text, image)` | Model card code example |
 | Chat Template | `processor.apply_chat_template(conversation, { add_generation_prompt: true })` | Model card |
-| Streaming | `TextStreamer(processor.tokenizer, { skip_prompt: true, skip_special_tokens: false })` | Model card |
+| Streaming | `TextStreamer(processor.tokenizer, { skip_prompt: true })` — `skip_special_tokens` defaults to `true` | [Streamers docs](https://huggingface.co/docs/transformers.js/en/api/generation/streamers) |
 | Generation | `model.generate({ ...inputs, max_new_tokens: 512, streamer })` | Model card |
 | Decode | `processor.batch_decode(outputs.slice(...), { skip_special_tokens: true })` | Model card |
 | Thinking Mode | Non-thinking by default. Soft `/think` switch NOT officially supported | Model card |
 | Recommended Params (non-thinking text) | `temperature=1.0, top_p=1.0, top_k=20, presence_penalty=2.0` | Model card |
 | License | Apache 2.0 | Model card |
 
-### 1.4 Orama v3.1.x
+### 1.4 Qwen3.5-0.8B-ONNX (Lightweight Alternative)
+
+| Property | Verified Value | Source |
+|----------|---------------|--------|
+| Model ID | `huggingworld/Qwen3.5-0.8B-ONNX` (mirror of `onnx-community/Qwen3.5-0.8B-ONNX`) | Hugging Face |
+| Class | `Qwen3_5ForConditionalGeneration` | Model card |
+| dtype Options | Same per-component as 2B variant | Model card |
+| Pipeline Support | `pipeline("text-generation")` works in v4.2.0 (NOT supported in v4.0.0-next.5) | [Discussion #1](https://huggingface.co/onnx-community/Qwen3.5-0.8B-ONNX/discussions/1), verified working |
+| Output Format | `result[0].generated_text` is full conversation; response is `result[0].generated_text[1].content` | Verified working implementation |
+| Model Size | ~0.8B params — smaller footprint than 2B variant | Model card |
+| Target Use | Low-memory devices, faster inference | Model card |
+
+**NOTE on Pipeline Support:** In v4.0.0-next.5, `pipeline("text-generation")` threw `Error: Unsupported model type: qwen3_5`. This was resolved by v4.2.0. The pipeline approach is now the recommended path for Qwen3.5 models.
+
+### 1.5 Orama v3.1.x
 
 | Property | Verified Value | Source |
 |----------|---------------|--------|
