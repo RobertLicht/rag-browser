@@ -73,6 +73,115 @@
                 </button>
                 <button id="unload-llm-btn" disabled>Unload LLM</button>
                 <button id="clear-chat-btn">Clear Chat</button>
+
+                <!-- Search Settings Panel -->
+                <details id="search-settings" class="settings-panel" open>
+                    <summary>Search Settings</summary>
+
+                    <!-- Mode Selector -->
+                    <fieldset class="setting-group">
+                        <label for="search-mode-select">Search Mode</label>
+                        <select id="search-mode-select">
+                            <option value="hybrid" selected>
+                                Hybrid (Recommended)
+                            </option>
+                            <option value="vector">Vector Only</option>
+                        </select>
+                    </fieldset>
+
+                    <!-- Hybrid Weights -->
+                    <div id="hybrid-settings" class="setting-group">
+                        <label>Keyword vs Semantic Balance</label>
+                        <div class="slider-row">
+                            <span id="text-weight-label">BM25: 50%</span>
+                            <input
+                                type="range"
+                                id="text-weight-slider"
+                                min="10"
+                                max="90"
+                                value="50"
+                                step="5"
+                            />
+                            <span id="vector-weight-label">Vector: 50%</span>
+                        </div>
+                    </div>
+
+                    <!-- Thresholds -->
+                    <fieldset class="setting-group">
+                        <legend>Similarity Thresholds</legend>
+
+                        <!-- Hybrid thresholds (visible in hybrid mode) -->
+                        <div id="hybrid-thresholds">
+                            <div class="threshold-row">
+                                <label for="hybrid-similarity-slider"
+                                    >Hybrid Score</label
+                                >
+                                <input
+                                    type="range"
+                                    id="hybrid-similarity-slider"
+                                    min="20"
+                                    max="95"
+                                    value="65"
+                                    step="5"
+                                />
+                                <span id="hybrid-similarity-value">65%</span>
+                            </div>
+
+                            <div class="threshold-row">
+                                <label for="min-vector-slider"
+                                    >Vector Gate</label
+                                >
+                                <input
+                                    type="range"
+                                    id="min-vector-slider"
+                                    min="20"
+                                    max="90"
+                                    value="55"
+                                    step="5"
+                                />
+                                <span id="min-vector-value">55%</span>
+                            </div>
+                        </div>
+
+                        <!-- Vector-only threshold (visible in vector mode) -->
+                        <div id="vector-threshold" style="display: none">
+                            <div class="threshold-row">
+                                <label for="vector-similarity-slider"
+                                    >Vector Similarity</label
+                                >
+                                <input
+                                    type="range"
+                                    id="vector-similarity-slider"
+                                    min="20"
+                                    max="95"
+                                    value="70"
+                                    step="5"
+                                />
+                                <span id="vector-similarity-value">70%</span>
+                            </div>
+                        </div>
+                    </fieldset>
+
+                    <!-- Top-N -->
+                    <div class="setting-group">
+                        <label>Max Results (Top-N)</label>
+                        <div class="slider-row">
+                            <input
+                                type="range"
+                                id="top-n-slider"
+                                min="1"
+                                max="20"
+                                value="8"
+                            />
+                            <span id="top-n-value">8</span>
+                        </div>
+                    </div>
+
+                    <!-- Reset Button -->
+                    <button id="reset-settings-btn" type="button">
+                        Reset to Defaults
+                    </button>
+                </details>
             </aside>
 
             <!-- Chat Panel -->

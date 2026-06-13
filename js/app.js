@@ -35,6 +35,7 @@ import {
   updateLoadingModal,
   setFileInputEnabled,
   setUnloadButtonStates,
+  syncSettingsUI,
 } from "./ui.js";
 import { formatBytes } from "./utils.js";
 
@@ -474,6 +475,14 @@ function resetUIButtons() {
   sendBtn.disabled = false;
   stopBtn.style.display = "none";
   queryInput.disabled = false;
+}
+
+/**
+ * Handle search settings reset.
+ */
+function handleResetSettings() {
+  syncSettingsUI();
+  showNotification("Search settings reset to defaults", "info");
 }
 
 // Bootstrap

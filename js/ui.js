@@ -2,6 +2,7 @@
 
 import { generateUUID } from "./utils.js";
 import { renderMarkdown, renderLaTeX } from "./renderer.js";
+import { setSearchConfig, resetSearchConfig, getState } from "./state.js";
 
 /**
  * Initialize all UI event listeners and render the initial state.
@@ -79,6 +80,9 @@ export function initUI(callbacks) {
       callbacks.onClearChat();
     }
   });
+
+  // Initialize search settings panel
+  initSearchSettings({ onReset: callbacks.onResetSearchConfig });
 
   return { sendBtn, stopBtn, queryInput };
 }
@@ -494,4 +498,194 @@ export function setUnloadButtonStates(embeddingLoaded, llmLoaded) {
   const unloadLlmBtn = document.getElementById("unload-llm-btn");
   unloadEmbeddingBtn.disabled = !embeddingLoaded;
   unloadLlmBtn.disabled = !llmLoaded;
+}
+
+/**
+ * Sync UI controls to match current search config state.
+ * Called after a reset so sliders/dropdowns reflect the new values.
+ */
+export function syncSettingsUI() {
+  const { searchConfig } = getState();
+
+  // Mode selector
+  const modeSelect = document.getElementById("search-mode-select");
+  if (modeSelect) modeSelect.value = searchConfig.mode;
+
+  // Hybrid weights slider
+  const textSlider = document.getElementById("text-weight-slider");
+  const textWeightLabel = document.getElementById("text-weight-label");
+  const vectorWeightLabel = document.getElementById("vector-weight-label");
+  if (textSlider) {
+    const tw = Math.round(searchConfig.hybridWeights.text * 100);
+    textSlider.value = tw;
+    if (textWeightLabel) textWeightLabel.textContent = `BM25: ${tw}%`;
+    if (vectorWeightLabel)
+      vectorWeightLabel.textContent = `Vector: ${100 - tw}%`;
+  }
+
+  // Hybrid similarity threshold
+  const hybridSimSlider = document.getElementById("hybrid-similarity-slider");
+  const hybridSimValue = document.getElementById("hybrid-similarity-value");
+  if (hybridSimSlider) {
+    const val = Math.round(searchConfig.thresholds.hybridSimilarity * 100);
+    hybridSimSlider.value = val;
+    if (hybridSimValue) hybridSimValue.textContent = `${val}%`;
+  }
+
+  // Min vector similarity gate
+  const minVecSlider = document.getElementById("min-vector-slider");
+  const minVecValue = document.getElementById("min-vector-value");
+  if (minVecSlider) {
+    const val = Math.round(searchConfig.thresholds.minVectorSimilarity * 100);
+    minVecSlider.value = val;
+    if (minVecValue) minVecValue.textContent = `${val}%`;
+  }
+
+  // Vector similarity threshold
+  const vecSimSlider = document.getElementById("vector-similarity-slider");
+  const vecSimValue = document.getElementById("vector-similarity-value");
+  if (vecSimSlider) {
+    const val = Math.round(searchConfig.thresholds.vectorSimilarity * 100);
+    vecSimSlider.value = val;
+    if (vecSimValue) vecSimValue.textContent = `${val}%`;
+  }
+
+  // Top-N slider
+  const topNSlider = document.getElementById("top-n-slider");
+  const topNValue = document.getElementById("top-n-value");
+  if (topNSlider) {
+    topNSlider.value = searchConfig.topN;
+    if (topNValue) topNValue.textContent = `${searchConfig.topN}`;
+  }
+
+  // Update visibility based on mode
+  const hybridSettings = document.getElementById("hybrid-settings");
+  const hybridThresholds = document.getElementById("hybrid-thresholds");
+  const vectorThreshold = document.getElementById("vector-threshold");
+  const isHybrid = searchConfig.mode === "hybrid";
+  if (hybridSettings)
+    hybridSettings.style.display = isHybrid ? "block" : "none";
+  if (hybridThresholds)
+    hybridThresholds.style.display = isHybrid ? "block" : "none";
+  if (vectorThreshold)
+    vectorThreshold.style.display = isHybrid ? "none" : "block";
+}
+
+/**
+ * Initialize search settings panel controls.
+ * Wires up all sliders, dropdowns, and the reset button to update
+ * search configuration via state management.
+ *
+ * @param {Object} options - Options object
+ * @param {Function} options.onReset - Callback when reset button is clicked
+ */
+export function initSearchSettings({ onReset }) {
+  // DOM references
+  const modeSelect = document.getElementById("search-mode-select");
+  const textSlider = document.getElementById("text-weight-slider");
+  const textWeightLabel = document.getElementById("text-weight-label");
+  const vectorWeightLabel = document.getElementById("vector-weight-label");
+  const hybridSettings = document.getElementById("hybrid-settings");
+  const hybridThresholds = document.getElementById("hybrid-thresholds");
+  const vectorThreshold = document.getElementById("vector-threshold");
+  const resetBtn = document.getElementById("reset-settings-btn");
+
+  // Helper: show/hide controls based on search mode
+  function updateVisibility(mode) {
+    const isHybrid = mode === "hybrid";
+    if (hybridSettings)
+      hybridSettings.style.display = isHybrid ? "block" : "none";
+    if (hybridThresholds)
+      hybridThresholds.style.display = isHybrid ? "block" : "none";
+    if (vectorThreshold)
+      vectorThreshold.style.display = isHybrid ? "none" : "block";
+  }
+
+  // ─── Mode Selector ──────────────────────────────────────────
+  if (modeSelect) {
+    modeSelect.addEventListener("change", (e) => {
+      setSearchConfig({ mode: e.target.value });
+      updateVisibility(e.target.value);
+    });
+  }
+
+  // ─── BM25/Vector Weight Slider ──────────────────────────────
+  if (textSlider) {
+    textSlider.addEventListener("input", (e) => {
+      const textWeight = parseInt(e.target.value);
+      const vectorWeight = 100 - textWeight;
+      if (textWeightLabel) textWeightLabel.textContent = `BM25: ${textWeight}%`;
+      if (vectorWeightLabel)
+        vectorWeightLabel.textContent = `Vector: ${vectorWeight}%`;
+
+      setSearchConfig({
+        hybridWeights: {
+          text: textWeight / 100,
+          vector: vectorWeight / 100,
+        },
+      });
+    });
+  }
+
+  // ─── Hybrid Similarity Threshold ────────────────────────────
+  const hybridSimSlider = document.getElementById("hybrid-similarity-slider");
+  const hybridSimValue = document.getElementById("hybrid-similarity-value");
+  if (hybridSimSlider) {
+    hybridSimSlider.addEventListener("input", (e) => {
+      const val = parseInt(e.target.value);
+      if (hybridSimValue) hybridSimValue.textContent = `${val}%`;
+      setSearchConfig({
+        thresholds: { hybridSimilarity: val / 100 },
+      });
+    });
+  }
+
+  // ─── Min Vector Similarity Gate ─────────────────────────────
+  const minVecSlider = document.getElementById("min-vector-slider");
+  const minVecValue = document.getElementById("min-vector-value");
+  if (minVecSlider) {
+    minVecSlider.addEventListener("input", (e) => {
+      const val = parseInt(e.target.value);
+      if (minVecValue) minVecValue.textContent = `${val}%`;
+      setSearchConfig({
+        thresholds: { minVectorSimilarity: val / 100 },
+      });
+    });
+  }
+
+  // ─── Vector Similarity Threshold ────────────────────────────
+  const vecSimSlider = document.getElementById("vector-similarity-slider");
+  const vecSimValue = document.getElementById("vector-similarity-value");
+  if (vecSimSlider) {
+    vecSimSlider.addEventListener("input", (e) => {
+      const val = parseInt(e.target.value);
+      if (vecSimValue) vecSimValue.textContent = `${val}%`;
+      setSearchConfig({
+        thresholds: { vectorSimilarity: val / 100 },
+      });
+    });
+  }
+
+  // ─── Top-N Slider ───────────────────────────────────────────
+  const topNSlider = document.getElementById("top-n-slider");
+  const topNValue = document.getElementById("top-n-value");
+  if (topNSlider) {
+    topNSlider.addEventListener("input", (e) => {
+      const val = parseInt(e.target.value);
+      if (topNValue) topNValue.textContent = `${val}`;
+      setSearchConfig({ topN: val });
+    });
+  }
+
+  // ─── Reset Button ───────────────────────────────────────────
+  if (resetBtn) {
+    resetBtn.addEventListener("click", () => {
+      resetSearchConfig();
+      syncSettingsUI();
+      if (onReset) onReset();
+    });
+  }
+
+  // Initial UI sync from state
+  syncSettingsUI();
 }

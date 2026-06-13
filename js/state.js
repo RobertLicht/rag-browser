@@ -1,6 +1,6 @@
 // state.js — Central application state with observable pattern
 
-import { generateUUID } from './utils.js';
+import { generateUUID } from "./utils.js";
 
 /**
  * Application state schema:
@@ -9,11 +9,35 @@ import { generateUUID } from './utils.js';
  * - index: stats about the document index
  * - conversation: array of message objects
  */
+/**
+ * Default search configuration.
+ */
+export const DEFAULT_SEARCH_CONFIG = {
+  mode: "hybrid", // 'hybrid' | 'vector'
+  hybridWeights: {
+    // BM25 vs vector balance (only in hybrid mode)
+    text: 0.5,
+    vector: 0.5,
+  },
+  thresholds: {
+    hybridSimilarity: 0.65, // Minimum combined score
+    minVectorSimilarity: 0.55, // Vector quality gate in hybrid mode
+    vectorSimilarity: 0.7, // Pure vector threshold
+  },
+  topN: 8, // Max chunks retrieved per query (1-20)
+};
+
 let state = {
-  hardware: { webgpuAvailable: false, device: 'wasm', dtype: '', deviceMemoryGB: undefined },
-  models: { embedding: 'unloaded', llm: 'unloaded' },
+  hardware: {
+    webgpuAvailable: false,
+    device: "wasm",
+    dtype: "",
+    deviceMemoryGB: undefined,
+  },
+  models: { embedding: "unloaded", llm: "unloaded" },
   index: { totalChunks: 0, totalDocuments: 0, embeddingDimension: 1024 },
   conversation: [],
+  searchConfig: { ...DEFAULT_SEARCH_CONFIG },
 };
 
 const subscribers = [];
@@ -32,7 +56,7 @@ export function getState() {
  */
 export function setState(updates) {
   state = { ...state, ...updates };
-  subscribers.forEach(fn => fn(state));
+  subscribers.forEach((fn) => fn(state));
 }
 
 /**
@@ -60,7 +84,7 @@ export function addMessage(role, content, contextChunks = null) {
     role,
     content,
     timestamp: Date.now(),
-    contextChunks: contextChunks?.map(c => c.id) || null,
+    contextChunks: contextChunks?.map((c) => c.id) || null,
   };
   setState({ conversation: [...state.conversation, message] });
   return message;
@@ -79,8 +103,42 @@ export function clearConversation() {
  * @param {number} maxMessages - Maximum number of messages to include (default 10 = 5 exchanges)
  */
 export function getRecentHistory(maxMessages = 10) {
-  return state.conversation.slice(-maxMessages).map(msg => ({
+  return state.conversation.slice(-maxMessages).map((msg) => ({
     role: msg.role,
-    content: [{ type: 'text', text: msg.content }],
+    content: [{ type: "text", text: msg.content }],
   }));
+}
+
+/**
+ * Update search configuration. Merges partial config into existing state.
+ * Nested objects (hybridWeights, thresholds) are deep-merged.
+ * @param {Object} updates - Partial search config to merge
+ */
+export function setSearchConfig(updates) {
+  if (updates.hybridWeights !== undefined) {
+    state.searchConfig.hybridWeights = {
+      ...state.searchConfig.hybridWeights,
+      ...updates.hybridWeights,
+    };
+  }
+  if (updates.thresholds !== undefined) {
+    state.searchConfig.thresholds = {
+      ...state.searchConfig.thresholds,
+      ...updates.thresholds,
+    };
+  }
+  for (const key of ["mode", "topN"]) {
+    if (updates[key] !== undefined) {
+      state.searchConfig[key] = updates[key];
+    }
+  }
+  subscribers.forEach((fn) => fn(state));
+}
+
+/**
+ * Reset search configuration to defaults.
+ */
+export function resetSearchConfig() {
+  state.searchConfig = { ...DEFAULT_SEARCH_CONFIG };
+  subscribers.forEach((fn) => fn(state));
 }

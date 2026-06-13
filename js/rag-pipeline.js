@@ -3,8 +3,8 @@
 import { chunkText } from "./chunker.js";
 import { embedQuery, embedDocuments, getEmbeddingArrays } from "./embedding.js";
 import { generateResponse } from "./llm.js";
-import { insertChunks, searchHybrid } from "./orama-db.js";
-import { getRecentHistory } from "./state.js";
+import { insertChunks, searchHybrid, searchVector } from "./orama-db.js";
+import { getRecentHistory, getState } from "./state.js";
 
 // ─── Ingestion Pipeline ───────────────────────────────────────────────
 
@@ -111,20 +111,34 @@ export async function retrieveAndGenerate(query, db, onToken, onComplete) {
   // Step 1: Embed query (with instruction wrapper)
   const queryEmbedding = await embedQuery(query);
 
-  // Step 2: Hybrid search — combines BM25 keyword matching with vector similarity.
-  // Pure vector search with low thresholds returns semantically irrelevant chunks.
-  // Hybrid search cross-validates: a result must match both lexically AND semantically.
-  const results = await searchHybrid(db, query, queryEmbedding, {
-    similarity: 0.75,
-    minVectorSimilarity: 0.65,
-    limit: 5,
-  });
+  // Step 2: Get current search configuration from state
+  const searchConfig = getState().searchConfig;
+
+  let results;
+  if (searchConfig.mode === "hybrid") {
+    // Hybrid search — combines BM25 keyword matching with vector similarity.
+    results = await searchHybrid(db, query, queryEmbedding, {
+      similarity: searchConfig.thresholds.hybridSimilarity,
+      minVectorSimilarity: searchConfig.thresholds.minVectorSimilarity,
+      limit: searchConfig.topN,
+      hybridWeights: searchConfig.hybridWeights,
+    });
+  } else {
+    // Pure vector search
+    results = await searchVector(db, queryEmbedding, {
+      similarity: searchConfig.thresholds.vectorSimilarity,
+      limit: searchConfig.topN,
+    });
+  }
 
   // Debug logging for retrieval diagnostics
   console.groupCollapsed(
-    `🔍 Retrieval: "${query.slice(0, 60)}${query.length > 60 ? "..." : ""}"`,
+    `🔍 Retrieval [${searchConfig.mode}]: "${query.slice(0, 60)}${query.length > 60 ? "..." : ""}"`,
   );
   console.log(`Hits: ${results.hits?.length ?? 0}`);
+  console.log(
+    `Config: threshold=${searchConfig.thresholds[searchConfig.mode === "hybrid" ? "hybridSimilarity" : "vectorSimilarity"]}, topN=${searchConfig.topN}`,
+  );
   if (results.hits) {
     results.hits.forEach((hit, i) => {
       console.log(

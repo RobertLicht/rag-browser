@@ -250,6 +250,173 @@ body {
     margin-top: auto;
 }
 
+/* ─── Search Settings Panel ────────────────────────────────────── */
+
+#search-settings {
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    padding: 0.75rem;
+    background: var(--bg-tertiary);
+}
+
+#search-settings summary {
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: var(--text-primary);
+    cursor: pointer;
+    padding: 0.25rem 0;
+    list-style: none;
+}
+
+#search-settings summary::-webkit-details-marker {
+    display: none;
+}
+
+#search-settings summary::before {
+    content: "▶";
+    display: inline-block;
+    margin-right: 0.5rem;
+    font-size: 0.7rem;
+    transition: transform 0.15s;
+}
+
+#search-settings[open] summary::before {
+    transform: rotate(90deg);
+}
+
+.settings-panel fieldset {
+    border: none;
+    padding: 0;
+    margin: 0;
+}
+
+.setting-group {
+    margin-top: 0.75rem;
+    padding-top: 0.75rem;
+    border-top: 1px solid var(--border-color);
+}
+
+.setting-group:first-of-type {
+    margin-top: 0.5rem;
+    padding-top: 0.5rem;
+    border-top: none;
+}
+
+.setting-group label,
+.setting-group legend {
+    display: block;
+    font-size: 0.78rem;
+    color: var(--text-secondary);
+    margin-bottom: 0.35rem;
+}
+
+.setting-group legend {
+    font-weight: 600;
+    color: var(--text-primary);
+    padding-bottom: 0.25rem;
+    width: 100%;
+}
+
+#search-mode-select {
+    width: 100%;
+    padding: 0.4rem 0.6rem;
+    border: 1px solid var(--border-color);
+    border-radius: 6px;
+    background: var(--bg-input);
+    color: var(--text-primary);
+    font-size: 0.85rem;
+    cursor: pointer;
+}
+
+#search-mode-select:focus {
+    outline: none;
+    border-color: var(--accent);
+}
+
+.slider-row {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.slider-row span {
+    font-size: 0.75rem;
+    color: var(--text-muted);
+    min-width: 2.5rem;
+    text-align: center;
+}
+
+.threshold-row {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin-bottom: 0.4rem;
+}
+
+.threshold-row:last-child {
+    margin-bottom: 0;
+}
+
+.threshold-row label {
+    font-size: 0.78rem;
+    color: var(--text-secondary);
+    margin-bottom: 0;
+    min-width: 5.5rem;
+}
+
+.threshold-row span {
+    font-size: 0.75rem;
+    color: var(--accent);
+    font-weight: 600;
+    min-width: 2.5rem;
+    text-align: right;
+}
+
+.settings-panel input[type="range"] {
+    flex: 1;
+    -webkit-appearance: none;
+    appearance: none;
+    height: 4px;
+    background: var(--bg-primary);
+    border-radius: 2px;
+    outline: none;
+}
+
+.settings-panel input[type="range"]::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    width: 14px;
+    height: 14px;
+    border-radius: 50%;
+    background: var(--accent);
+    cursor: pointer;
+    transition: background 0.15s;
+}
+
+.settings-panel input[type="range"]::-webkit-slider-thumb:hover {
+    background: var(--accent-hover);
+}
+
+.settings-panel input[type="range"]::-moz-range-thumb {
+    width: 14px;
+    height: 14px;
+    border-radius: 50%;
+    background: var(--accent);
+    cursor: pointer;
+    border: none;
+    transition: background 0.15s;
+}
+
+.settings-panel input[type="range"]::-moz-range-thumb:hover {
+    background: var(--accent-hover);
+}
+
+#reset-settings-btn {
+    margin-top: 0.75rem;
+    padding: 0.4rem 0.6rem;
+    font-size: 0.8rem;
+    width: 100%;
+}
+
 /* ─── Chat Panel ───────────────────────────────────────────────── */
 
 #chat-panel {
