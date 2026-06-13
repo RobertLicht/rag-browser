@@ -1,44 +1,91 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>RAG-Browser Agent</title>
-  <link rel="stylesheet" href="css/styles.css">
-</head>
-<body>
-  <!-- Status Bar -->
-  <header id="status-bar">
-    <span id="hardware-status">Detecting hardware...</span>
-    <span id="model-status">Models: unloaded</span>
-    <span id="index-status">Index: 0 chunks, 0 documents</span>
-    <span id="memory-status">Memory: --</span>
-  </header>
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <link rel="icon" href="favicon.svg" type="image/svg+xml" />
+        <title>RAG-Browser Agent</title>
+        <link rel="stylesheet" href="css/styles.css" />
+    </head>
+    <body>
+        <!-- Model Loading Modal -->
+        <div id="loading-modal" class="modal" style="display: none">
+            <div class="modal-content">
+                <div class="modal-spinner"></div>
+                <h2 id="modal-title">Loading Models</h2>
+                <p id="modal-description">
+                    Downloading and initializing AI models...
+                </p>
+                <div class="modal-steps">
+                    <div id="step-embedding" class="modal-step">
+                        <span class="step-icon">●</span>
+                        <span class="step-label"
+                            >Embedding Model (Qwen3-Embedding-0.6B)</span
+                        >
+                        <span
+                            id="step-embedding-progress"
+                            class="step-progress"
+                        ></span>
+                    </div>
+                    <div id="step-llm" class="modal-step">
+                        <span class="step-icon">●</span>
+                        <span class="step-label"
+                            >Language Model (Qwen3.5-2B)</span
+                        >
+                        <span
+                            id="step-llm-progress"
+                            class="step-progress"
+                        ></span>
+                    </div>
+                </div>
+                <div class="modal-progress-bar">
+                    <div
+                        id="modal-progress-fill"
+                        class="modal-progress-fill"
+                    ></div>
+                </div>
+                <p id="modal-total-progress" class="modal-total-progress"></p>
+            </div>
+        </div>
 
-  <div id="app-container">
-    <!-- Sidebar: Document Management -->
-    <aside id="sidebar">
-      <h2>Documents</h2>
-      <input type="file" id="file-input" accept=".txt" multiple>
-      <div id="upload-progress"></div>
-      <ul id="document-list"></ul>
-      <button id="load-models-btn">Load Models</button>
-      <button id="unload-embedding-btn" disabled>Unload Embedding Model</button>
-      <button id="unload-llm-btn" disabled>Unload LLM</button>
-      <button id="clear-chat-btn">Clear Chat</button>
-    </aside>
+        <!-- Status Bar -->
+        <header id="status-bar">
+            <span id="hardware-status">Detecting hardware...</span>
+            <span id="model-status">Models: unloaded</span>
+            <span id="index-status">Index: 0 chunks, 0 documents</span>
+            <span id="memory-status">Memory: --</span>
+        </header>
 
-    <!-- Chat Panel -->
-    <main id="chat-panel">
-      <div id="conversation"></div>
-      <div id="input-area">
-        <textarea id="query-input" placeholder="Ask a question about your documents..." rows="3"></textarea>
-        <button id="send-btn">Send</button>
-        <button id="stop-btn" style="display:none">Stop</button>
-      </div>
-    </main>
-  </div>
+        <div id="app-container">
+            <!-- Sidebar: Document Management -->
+            <aside id="sidebar">
+                <h2>Documents</h2>
+                <input type="file" id="file-input" accept=".txt" multiple />
+                <div id="upload-progress"></div>
+                <ul id="document-list"></ul>
+                <button id="load-models-btn">Load Models</button>
+                <button id="unload-embedding-btn" disabled>
+                    Unload Embedding Model
+                </button>
+                <button id="unload-llm-btn" disabled>Unload LLM</button>
+                <button id="clear-chat-btn">Clear Chat</button>
+            </aside>
 
-  <script type="module" src="js/app.js"></script>
-</body>
+            <!-- Chat Panel -->
+            <main id="chat-panel">
+                <div id="conversation"></div>
+                <div id="input-area">
+                    <textarea
+                        id="query-input"
+                        placeholder="Ask a question about your documents..."
+                        rows="3"
+                    ></textarea>
+                    <button id="send-btn">Send</button>
+                    <button id="stop-btn" style="display: none">Stop</button>
+                </div>
+            </main>
+        </div>
+
+        <script type="module" src="js/app.js"></script>
+    </body>
 </html>

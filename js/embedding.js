@@ -16,14 +16,16 @@ const TASK_INSTRUCTION =
 /**
  * Load the Qwen3-Embedding-0.6B-ONNX model.
  * @param {Object} config - Hardware config with embeddingDtype and device
+ * @param {Function} [onProgress] - Optional progress callback from transformers.js
  */
-export async function loadEmbeddingModel(config) {
+export async function loadEmbeddingModel(config, onProgress) {
   extractor = await pipeline(
     "feature-extraction",
     "onnx-community/Qwen3-Embedding-0.6B-ONNX",
     {
       dtype: config.embeddingDtype,
       device: config.device,
+      progress_callback: onProgress,
     },
   );
 }

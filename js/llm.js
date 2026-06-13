@@ -1,6 +1,10 @@
 // llm.js — LLM model loader, generation with streaming, and disposal
 
-import { pipeline, TextStreamer, InterruptableStoppingCriteria } from 'https://cdn.jsdelivr.net/npm/@huggingface/transformers@4.2.0/+esm';
+import {
+  pipeline,
+  TextStreamer,
+  InterruptableStoppingCriteria,
+} from "https://cdn.jsdelivr.net/npm/@huggingface/transformers@4.2.0/+esm";
 
 let generator = null;
 let currentStoppingCriteria = null;
@@ -15,11 +19,13 @@ const MODEL_ID = "huggingworld/Qwen3.5-2B-ONNX";
  * Load the LLM model via text-generation pipeline.
  * The pipeline handles tokenization, chat templates, and generation automatically.
  * @param {Object} config - Hardware config with llmDtype and device
+ * @param {Function} [onProgress] - Optional progress callback from transformers.js
  */
-export async function loadLLM(config) {
+export async function loadLLM(config, onProgress) {
   generator = await pipeline("text-generation", MODEL_ID, {
     dtype: config.llmDtype,
     device: config.device,
+    progress_callback: onProgress,
   });
 }
 
