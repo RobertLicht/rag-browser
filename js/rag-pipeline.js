@@ -3,7 +3,7 @@
 import { chunkText } from "./chunker.js";
 import { embedQuery, embedDocuments, getEmbeddingArrays } from "./embedding.js";
 import { generateResponse } from "./llm.js";
-import { insertChunks, searchVector } from "./orama-db.js";
+import { insertChunks, searchHybrid } from "./orama-db.js";
 import { getRecentHistory } from "./state.js";
 
 // ─── Ingestion Pipeline ───────────────────────────────────────────────
@@ -111,26 +111,43 @@ export async function retrieveAndGenerate(query, db, onToken, onComplete) {
   // Step 1: Embed query (with instruction wrapper)
   const queryEmbedding = await embedQuery(query);
 
-  // Step 2: Search Orama for top-K relevant chunks
-  // Using similarity 0.6 (below default 0.8) to retrieve more context.
-  // This compensates for last_token pooling, which can produce less stable scores.
-  const results = await searchVector(db, queryEmbedding, {
-    similarity: 0.6,
+  // Step 2: Hybrid search — combines BM25 keyword matching with vector similarity.
+  // Pure vector search with low thresholds returns semantically irrelevant chunks.
+  // Hybrid search cross-validates: a result must match both lexically AND semantically.
+  const results = await searchHybrid(db, query, queryEmbedding, {
+    similarity: 0.75,
+    minVectorSimilarity: 0.65,
     limit: 5,
   });
 
-  // Step 3: Build context string from retrieved chunks
+  // Debug logging for retrieval diagnostics
+  console.groupCollapsed(
+    `🔍 Retrieval: "${query.slice(0, 60)}${query.length > 60 ? "..." : ""}"`,
+  );
+  console.log(`Hits: ${results.hits?.length ?? 0}`);
+  if (results.hits) {
+    results.hits.forEach((hit, i) => {
+      console.log(
+        `  [${i + 1}] score=${hit.score.toFixed(3)} | ${hit.document.content.slice(0, 80)}...`,
+      );
+    });
+  }
+  console.groupEnd();
+
+  // Step 3: Build context string from retrieved chunks (or empty if no relevant results)
   const contextChunks = results.hits
-    .map(
-      (hit, i) =>
-        `[Source ${i + 1}: ${hit.document.metadata.sourceFile} (chunk ${hit.document.metadata.chunkIndex})]\n${hit.document.content}`,
-    )
-    .join("\n\n---\n\n");
+    ? results.hits
+        .map(
+          (hit, i) =>
+            `[Source ${i + 1}: ${hit.document.metadata.sourceFile} (chunk ${hit.document.metadata.chunkIndex})]\n${hit.document.content}`,
+        )
+        .join("\n\n---\n\n")
+    : "";
 
   // Step 4: Build system prompt with context and question
   const systemPrompt = SYSTEM_PROMPT.replace(
     "{context}",
-    contextChunks,
+    contextChunks || "(no relevant context found)",
   ).replace("{question}", query);
 
   // Step 5: Build conversation messages with history
@@ -145,14 +162,14 @@ export async function retrieveAndGenerate(query, db, onToken, onComplete) {
   await generateResponse(messages, onToken, (fullText) => {
     if (onComplete) {
       onComplete(fullText, {
-        sourceChunks: results.hits.map((hit) => hit.document),
-        similarity: results.hits.map((hit) => hit.score),
+        sourceChunks: results.hits?.map((hit) => hit.document) ?? [],
+        similarity: results.hits?.map((hit) => hit.score) ?? [],
       });
     }
   });
 
   return {
-    sourceChunks: results.hits.map((hit) => hit.document),
-    similarity: results.hits.map((hit) => hit.score),
+    sourceChunks: results.hits?.map((hit) => hit.document) ?? [],
+    similarity: results.hits?.map((hit) => hit.score) ?? [],
   };
 }

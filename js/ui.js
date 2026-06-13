@@ -204,17 +204,25 @@ export function renderStreamingMessage() {
   scrollConversation();
 
   let previousText = "";
+  let thinkingNode = null; // tracks the "Thinking..." text node
 
   return {
     messageEl: el,
     // Show "Thinking..." loading state during model generation
     showThinking: () => {
-      contentEl.insertBefore(document.createTextNode("Thinking..."), cursor);
+      thinkingNode = document.createTextNode("Thinking...");
+      contentEl.insertBefore(thinkingNode, cursor);
       scrollConversation();
     },
     // Called with the final FULL accumulated text after generation completes.
     // Previously called per-token during streaming; now called once with full text.
     onToken: (fullText) => {
+      // Clear the "Thinking..." placeholder before showing actual response
+      if (thinkingNode && thinkingNode.parentNode) {
+        thinkingNode.parentNode.removeChild(thinkingNode);
+        thinkingNode = null;
+      }
+
       const newText = fullText.slice(previousText.length);
       previousText = fullText;
 
@@ -222,8 +230,13 @@ export function renderStreamingMessage() {
       scrollConversation();
     },
     getFullText: () => previousText,
-    // Remove cursor and optionally add citations
+    // Remove cursor, clear thinking placeholder, and optionally add citations
     finalize: (sourceChunks = null, similarities = null) => {
+      // Always clear the thinking placeholder (in case onToken was never called)
+      if (thinkingNode && thinkingNode.parentNode) {
+        thinkingNode.parentNode.removeChild(thinkingNode);
+        thinkingNode = null;
+      }
       cursor.remove();
 
       // Add citations if available
