@@ -1,10 +1,10 @@
 // rag-pipeline.js — RAG pipeline orchestration (ingestion + retrieval & generation)
 
-import { chunkText } from './chunker.js';
-import { embedQuery, embedDocuments } from './embedding.js';
-import { generateResponse } from './llm.js';
-import { insertChunks, searchVector } from './orama-db.js';
-import { getRecentHistory } from './state.js';
+import { chunkText } from "./chunker.js";
+import { embedQuery, embedDocuments, getEmbeddingArrays } from "./embedding.js";
+import { generateResponse } from "./llm.js";
+import { insertChunks, searchVector } from "./orama-db.js";
+import { getRecentHistory } from "./state.js";
 
 // ─── Ingestion Pipeline ───────────────────────────────────────────────
 
@@ -18,39 +18,52 @@ import { getRecentHistory } from './state.js';
  */
 export async function ingestDocument(file, db, progressCallback) {
   // Step 1: Read file
-  progressCallback({ step: 'reading', progress: 0, message: `Reading ${file.name}...` });
+  progressCallback({
+    step: "reading",
+    progress: 0,
+    message: `Reading ${file.name}...`,
+  });
   const text = await file.text();
   const fileSize = file.size;
 
   // Step 2: Chunk text
-  progressCallback({ step: 'chunking', progress: 25, message: 'Chunking document...' });
+  progressCallback({
+    step: "chunking",
+    progress: 25,
+    message: "Chunking document...",
+  });
   const chunks = chunkText(text, { sourceFile: file.name });
 
   // Step 3: Generate embeddings (in batches)
-  progressCallback({ step: 'embedding', progress: 50, message: `Generating embeddings for ${chunks.length} chunks...` });
+  progressCallback({
+    step: "embedding",
+    progress: 50,
+    message: `Generating embeddings for ${chunks.length} chunks...`,
+  });
   const batchSize = 32;
   const allEmbeddings = [];
 
   for (let i = 0; i < chunks.length; i += batchSize) {
-    const batch = chunks.slice(i, i + batchSize).map(c => c.content);
-    const embeddings = await embedDocuments(batch);
-
-    // embeddings output shape: [batch_size, sequence_length, 1024]
-    // After last_token pooling: [batch_size, 1024]
-    // Convert tensor output to arrays
-    const embeddingArrays = [];
-    for (let j = 0; j < batch.length; j++) {
-      const slice = embeddings.slice([j, j + 1]);
-      embeddingArrays.push(Array.from(slice.data));
-    }
+    const batch = chunks.slice(i, i + batchSize).map((c) => c.content);
+    const flatData = await embedDocuments(batch);
+    const embeddingArrays = getEmbeddingArrays(flatData, batch.length);
     allEmbeddings.push(...embeddingArrays);
 
-    const embedProgress = 50 + (Math.min(i + batchSize, chunks.length) / chunks.length) * 40;
-    progressCallback({ step: 'embedding', progress: embedProgress, message: `Embedded ${Math.min(i + batchSize, chunks.length)}/${chunks.length} chunks...` });
+    const embedProgress =
+      50 + (Math.min(i + batchSize, chunks.length) / chunks.length) * 40;
+    progressCallback({
+      step: "embedding",
+      progress: embedProgress,
+      message: `Embedded ${Math.min(i + batchSize, chunks.length)}/${chunks.length} chunks...`,
+    });
   }
 
   // Step 4: Insert into Orama
-  progressCallback({ step: 'indexing', progress: 95, message: 'Indexing chunks...' });
+  progressCallback({
+    step: "indexing",
+    progress: 95,
+    message: "Indexing chunks...",
+  });
   const documents = chunks.map((chunk, i) => ({
     ...chunk,
     embedding: allEmbeddings[i],
@@ -58,7 +71,11 @@ export async function ingestDocument(file, db, progressCallback) {
 
   await insertChunks(db, documents);
 
-  progressCallback({ step: 'complete', progress: 100, message: `Indexed ${chunks.length} chunks from ${file.name}` });
+  progressCallback({
+    step: "complete",
+    progress: 100,
+    message: `Indexed ${chunks.length} chunks from ${file.name}`,
+  });
 
   return { chunks: chunks.length, fileSize };
 }
@@ -103,26 +120,32 @@ export async function retrieveAndGenerate(query, db, onToken, onComplete) {
   });
 
   // Step 3: Build context string from retrieved chunks
-  const contextChunks = results.hits.map((hit, i) =>
-    `[Source ${i + 1}: ${hit.document.metadata.sourceFile} (chunk ${hit.document.metadata.chunkIndex})]\n${hit.document.content}`
-  ).join('\n\n---\n\n');
+  const contextChunks = results.hits
+    .map(
+      (hit, i) =>
+        `[Source ${i + 1}: ${hit.document.metadata.sourceFile} (chunk ${hit.document.metadata.chunkIndex})]\n${hit.document.content}`,
+    )
+    .join("\n\n---\n\n");
 
   // Step 4: Build system prompt with context and question
-  const systemPrompt = SYSTEM_PROMPT.replace('{context}', contextChunks).replace('{question}', query);
+  const systemPrompt = SYSTEM_PROMPT.replace(
+    "{context}",
+    contextChunks,
+  ).replace("{question}", query);
 
   // Step 5: Build conversation messages with history
   const recentHistory = getRecentHistory(MAX_HISTORY);
   const messages = [
-    { role: 'system', content: [{ type: 'text', text: systemPrompt }] },
+    { role: "system", content: [{ type: "text", text: systemPrompt }] },
     ...recentHistory,
-    { role: 'user', content: [{ type: 'text', text: query }] },
+    { role: "user", content: [{ type: "text", text: query }] },
   ];
 
   // Step 6: Generate response via LLM
   await generateResponse(messages, onToken, onComplete);
 
   return {
-    sourceChunks: results.hits.map(hit => hit.document),
-    similarity: results.hits.map(hit => hit.score),
+    sourceChunks: results.hits.map((hit) => hit.document),
+    similarity: results.hits.map((hit) => hit.score),
   };
 }
