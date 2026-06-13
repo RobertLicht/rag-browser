@@ -298,6 +298,8 @@ body {
     white-space: pre-wrap;
 }
 
+/* ─── Markdown Content Styling ─────────────────────────────── */
+
 .message-content p {
     margin-bottom: 0.5rem;
 }
@@ -325,6 +327,164 @@ body {
 .message-content pre code {
     background: none;
     padding: 0;
+}
+
+/* Headings */
+.message-content h1,
+.message-content h2,
+.message-content h3,
+.message-content h4,
+.message-content h5,
+.message-content h6 {
+    margin: 0.75rem 0 0.5rem;
+    font-weight: 600;
+    line-height: 1.3;
+}
+
+.message-content h1:first-child,
+.message-content h2:first-child,
+.message-content h3:first-child {
+    margin-top: 0;
+}
+
+.message-content h1 {
+    font-size: 1.25em;
+}
+.message-content h2 {
+    font-size: 1.15em;
+}
+.message-content h3 {
+    font-size: 1.05em;
+}
+
+/* Lists */
+.message-content ul,
+.message-content ol {
+    margin: 0.5rem 0;
+    padding-left: 1.5rem;
+}
+
+.message-content li {
+    margin-bottom: 0.25rem;
+}
+
+.message-content li > ul,
+.message-content li > ol {
+    margin: 0.25rem 0;
+}
+
+/* Blockquotes */
+.message-content blockquote {
+    margin: 0.5rem 0;
+    padding: 0.5rem 0.75rem;
+    border-left: 3px solid var(--accent);
+    color: var(--text-secondary);
+    background: rgba(99, 102, 241, 0.05);
+    border-radius: 0 6px 6px 0;
+}
+
+.message-content blockquote p {
+    margin-bottom: 0.25rem;
+}
+
+.message-content blockquote p:last-child {
+    margin-bottom: 0;
+}
+
+/* Tables */
+.message-content table {
+    border-collapse: collapse;
+    width: 100%;
+    margin: 0.75rem 0;
+    font-size: 0.85em;
+}
+
+.message-content th,
+.message-content td {
+    border: 1px solid var(--border-color);
+    padding: 0.4rem 0.6rem;
+    text-align: left;
+}
+
+.message-content th {
+    background: var(--bg-tertiary);
+    font-weight: 600;
+}
+
+.message-content tr:nth-child(even) {
+    background: rgba(255, 255, 255, 0.02);
+}
+
+/* Links */
+.message-content a {
+    color: var(--accent-hover);
+    text-decoration: none;
+}
+
+.message-content a:hover {
+    text-decoration: underline;
+}
+
+/* Horizontal rules */
+.message-content hr {
+    border: none;
+    border-top: 1px solid var(--border-color);
+    margin: 1rem 0;
+}
+
+/* Images */
+.message-content img {
+    max-width: 100%;
+    border-radius: 8px;
+    margin: 0.5rem 0;
+}
+
+/* Task lists */
+.message-content input[type="checkbox"] {
+    margin-right: 0.4rem;
+}
+
+/* Think (reasoning) blocks */
+.message-content details.think-block {
+    margin: 0.5rem 0;
+    background: var(--bg-tertiary);
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    overflow: hidden;
+}
+
+.message-content details.think-block summary {
+    padding: 0.5rem 0.75rem;
+    cursor: pointer;
+    font-size: 0.85em;
+    color: var(--text-secondary);
+    user-select: none;
+}
+
+.message-content details.think-block summary:hover {
+    background: rgba(255, 255, 255, 0.03);
+}
+
+.message-content details.think-block .think-content {
+    padding: 0 0.75rem 0.5rem;
+    font-size: 0.85em;
+    color: var(--text-muted);
+    white-space: pre-wrap;
+}
+
+/* KaTeX overrides for dark theme */
+.message-content .katex {
+    font-size: 1em;
+}
+
+.message-content .katex-display {
+    margin: 0.75rem 0;
+    overflow-x: auto;
+    overflow-y: hidden;
+}
+
+.message-content .katex-display > .katex {
+    display: inline-block;
 }
 
 /* ─── Streaming Cursor ─────────────────────────────────────────── */

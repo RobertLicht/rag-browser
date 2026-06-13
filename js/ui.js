@@ -1,6 +1,7 @@
 // ui.js — UI rendering, DOM manipulation, event handling
 
 import { generateUUID } from "./utils.js";
+import { renderMarkdown, renderLaTeX } from "./renderer.js";
 
 /**
  * Initialize all UI event listeners and render the initial state.
@@ -141,7 +142,8 @@ export function renderAssistantMessage(
 
   const contentEl = document.createElement("div");
   contentEl.className = "message-content";
-  contentEl.textContent = text;
+  contentEl.innerHTML = renderMarkdown(text);
+  renderLaTeX(contentEl);
   el.appendChild(contentEl);
 
   // Add citations if available
@@ -205,6 +207,7 @@ export function renderStreamingMessage() {
 
   let previousText = "";
   let thinkingNode = null; // tracks the "Thinking..." text node
+  let renderTimeout = null; // debounces markdown re-rendering during streaming
 
   return {
     messageEl: el,
@@ -223,21 +226,40 @@ export function renderStreamingMessage() {
         thinkingNode = null;
       }
 
-      const newText = fullText.slice(previousText.length);
       previousText = fullText;
 
-      contentEl.insertBefore(document.createTextNode(newText), cursor);
-      scrollConversation();
+      // Debounce re-rendering: wait for a brief pause in streaming
+      if (renderTimeout) clearTimeout(renderTimeout);
+      renderTimeout = setTimeout(() => {
+        // Re-render the content area with updated markdown, keeping the cursor
+        // Remove all children except cursor
+        while (contentEl.firstChild && contentEl.firstChild !== cursor) {
+          contentEl.removeChild(contentEl.firstChild);
+        }
+        contentEl.innerHTML = renderMarkdown(previousText);
+        contentEl.appendChild(cursor);
+        scrollConversation();
+      }, 80);
     },
     getFullText: () => previousText,
-    // Remove cursor, clear thinking placeholder, and optionally add citations
+    // Remove cursor, clear thinking placeholder, render final markdown+LaTeX, and optionally add citations
     finalize: (sourceChunks = null, similarities = null) => {
+      // Clear any pending render timeout
+      if (renderTimeout) {
+        clearTimeout(renderTimeout);
+        renderTimeout = null;
+      }
+
       // Always clear the thinking placeholder (in case onToken was never called)
       if (thinkingNode && thinkingNode.parentNode) {
         thinkingNode.parentNode.removeChild(thinkingNode);
         thinkingNode = null;
       }
       cursor.remove();
+
+      // Final render: markdown + LaTeX
+      contentEl.innerHTML = renderMarkdown(previousText);
+      renderLaTeX(contentEl);
 
       // Add citations if available
       if (sourceChunks && sourceChunks.length > 0) {
