@@ -34,6 +34,7 @@ import {
   hideLoadingModal,
   updateLoadingModal,
   setFileInputEnabled,
+  setUnloadButtonStates,
 } from "./ui.js";
 import { formatBytes } from "./utils.js";
 
@@ -362,24 +363,87 @@ function onModelProgress(step, info) {
 function updateModelState(state) {
   const { embedding, llm } = state.models;
   setFileInputEnabled(embedding === "ready" && llm === "ready");
+  setUnloadButtonStates(embedding === "ready", llm === "ready");
 }
 
 /**
  * Handle embedding model unload.
+ *
+ * Because ONNX Runtime Web shares a single global WebGPU device across all
+ * inference sessions, unloading one model does NOT free its VRAM while the
+ * other model's session still holds the device. To actually free VRAM we
+ * unload BOTH models (which destroys the device) and then reload the LLM
+ * so the user's remaining model is available immediately.
  */
 async function handleUnloadEmbedding() {
+  const otherWasLoaded = isLLMLoaded();
+
   await unloadEmbeddingModel();
-  setState({ models: { ...getState().models, embedding: "unloaded" } });
+  await unloadLLM();
+  setState({
+    models: {
+      ...getState().models,
+      embedding: "unloaded",
+      llm: otherWasLoaded ? "loading" : "unloaded",
+    },
+  });
+
+  // Show notification immediately
   showNotification("Embedding model unloaded", "info");
+
+  // If the LLM was loaded, reload it so the user can keep using it
+  if (otherWasLoaded) {
+    try {
+      await loadLLM(getState().hardware);
+      setState({ models: { ...getState().models, llm: "ready" } });
+    } catch (error) {
+      console.error("Failed to reload LLM:", error);
+      setState({ models: { ...getState().models, llm: "unloaded" } });
+      showNotification(
+        "Failed to reload LLM after unloading embedding",
+        "error",
+      );
+    }
+  }
 }
 
 /**
  * Handle LLM unload.
+ *
+ * Same shared-WebGPU-device reasoning as handleUnloadEmbedding — unload both
+ * to destroy the device and actually free VRAM, then reload the embedding
+ * model so the user can keep indexing documents.
  */
 async function handleUnloadLLM() {
+  const otherWasLoaded = isEmbeddingLoaded();
+
   await unloadLLM();
-  setState({ models: { ...getState().models, llm: "unloaded" } });
+  await unloadEmbeddingModel();
+  setState({
+    models: {
+      ...getState().models,
+      llm: "unloaded",
+      embedding: otherWasLoaded ? "loading" : "unloaded",
+    },
+  });
+
+  // Show notification immediately
   showNotification("LLM unloaded", "info");
+
+  // If the embedding model was loaded, reload it so the user can keep using it
+  if (otherWasLoaded) {
+    try {
+      await loadEmbeddingModel(getState().hardware);
+      setState({ models: { ...getState().models, embedding: "ready" } });
+    } catch (error) {
+      console.error("Failed to reload embedding model:", error);
+      setState({ models: { ...getState().models, embedding: "unloaded" } });
+      showNotification(
+        "Failed to reload embedding model after unloading LLM",
+        "error",
+      );
+    }
+  }
 }
 
 /**

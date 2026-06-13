@@ -460,3 +460,16 @@ export function setFileInputEnabled(enabled) {
   const fileInput = document.getElementById("file-input");
   fileInput.disabled = !enabled;
 }
+
+/**
+ * Enable or disable the unload buttons based on model loading state.
+ * A button is enabled only when its corresponding model is loaded.
+ * @param {boolean} embeddingLoaded - Whether the embedding model is loaded
+ * @param {boolean} llmLoaded - Whether the LLM is loaded
+ */
+export function setUnloadButtonStates(embeddingLoaded, llmLoaded) {
+  const unloadEmbeddingBtn = document.getElementById("unload-embedding-btn");
+  const unloadLlmBtn = document.getElementById("unload-llm-btn");
+  unloadEmbeddingBtn.disabled = !embeddingLoaded;
+  unloadLlmBtn.disabled = !llmLoaded;
+}

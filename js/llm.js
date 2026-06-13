@@ -130,16 +130,12 @@ export function stopGeneration() {
 }
 
 /**
- * Dispose the LLM model and processor, freeing memory.
+ * Dispose the LLM model, freeing memory.
  */
 export async function unloadLLM() {
   if (model) {
     await model.dispose();
     model = null;
-  }
-  if (processor) {
-    await processor.dispose();
-    processor = null;
   }
 }
 
