@@ -100,6 +100,7 @@ export async function init() {
     onClearChat: handleClearChat,
     onExportDB: handleExportDB,
     onImportDB: handleImportDB,
+    onClearDB: handleClearDB,
     onResetSearchConfig: handleResetSettings,
     onResetLlmConfig: handleResetLlmSettings,
   });
@@ -464,6 +465,54 @@ function handleClearChat() {
   clearConversation();
   document.getElementById("conversation").innerHTML = "";
   showNotification("Chat cleared", "info");
+}
+
+/**
+ * Handle database clear: confirmation, then wipe in-memory DB,
+ * IndexedDB persistence, ingested document list, and conversation.
+ */
+async function handleClearDB() {
+  const count = getDocumentCount(db);
+  const confirmed = confirm(
+    `This will permanently delete all indexed data (${count} chunks).\n\nThis action cannot be undone. Continue?`,
+  );
+  if (!confirmed) {
+    return;
+  }
+
+  // Replace in-memory database with a fresh empty instance
+  db = createDB();
+
+  // Clear ingested document list
+  ingestedDocuments.length = 0;
+
+  // Clear conversation
+  clearConversation();
+  const conversationEl = document.getElementById("conversation");
+  if (conversationEl) {
+    conversationEl.innerHTML = "";
+  }
+
+  // Update state
+  setState({
+    index: {
+      totalChunks: 0,
+      totalDocuments: 0,
+      embeddingDimension: 1024,
+    },
+  });
+
+  // Clear document list UI
+  updateDocumentList([]);
+
+  // Persist empty state to IndexedDB (clears previous data)
+  try {
+    await persistIndex(db);
+  } catch (error) {
+    console.error("Failed to persist empty index:", error);
+  }
+
+  showNotification(`Database cleared (${count} chunks removed)`, "info");
 }
 
 /**

@@ -114,6 +114,16 @@ export function initUI(callbacks) {
     });
   }
 
+  // Clear database
+  const clearDbBtn = document.getElementById("clear-db-btn");
+  if (clearDbBtn) {
+    clearDbBtn.addEventListener("click", () => {
+      if (callbacks.onClearDB) {
+        callbacks.onClearDB();
+      }
+    });
+  }
+
   // Initialize search settings panel
   initSearchSettings({ onReset: callbacks.onResetSearchConfig });
 

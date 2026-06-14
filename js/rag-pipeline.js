@@ -119,15 +119,7 @@ Question: {question}`;
  * Instructs Qwen3.5 to keep reasoning brief and focused, avoiding
  * over-analysis. Context and question are injected at runtime.
  */
-const SYSTEM_PROMPT_THINKING = `You are a helpful assistant. You are in thinking mode.
-
-IMPORTANT: Keep your reasoning brief and focused. Do NOT overthink.
-- Use <thinking> tags only for concise, direct reasoning
-- Skip tangential exploration — only reason through the core steps needed
-- Avoid restating the question or context
-- If the answer is straightforward, keep thinking minimal
-
-Answer the user's question using ONLY the provided context. If the context does not contain enough information, say so clearly. Cite your sources by referencing the document chunks.
+const SYSTEM_PROMPT_THINKING = `You are a helpful assistant. Keep your reasoning brief and focused. Do NOT overthink. Answer the user's question using ONLY the provided context. If the context does not contain enough information, say so clearly. Cite your sources by referencing the document chunks.
 
 Context:
 {context}
