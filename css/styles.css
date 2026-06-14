@@ -119,8 +119,8 @@ body {
 /* ─── Sidebar ──────────────────────────────────────────────────── */
 
 #sidebar {
-    width: 300px;
-    min-width: 260px;
+    width: 320px;
+    min-width: 280px;
     background: var(--bg-secondary);
     border-right: 1px solid var(--border-color);
     display: flex;
@@ -361,7 +361,7 @@ body {
     font-size: 0.78rem;
     color: var(--text-secondary);
     margin-bottom: 0;
-    min-width: 5.5rem;
+    min-width: 4.8rem;
 }
 
 .threshold-row span {

@@ -16,15 +16,15 @@ export const DEFAULT_SEARCH_CONFIG = {
   mode: "hybrid", // 'hybrid' | 'vector'
   hybridWeights: {
     // BM25 vs vector balance (only in hybrid mode)
-    text: 0.5,
-    vector: 0.5,
+    text: 0.7,
+    vector: 0.3,
   },
   thresholds: {
     hybridSimilarity: 0.65, // Minimum combined score
     minVectorSimilarity: 0.55, // Vector quality gate in hybrid mode
     vectorSimilarity: 0.7, // Pure vector threshold
   },
-  topN: 8, // Max chunks retrieved per query (1-20)
+  topN: 5, // Max chunks retrieved per query (1-20)
 };
 
 let state = {
