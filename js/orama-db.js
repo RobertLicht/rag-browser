@@ -4,11 +4,13 @@ import {
   create,
   insertMultiple,
   search,
+  save,
+  load,
 } from "https://cdn.jsdelivr.net/npm/@orama/orama@3.1.18/+esm";
 
 // IndexedDB constants
 const DB_NAME = "rag-browser-db";
-const DB_VERSION = 1;
+const DB_VERSION = 2;
 const STORE_NAME = "documents";
 
 /**
@@ -148,13 +150,15 @@ function openDB() {
 
 /**
  * Persist the Orama database to IndexedDB.
- * Serializes the full Orama DB as JSON and stores it alongside metadata.
+ * Uses Orama's save() to produce proper serializable state, then stores it
+ * as a JSON blob alongside metadata.
  *
  * @param {Object} db - Orama database instance
  */
 export async function persistIndex(db) {
   try {
-    const data = JSON.stringify(db);
+    const rawData = save(db);
+    const data = JSON.stringify(rawData);
     const blob = new Blob([data], { type: "application/json" });
 
     const idb = await openDB();
@@ -185,10 +189,10 @@ export async function persistIndex(db) {
 /**
  * Restore the Orama database from IndexedDB.
  *
- * After deserializing the JSON, we create a fresh Orama database and
- * re-insert all documents. This is necessary because a deserialized JSON
- * object lacks the internal Orama methods (e.g. validateSchema) that
- * create() attaches, which would cause insertMultiple() to fail.
+ * Detects whether the stored data is in old format (raw JSON of DB object)
+ * or new format (output of save()) and uses the appropriate restoration
+ * method. This preserves backward compatibility with previously persisted
+ * data after the version bump.
  *
  * @returns {Promise<Object>} The restored Orama database with all methods
  */
@@ -203,19 +207,26 @@ export async function restoreIndex() {
       req.onsuccess = async () => {
         if (req.result && req.result.data) {
           const text = await req.result.data.text();
-          const raw = JSON.parse(text);
+          const storedData = JSON.parse(text);
 
-          // Extract documents from the raw JSON (schema + docs array)
-          const docs = raw.docs || [];
-
-          // Create a fresh database with the same schema and re-insert
-          // documents so the database has all its internal methods
-          const db = createDB();
-          if (docs.length > 0) {
-            await insertMultiple(db, docs);
+          // Detect format and restore appropriately
+          if (storedData.schema) {
+            // Old format: raw DB object — extract docs and re-insert
+            const db = createDB();
+            let docs = storedData.docs;
+            if (docs && typeof docs === "object" && !Array.isArray(docs)) {
+              docs = docs.docs ? Object.values(docs.docs) : Object.values(docs);
+            }
+            if (Array.isArray(docs) && docs.length > 0) {
+              await insertMultiple(db, docs);
+            }
+            resolve(db);
+          } else {
+            // New format from save(): use load() for instant restoration
+            const db = createDB();
+            await load(db, storedData);
+            resolve(db);
           }
-
-          resolve(db);
         } else {
           resolve(createDB());
         }
@@ -230,25 +241,27 @@ export async function restoreIndex() {
 // ─── Export / Import helpers ────────────────────────────────────────
 
 const EXPORT_FORMAT = "rag-browser-orama";
-const EXPORT_VERSION = 1;
+const EXPORT_VERSION = 2;
 const EXPECTED_DIMENSION = 1024;
 
 /**
  * Serialize the Orama database into a versioned JSON envelope suitable for
- * file export. The envelope adds metadata so import-side validation can verify
- * compatibility before accepting the data.
+ * file export. Uses Orama's save() to produce proper serializable state,
+ * ensuring all internal structures (indices, vectors) are captured faithfully.
  *
  * @param {Object} db - Orama database instance
  * @returns {Blob} JSON blob ready for download
  */
 export function serializeDB(db) {
+  const rawData = save(db);
+
   const envelope = {
     format: EXPORT_FORMAT,
     version: EXPORT_VERSION,
     exportedAt: new Date().toISOString(),
     embeddingDimension: EXPECTED_DIMENSION,
     documentCount: db.count,
-    database: db,
+    rawData: rawData,
   };
 
   return new Blob([JSON.stringify(envelope)], {
@@ -271,25 +284,70 @@ export function generateExportFilename(documentCount) {
 }
 
 /**
- * Validate an imported database file. Accepts both the versioned envelope
- * format and raw Orama JSON objects (backward compatibility).
+ * Restore an Orama database from serialized raw data.
+ *
+ * Detects the data format and uses the appropriate restoration method:
+ * - New format (from save()): has searchablePropertiesWithTypes → use load()
+ * - Old format (raw DB object): has schema + docs → extract and re-insert
+ *
+ * @param {Object} rawData - The raw serialized state from save() or an old-style database object
+ * @returns {Promise<Object>} A fully functional Orama database instance
+ */
+export async function restoreFromData(rawData) {
+  const db = createDB();
+
+  if (rawData.index?.searchablePropertiesWithTypes) {
+    // New format: produced by save() — load restores the full internal state
+    await load(db, rawData);
+  } else if (rawData.docs && typeof rawData.docs === "object") {
+    // Old format (raw DB object or version 1 export): extract documents and re-insert.
+    // Docs may be an array or an object keyed by internal ID (e.g. {"1": {...}, "2": {...}}).
+    let docs = rawData.docs;
+    if (!Array.isArray(docs) && docs.docs) {
+      // Nested docs structure: { docs: { ... }, count: N }
+      docs = docs.docs;
+    }
+    const docArray = Array.isArray(docs) ? docs : Object.values(docs);
+    if (docArray.length > 0) {
+      await insertMultiple(db, docArray);
+    }
+  }
+
+  return db;
+}
+
+/**
+ * Validate an imported database file. Accepts both the new versioned envelope
+ * format (with rawData) and old formats for backward compatibility:
+ * - Version 2: envelope with 'rawData' key (save() output, no top-level schema)
+ * - Version 1: envelope with 'database' key (raw Orama object with schema)
+ * - Raw Orama object: direct schema/docs structure
  *
  * @param {Object} data - Parsed JSON from the uploaded file
- * @returns {{ valid: boolean, database?: Object, metadata?: Object, error?: string }}
+ * @returns {{ valid: boolean, rawData?: Object, metadata?: Object, error?: string }}
  */
 export function validateImport(data) {
-  // Allow null/empty
   if (!data || typeof data !== "object") {
     return { valid: false, error: "File does not contain valid JSON." };
   }
 
-  let database = null;
+  let rawData = null;
   let metadata = {};
 
-  // Detect format: envelope or raw Orama object
-  if (data.format === EXPORT_FORMAT && data.database) {
-    // Versioned envelope
-    database = data.database;
+  // Detect format and extract raw database data
+  if (data.format === EXPORT_FORMAT && data.rawData) {
+    // Version 2: proper serialized state from save()
+    rawData = data.rawData;
+    metadata = {
+      format: data.format,
+      version: data.version,
+      exportedAt: data.exportedAt,
+      embeddingDimension: data.embeddingDimension,
+      documentCount: data.documentCount,
+    };
+  } else if (data.format === EXPORT_FORMAT && data.database) {
+    // Version 1: raw Orama object (backward compatibility)
+    rawData = data.database;
     metadata = {
       format: data.format,
       version: data.version,
@@ -299,56 +357,96 @@ export function validateImport(data) {
     };
   } else if (data.schema && data.docs) {
     // Raw Orama object (backward compatibility)
-    database = data;
+    rawData = data;
     metadata = { format: "raw-orama" };
   } else {
     return {
       valid: false,
       error:
-        "File is not a valid RAG-Browser database export. Expected a JSON file with 'format' and 'database' keys, or a raw Orama database.",
+        "File is not a valid RAG-Browser database export. Expected a JSON file with 'format' and 'rawData' keys, or a raw Orama database.",
     };
   }
 
-  // Validate schema structure
-  const schema = database.schema;
-  if (!schema || typeof schema !== "object") {
-    return { valid: false, error: "Database is missing a valid schema." };
-  }
+  // Validate structure based on format type.
+  // save() output nests searchablePropertiesWithTypes under index.
+  // Raw DB objects use a nested schema object.
+  if (rawData.index?.searchablePropertiesWithTypes) {
+    const types = rawData.index.searchablePropertiesWithTypes;
 
-  if (schema.content !== "string") {
-    return {
-      valid: false,
-      error: 'Schema mismatch: expected content field of type "string".',
-    };
-  }
+    if (types.content !== "string") {
+      return {
+        valid: false,
+        error: 'Schema mismatch: expected content field of type "string".',
+      };
+    }
 
-  // Validate embedding dimension
-  const embType = schema.embedding;
-  const dimMatch = String(embType).match(/^vector\[(\d+)\]$/);
-  if (!dimMatch) {
+    const embType = types.embedding;
+    const dimMatch = String(embType).match(/^vector\[(\d+)\]$/);
+    if (!dimMatch) {
+      return {
+        valid: false,
+        error:
+          'Schema mismatch: expected an embedding field like "vector[1024]".',
+      };
+    }
+
+    const actualDim = parseInt(dimMatch[1], 10);
+    if (actualDim !== EXPECTED_DIMENSION) {
+      return {
+        valid: false,
+        error: `Embedding dimension mismatch. Expected ${EXPECTED_DIMENSION}, got ${actualDim}. This database was likely created with a different embedding model.`,
+      };
+    }
+
+    if (!types["metadata.sourceFile"] || !types["metadata.chunkIndex"]) {
+      return {
+        valid: false,
+        error: 'Schema mismatch: expected "metadata" nested fields.',
+      };
+    }
+  } else if (rawData.schema && typeof rawData.schema === "object") {
+    // Old-format or raw Orama object validation
+    const schema = rawData.schema;
+
+    if (schema.content !== "string") {
+      return {
+        valid: false,
+        error: 'Schema mismatch: expected content field of type "string".',
+      };
+    }
+
+    const embType = schema.embedding;
+    const dimMatch = String(embType).match(/^vector\[(\d+)\]$/);
+    if (!dimMatch) {
+      return {
+        valid: false,
+        error:
+          'Schema mismatch: expected an embedding field like "vector[1024]".',
+      };
+    }
+
+    const actualDim = parseInt(dimMatch[1], 10);
+    if (actualDim !== EXPECTED_DIMENSION) {
+      return {
+        valid: false,
+        error: `Embedding dimension mismatch. Expected ${EXPECTED_DIMENSION}, got ${actualDim}. This database was likely created with a different embedding model.`,
+      };
+    }
+
+    const metaSchema = schema.metadata;
+    if (!metaSchema || typeof metaSchema !== "object") {
+      return {
+        valid: false,
+        error: 'Schema mismatch: expected a "metadata" nested field.',
+      };
+    }
+  } else {
     return {
       valid: false,
       error:
-        'Schema mismatch: expected an embedding field like "vector[1024]".',
+        "Database is missing a recognizable structure. Expected either 'searchablePropertiesWithTypes' (new format) or 'schema' (old format).",
     };
   }
 
-  const actualDim = parseInt(dimMatch[1], 10);
-  if (actualDim !== EXPECTED_DIMENSION) {
-    return {
-      valid: false,
-      error: `Embedding dimension mismatch. Expected ${EXPECTED_DIMENSION}, got ${actualDim}. This database was likely created with a different embedding model.`,
-    };
-  }
-
-  // Validate metadata sub-schema
-  const metaSchema = schema.metadata;
-  if (!metaSchema || typeof metaSchema !== "object") {
-    return {
-      valid: false,
-      error: 'Schema mismatch: expected a "metadata" nested field.',
-    };
-  }
-
-  return { valid: true, database, metadata };
+  return { valid: true, rawData, metadata };
 }

@@ -20,6 +20,7 @@ import {
   persistIndex,
   restoreIndex,
   serializeDB,
+  restoreFromData,
   validateImport,
   generateExportFilename,
 } from "./orama-db.js";
@@ -576,8 +577,8 @@ async function handleImportDB(file) {
       return;
     }
 
-    const { database, metadata } = result;
-    const importCount = database.count || 0;
+    const { rawData, metadata } = result;
+    const importCount = getDocumentCount(rawData) || rawData.docs?.length || 0;
 
     // Check current DB size and warn about data loss
     const currentCount = db ? getDocumentCount(db) : 0;
@@ -591,8 +592,8 @@ async function handleImportDB(file) {
       }
     }
 
-    // Replace database
-    db = database;
+    // Restore into a fresh, fully functional Orama database using load()
+    db = await restoreFromData(rawData);
     ingestedDocuments.length = 0; // Clear old document list
 
     // Update state and UI
