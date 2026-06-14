@@ -99,10 +99,28 @@ export async function generateResponse(messages, onToken, onComplete) {
   // Generate using the model directly (low-level API for multi-modal models).
   // IMPORTANT: No streamer is used. TextStreamer corrupts Qwen3.5 output
   // due to buggy incremental BPE decoding in transformers.js.
+  //
+  // Generation parameters are read from llmConfig.generation. These include:
+  // - temperature: controls randomness (0.0-2.0)
+  // - top_p: nucleus sampling threshold (0.0-1.0)
+  // - top_k: top-k sampling (1-100)
+  // - min_p: min-p sampling (0.0-1.0)
+  // - max_new_tokens: maximum tokens to generate
+  // - presence_penalty: penalizes new tokens based on presence (-2.0 to 2.0)
+  // - repetition_penalty: penalizes repeated tokens (0.1-2.0)
+  const {
+    llmConfig: { generation },
+  } = getState();
   const output = await model.generate({
     ...inputs,
-    max_new_tokens: 512,
-    do_sample: false,
+    max_new_tokens: generation.max_new_tokens,
+    do_sample: true,
+    temperature: generation.temperature,
+    top_p: generation.top_p,
+    top_k: generation.top_k,
+    min_p: generation.min_p,
+    presence_penalty: generation.presence_penalty,
+    repetition_penalty: generation.repetition_penalty,
     stopping_criteria: [currentStoppingCriteria],
   });
 

@@ -8,6 +8,7 @@ import {
   getState,
   setLlmConfig,
   resetLlmConfig,
+  resetGenerationToPreset,
 } from "./state.js";
 
 /**
@@ -727,7 +728,7 @@ export function initSearchSettings({ onReset }) {
 
 /**
  * Initialize LLM settings panel controls.
- * Wires up the thinking mode toggle to update LLM configuration.
+ * Wires up the thinking mode toggle and generation parameter sliders.
  *
  * @param {Object} options - Options object
  * @param {Function} options.onReset - Callback when reset is triggered
@@ -735,16 +736,90 @@ export function initSearchSettings({ onReset }) {
 export function initLlmSettings({ onReset }) {
   // DOM references
   const toggle = document.getElementById("thinking-toggle");
+  const temperatureSlider = document.getElementById("temperature-slider");
+  const temperatureValue = document.getElementById("temperature-value");
+  const topPSlider = document.getElementById("top-p-slider");
+  const topPValue = document.getElementById("top-p-value");
+  const topKSlider = document.getElementById("top-k-slider");
+  const topKValue = document.getElementById("top-k-value");
+  const minPSlider = document.getElementById("min-p-slider");
+  const minPValue = document.getElementById("min-p-value");
+  const presencePenaltySlider = document.getElementById(
+    "presence-penalty-slider",
+  );
+  const presencePenaltyValue = document.getElementById(
+    "presence-penalty-value",
+  );
+  const repetitionPenaltySlider = document.getElementById(
+    "repetition-penalty-slider",
+  );
+  const repetitionPenaltyValue = document.getElementById(
+    "repetition-penalty-value",
+  );
 
   // ─── Thinking Mode Toggle ───────────────────────────────
   if (toggle) {
     toggle.addEventListener("change", (e) => {
       setLlmConfig({ enableThinking: e.target.checked });
+      syncLlmSettingsUI(); // Update sliders to reflect new preset
     });
   }
 
+  // ─── Generation Parameter Sliders ───────────────────────
+  const genParams = [
+    {
+      slider: temperatureSlider,
+      value: temperatureValue,
+      key: "temperature",
+      decimals: 2,
+    },
+    { slider: topPSlider, value: topPValue, key: "top_p", decimals: 2 },
+    { slider: topKSlider, value: topKValue, key: "top_k", decimals: 0 },
+    { slider: minPSlider, value: minPValue, key: "min_p", decimals: 2 },
+    {
+      slider: presencePenaltySlider,
+      value: presencePenaltyValue,
+      key: "presence_penalty",
+      decimals: 1,
+    },
+    {
+      slider: repetitionPenaltySlider,
+      value: repetitionPenaltyValue,
+      key: "repetition_penalty",
+      decimals: 2,
+    },
+    {
+      slider: document.getElementById("max-new-tokens-slider"),
+      value: document.getElementById("max-new-tokens-value"),
+      key: "max_new_tokens",
+      decimals: 0,
+    },
+  ];
+
+  genParams.forEach(({ slider, value, key, decimals }) => {
+    if (slider && value) {
+      slider.addEventListener("input", (e) => {
+        const numValue =
+          decimals === 0
+            ? parseInt(e.target.value, 10)
+            : parseFloat(parseFloat(e.target.value).toFixed(decimals));
+        value.textContent = e.target.value;
+        setLlmConfig({ generation: { [key]: numValue } });
+      });
+    }
+  });
+
   // Initial UI sync from state
   syncLlmSettingsUI();
+
+  // ─── Reset to Preset Button ─────────────────────────────
+  const resetBtn = document.getElementById("reset-llm-btn");
+  if (resetBtn) {
+    resetBtn.addEventListener("click", () => {
+      resetGenerationToPreset();
+      syncLlmSettingsUI();
+    });
+  }
 }
 
 /**
@@ -758,4 +833,60 @@ export function syncLlmSettingsUI() {
   if (toggle) {
     toggle.checked = llmConfig.enableThinking;
   }
+
+  // Generation parameter sliders
+  const gen = llmConfig.generation;
+  const genParams = [
+    {
+      slider: () => document.getElementById("temperature-slider"),
+      value: () => document.getElementById("temperature-value"),
+      key: "temperature",
+      decimals: 2,
+    },
+    {
+      slider: () => document.getElementById("top-p-slider"),
+      value: () => document.getElementById("top-p-value"),
+      key: "top_p",
+      decimals: 2,
+    },
+    {
+      slider: () => document.getElementById("top-k-slider"),
+      value: () => document.getElementById("top-k-value"),
+      key: "top_k",
+      decimals: 0,
+    },
+    {
+      slider: () => document.getElementById("min-p-slider"),
+      value: () => document.getElementById("min-p-value"),
+      key: "min_p",
+      decimals: 2,
+    },
+    {
+      slider: () => document.getElementById("presence-penalty-slider"),
+      value: () => document.getElementById("presence-penalty-value"),
+      key: "presence_penalty",
+      decimals: 1,
+    },
+    {
+      slider: () => document.getElementById("repetition-penalty-slider"),
+      value: () => document.getElementById("repetition-penalty-value"),
+      key: "repetition_penalty",
+      decimals: 2,
+    },
+    {
+      slider: () => document.getElementById("max-new-tokens-slider"),
+      value: () => document.getElementById("max-new-tokens-value"),
+      key: "max_new_tokens",
+      decimals: 0,
+    },
+  ];
+
+  genParams.forEach(({ slider, value, key, decimals }) => {
+    const s = slider();
+    const v = value();
+    if (s && v) {
+      s.value = gen[key];
+      v.textContent = String(gen[key]);
+    }
+  });
 }

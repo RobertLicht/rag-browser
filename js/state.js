@@ -14,10 +14,48 @@ import { generateUUID } from "./utils.js";
  */
 /**
  * Default LLM configuration.
+ *
+ * Generation parameters follow official Qwen3.5 recommendations from
+ * unsloth.ai/docs/models/qwen3.5.
+ *
+ * Non-thinking (general tasks): temp=0.7, top_p=0.8, top_k=20,
+ *   min_p=0.0, presence=1.5, repeat=1.0
+ * Thinking (general tasks):    temp=1.0, top_p=0.95, top_k=20,
+ *   min_p=0.0, presence=1.5, repeat=1.0
  */
+const NON_THINKING_PRESET = {
+  temperature: 0.7,
+  top_p: 0.8,
+  top_k: 20,
+  min_p: 0.0,
+  presence_penalty: 1.5,
+  repetition_penalty: 1.0,
+  max_new_tokens: 1024,
+};
+
+const THINKING_PRESET = {
+  temperature: 1.0,
+  top_p: 0.95,
+  top_k: 20,
+  min_p: 0.0,
+  presence_penalty: 1.5,
+  repetition_penalty: 1.0,
+  max_new_tokens: 2048,
+};
+
 export const DEFAULT_LLM_CONFIG = {
   enableThinking: false, // Qwen3.5-2B defaults to non-thinking mode
+  generation: { ...NON_THINKING_PRESET },
 };
+
+/**
+ * Get the appropriate generation preset for the given thinking mode.
+ * @param {boolean} enableThinking
+ * @returns {Object} Generation parameters
+ */
+export function getGenerationPreset(enableThinking) {
+  return enableThinking ? { ...THINKING_PRESET } : { ...NON_THINKING_PRESET };
+}
 
 /**
  * Default search configuration.
@@ -156,13 +194,24 @@ export function resetSearchConfig() {
 
 /**
  * Update LLM configuration. Merges partial config into existing state.
+ * Supports updating individual generation parameters via `generation` key.
  * @param {Object} updates - Partial LLM config to merge
  */
 export function setLlmConfig(updates) {
   for (const key of ["enableThinking"]) {
     if (updates[key] !== undefined) {
       state.llmConfig[key] = updates[key];
+      // Auto-apply generation preset when thinking mode changes
+      state.llmConfig.generation = {
+        ...getGenerationPreset(state.llmConfig.enableThinking),
+      };
     }
+  }
+  if (updates.generation !== undefined) {
+    state.llmConfig.generation = {
+      ...state.llmConfig.generation,
+      ...updates.generation,
+    };
   }
   subscribers.forEach((fn) => fn(state));
 }
@@ -172,5 +221,16 @@ export function setLlmConfig(updates) {
  */
 export function resetLlmConfig() {
   state.llmConfig = { ...DEFAULT_LLM_CONFIG };
+  subscribers.forEach((fn) => fn(state));
+}
+
+/**
+ * Reset only the generation parameters to the preset for the current thinking mode.
+ * Preserves the current enableThinking setting.
+ */
+export function resetGenerationToPreset() {
+  state.llmConfig.generation = {
+    ...getGenerationPreset(state.llmConfig.enableThinking),
+  };
   subscribers.forEach((fn) => fn(state));
 }

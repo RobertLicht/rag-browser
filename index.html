@@ -111,6 +111,124 @@
                             <span class="toggle-slider"></span>
                         </label>
                     </fieldset>
+
+                    <!-- Generation Parameters -->
+                    <fieldset class="setting-group">
+                        <legend>Generation Parameters</legend>
+                        <p class="setting-description">
+                            Values auto-adjust when switching thinking mode.
+                            Manual overrides are allowed.
+                        </p>
+
+                        <!-- Temperature -->
+                        <div class="threshold-row">
+                            <label for="temperature-slider">Temperature</label>
+                            <input
+                                type="range"
+                                id="temperature-slider"
+                                min="0.1"
+                                max="2.0"
+                                value="1.0"
+                                step="0.05"
+                            />
+                            <span id="temperature-value">1.0</span>
+                        </div>
+
+                        <!-- Top-p -->
+                        <div class="threshold-row">
+                            <label for="top-p-slider">Top-p</label>
+                            <input
+                                type="range"
+                                id="top-p-slider"
+                                min="0.1"
+                                max="1.0"
+                                value="1.0"
+                                step="0.01"
+                            />
+                            <span id="top-p-value">1.0</span>
+                        </div>
+
+                        <!-- Top-k -->
+                        <div class="threshold-row">
+                            <label for="top-k-slider">Top-k</label>
+                            <input
+                                type="range"
+                                id="top-k-slider"
+                                min="1"
+                                max="100"
+                                value="20"
+                                step="1"
+                            />
+                            <span id="top-k-value">20</span>
+                        </div>
+
+                        <!-- Min-p -->
+                        <div class="threshold-row">
+                            <label for="min-p-slider">Min-p</label>
+                            <input
+                                type="range"
+                                id="min-p-slider"
+                                min="0.0"
+                                max="1.0"
+                                value="0.0"
+                                step="0.01"
+                            />
+                            <span id="min-p-value">0.0</span>
+                        </div>
+
+                        <!-- Presence Penalty -->
+                        <div class="threshold-row">
+                            <label for="presence-penalty-slider"
+                                >Presence Penalty</label
+                            >
+                            <input
+                                type="range"
+                                id="presence-penalty-slider"
+                                min="-2.0"
+                                max="2.0"
+                                value="2.0"
+                                step="0.1"
+                            />
+                            <span id="presence-penalty-value">2.0</span>
+                        </div>
+
+                        <!-- Repetition Penalty -->
+                        <div class="threshold-row">
+                            <label for="repetition-penalty-slider"
+                                >Repetition Penalty</label
+                            >
+                            <input
+                                type="range"
+                                id="repetition-penalty-slider"
+                                min="0.1"
+                                max="2.0"
+                                value="1.0"
+                                step="0.05"
+                            />
+                            <span id="repetition-penalty-value">1.0</span>
+                        </div>
+
+                        <!-- Max New Tokens -->
+                        <div class="threshold-row">
+                            <label for="max-new-tokens-slider"
+                                >Max New Tokens</label
+                            >
+                            <input
+                                type="range"
+                                id="max-new-tokens-slider"
+                                min="64"
+                                max="4096"
+                                value="1024"
+                                step="64"
+                            />
+                            <span id="max-new-tokens-value">1024</span>
+                        </div>
+                    </fieldset>
+
+                    <!-- Reset Button -->
+                    <button id="reset-llm-btn" type="button">
+                        Reset to Preset
+                    </button>
                 </details>
 
                 <button id="clear-chat-btn">Clear Chat</button>

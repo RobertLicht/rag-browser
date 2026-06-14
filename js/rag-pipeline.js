@@ -104,10 +104,30 @@ export async function ingestDocument(file, db, progressCallback) {
 // ─── Retrieval & Generation Pipeline ──────────────────────────────────
 
 /**
- * System prompt template for RAG generation.
+ * System prompt template for RAG generation (non-thinking mode).
  * Context and question are injected at runtime.
  */
 const SYSTEM_PROMPT = `You are a helpful assistant. Answer the user's question using ONLY the provided context. If the context does not contain enough information, say so clearly. Cite your sources by referencing the document chunks.
+
+Context:
+{context}
+
+Question: {question}`;
+
+/**
+ * System prompt template for RAG generation (thinking mode).
+ * Instructs Qwen3.5 to keep reasoning brief and focused, avoiding
+ * over-analysis. Context and question are injected at runtime.
+ */
+const SYSTEM_PROMPT_THINKING = `You are a helpful assistant. You are in thinking mode.
+
+IMPORTANT: Keep your reasoning brief and focused. Do NOT overthink.
+- Use <thinking> tags only for concise, direct reasoning
+- Skip tangential exploration — only reason through the core steps needed
+- Avoid restating the question or context
+- If the answer is straightforward, keep thinking minimal
+
+Answer the user's question using ONLY the provided context. If the context does not contain enough information, say so clearly. Cite your sources by referencing the document chunks.
 
 Context:
 {context}
@@ -132,8 +152,9 @@ export async function retrieveAndGenerate(query, db, onToken, onComplete) {
   // Step 1: Embed query (with instruction wrapper)
   const queryEmbedding = await embedQuery(query);
 
-  // Step 2: Get current search configuration from state
-  const searchConfig = getState().searchConfig;
+  // Step 2: Get current configuration from state
+  const { searchConfig, llmConfig } = getState();
+  const enableThinking = llmConfig.enableThinking;
 
   let results;
   if (searchConfig.mode === "hybrid") {
@@ -180,10 +201,13 @@ export async function retrieveAndGenerate(query, db, onToken, onComplete) {
     : "";
 
   // Step 4: Build system prompt with context and question
-  const systemPrompt = SYSTEM_PROMPT.replace(
-    "{context}",
-    contextChunks || "(no relevant context found)",
-  ).replace("{question}", query);
+  // Select prompt based on thinking mode
+  const promptTemplate = enableThinking
+    ? SYSTEM_PROMPT_THINKING
+    : SYSTEM_PROMPT;
+  const systemPrompt = promptTemplate
+    .replace("{context}", contextChunks || "(no relevant context found)")
+    .replace("{question}", query);
 
   // Step 5: Build conversation messages with history
   const recentHistory = getRecentHistory(MAX_HISTORY);

@@ -1054,3 +1054,23 @@ body {
         padding: 1rem;
     }
 }
+
+/* ─── LLM Settings Reset Button ────────────────────────────── */
+
+#reset-llm-btn {
+    margin-top: 0.5rem;
+    padding: 0.4rem 0.6rem;
+    font-size: 0.8rem;
+    width: 100%;
+    background: var(--bg-tertiary);
+    color: var(--text-secondary);
+    border: 1px solid var(--border-color);
+    border-radius: 6px;
+    cursor: pointer;
+    transition: background 0.15s, color 0.15s;
+}
+
+#reset-llm-btn:hover {
+    background: var(--border-color);
+    color: var(--text-primary);
+}
