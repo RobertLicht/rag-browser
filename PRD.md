@@ -531,7 +531,7 @@ The following are explicitly excluded from the MVP but identified as potential f
 
 | Feature                      | Notes                                           |
 |------------------------------|--------------------------------------------------|
-| PDF/DOCX/Markdown ingestion  | Requires additional parsing libraries            |
+| DOCX/Markdown ingestion  | Requires additional parsing libraries            |
 | Web page ingestion           | Requires fetch + HTML parsing                    |
 | Image understanding          | Qwen3.5-2B supports images; could be added later |
 | Voice interaction            | Web Speech API integration                       |

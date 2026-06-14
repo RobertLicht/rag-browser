@@ -20,6 +20,8 @@ export const SUPPORTED_EXTENSIONS = [
   ".odt",
   ".ods",
   ".odp",
+  // PDF
+  ".pdf",
 ];
 
 /**
@@ -38,6 +40,11 @@ const OFFICE_EXTENSIONS = [
 ];
 
 /**
+ * Extensions that require the PDF.js library for parsing.
+ */
+const PDF_EXTENSIONS = [".pdf"];
+
+/**
  * CDN URL for the officeParser browser IIFE bundle.
  * Pinned to version 7.2.0 for stability.
  */
@@ -48,6 +55,15 @@ const OFFICE_PARSER_CDN =
 
 /** @type {Promise<boolean>|null} — Resolves when officeParser is loaded */
 let officeParserLoadPromise = null;
+
+/** @type {Promise<object>|null} — Resolves when PDF.js is loaded */
+let pdfjsLoadPromise = null;
+
+/**
+ * PDF.js version pinned for stability. Uses jsDelivr CDN.
+ */
+const PDFJS_VERSION = "4.9.155";
+const PDFJS_CDN_BASE = `https://cdn.jsdelivr.net/npm/pdfjs-dist@${PDFJS_VERSION}/build`;
 
 /**
  * Load officeParser from CDN as an IIFE script. Returns true when loaded.
@@ -103,6 +119,17 @@ export function needsOfficeParser(filename) {
 }
 
 /**
+ * Check if a file requires the PDF.js library.
+ *
+ * @param {string} filename
+ * @returns {boolean}
+ */
+export function needsPdfJs(filename) {
+  const ext = getExtension(filename);
+  return PDF_EXTENSIONS.includes(ext);
+}
+
+/**
  * Get the file extension including the dot (e.g. ".xlsx").
  *
  * @param {string} filename
@@ -120,7 +147,7 @@ function getExtension(filename) {
  *
  * For .txt and .md files: reads directly with File.text(), optionally
  * stripping Markdown syntax for .md files.
- *
+ * For .pdf files: uses the PDF.js library.
  * For all other supported formats: uses the officeParser library.
  *
  * @param {File} file
@@ -139,6 +166,12 @@ export async function parseFile(file) {
   if (ext === ".md") {
     const raw = await file.text();
     return stripMarkdownSyntax(raw);
+  }
+
+  // PDF — use PDF.js
+  if (PDF_EXTENSIONS.includes(ext)) {
+    const buffer = await file.arrayBuffer();
+    return parsePdf(buffer);
   }
 
   // Everything else — use officeParser
@@ -231,4 +264,69 @@ async function parseWithOfficeParser(buffer, fileType) {
   const config = fileType ? { fileType } : {};
   const ast = await officeParser.parseOffice(new Uint8Array(buffer), config);
   return ast.toText();
+}
+
+// ─── PDF.js Integration ───────────────────────────────────────────────────
+
+/**
+ * Load PDF.js from CDN as an ES module. Returns the pdfjsLib namespace.
+ * Lazy-loaded on first demand; subsequent calls reuse the same promise.
+ *
+ * @returns {Promise<object>} The pdfjsLib module namespace
+ */
+async function loadPdfJs() {
+  if (pdfjsLoadPromise !== null) {
+    return pdfjsLoadPromise;
+  }
+
+  pdfjsLoadPromise = (async () => {
+    try {
+      const pdfjsLib = await import(
+        /* webpackIgnore: true */ `${PDFJS_CDN_BASE}/pdf.min.mjs`
+      );
+      // Configure the worker from the same CDN version
+      pdfjsLib.GlobalWorkerOptions.workerSrc = `${PDFJS_CDN_BASE}/pdf.worker.min.mjs`;
+      return pdfjsLib;
+    } catch (error) {
+      pdfjsLoadPromise = null; // Reset so we can retry
+      throw new Error(
+        `Failed to load PDF.js from CDN (${PDFJS_CDN_BASE}): ${error.message}`,
+      );
+    }
+  })();
+
+  return pdfjsLoadPromise;
+}
+
+/**
+ * Parse a PDF ArrayBuffer and extract its plain text content.
+ * Uses PDF.js to iterate each page and extract text items, joining them
+ * with newlines for readable output.
+ *
+ * @param {ArrayBuffer} buffer - Raw PDF file data
+ * @returns {Promise<string>} Plain text content of the PDF
+ * @throws {Error} If PDF.js fails to load or parsing fails
+ */
+async function parsePdf(buffer) {
+  const pdfjsLib = await loadPdfJs();
+
+  const loadingTask = pdfjsLib.getDocument({
+    data: new Uint8Array(buffer),
+  });
+  const pdf = await loadingTask.promise;
+
+  const pagesText = [];
+
+  for (let i = 1; i <= pdf.numPages; i++) {
+    const page = await pdf.getPage(i);
+    const textContent = await page.getTextContent();
+    // Extract text strings and join them for this page
+    const pageText = textContent.items.map((item) => item.str).join("");
+    if (pageText.trim()) {
+      pagesText.push(pageText);
+    }
+  }
+
+  // Join pages with double newline for readable separation
+  return pagesText.join("\n\n");
 }

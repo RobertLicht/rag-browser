@@ -1,6 +1,6 @@
 # RAG-Browser
 
-A fully client-side, browser-based **Retrieval-Augmented Generation (RAG)** agent. Upload documents (`.txt`, `.md`, `.csv`, `.xls`, `.xlsx`, `.docx`, `.pptx`, `.odt`, `.ods`, `.odp`), embed them locally, and query them conversationally — all without a server, API keys, or cloud infrastructure.
+A fully client-side, browser-based **Retrieval-Augmented Generation (RAG)** agent. Upload documents (`.txt`, `.md`, `.csv`, `.xls`, `.xlsx`, `.docx`, `.pptx`, `.odt`, `.ods`, `.odp`, `.pdf`), embed them locally, and query them conversationally — all without a server, API keys, or cloud infrastructure.
 
 ## Overview
 
@@ -17,7 +17,7 @@ The server serves only static files. **No user data ever leaves your device.**
 
 ```mermaid
 graph TD
-    A[Upload .txt .md .csv .xls .xlsx .docx .pptx .odt .ods .odp] --> B[File Parser]
+    A[Upload .txt .md .csv .xls .xlsx .docx .pptx .odt .ods .odp .pdf] --> B[File Parser]
     B --> C[Chunker]
     C --> D[Embedding Model]
     D --> E[Orama DB]
@@ -29,7 +29,7 @@ graph TD
 
 ## Key Features
 
-- **Multi-Format Ingestion** — Supports `.txt`, `.md`, `.csv`, `.xls`, `.xlsx`, `.docx`, `.pptx`, `.odt`, `.ods`, `.odp` (legacy `.doc`/`.ppt` binary formats are unsupported in-browser)
+- **Multi-Format Ingestion** — Supports `.txt`, `.md`, `.csv`, `.xls`, `.xlsx`, `.docx`, `.pptx`, `.odt`, `.ods`, `.odp`, `.pdf` (legacy `.doc`/`.ppt` binary formats are unsupported in-browser)
 - **100% Client-Side** — No backend, no API calls, no cloud dependencies
 - **Privacy-First** — All processing happens locally; nothing leaves your device
 - **WebGPU Acceleration** — GPU-accelerated inference via ONNX Runtime Web
@@ -50,7 +50,8 @@ graph TD
 | LLM                    | Qwen3.5-2B (ONNX, q4 quantized)                   |
 | Inference Runtime      | Transformers.js v4                                |
 | Vector Database        | Orama v3.1.x                                      |
-| Document Parser        | officeParser 7.2.0 (CDN, lazy-loaded)             |
+| Document Parser        | officeParser 7.2.0 (CDN, lazy-loaded)                  |
+| PDF Parser             | PDF.js 4.9.155 (Mozilla, CDN, lazy-loaded)             |
 | Acceleration           | WebGPU (with WASM fallback)                       |
 | Persistence            | IndexedDB                                         |
 | Offline                | Service Worker + CDN caching                      |
@@ -125,7 +126,7 @@ Then open `http://localhost:8080` in your browser.
 ### Usage
 
 1. **Load Models** — Click "Load Models" to download and initialize the embedding model and LLM
-2. **Upload Documents** — Select files (`.txt`, `.md`, `.csv`, `.xls`, `.xlsx`, `.docx`, `.pptx`, `.odt`, `.ods`, `.odp`) via the file input (supports multiple uploads)
+2. **Upload Documents** — Select files (`.txt`, `.md`, `.csv`, `.xls`, `.xlsx`, `.docx`, `.pptx`, `.odt`, `.ods`, `.odp`, `.pdf`) via the file input (supports multiple uploads)
 3. **Ask Questions** — Type a query in the chat panel and press Send
 4. **Configure Search** — Use the Search Settings panel in the sidebar to adjust BM25/semantic weights, similarity thresholds, and top-N results
 5. **Manage Indexes** — Export your document index as JSON or import an existing index

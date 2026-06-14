@@ -2,7 +2,7 @@
 
 import { chunkText } from "./chunker.js";
 import { embedQuery, embedDocuments, getEmbeddingArrays } from "./embedding.js";
-import { parseFile, needsOfficeParser } from "./fileParser.js";
+import { parseFile, needsOfficeParser, needsPdfJs } from "./fileParser.js";
 import { generateResponse } from "./llm.js";
 import { insertChunks, searchHybrid, searchVector } from "./orama-db.js";
 import { getRecentHistory, getState } from "./state.js";
@@ -11,7 +11,7 @@ import { getRecentHistory, getState } from "./state.js";
 
 /**
  * Ingest a supported document: parse, chunk, embed, and index in Orama.
- * Supports: .txt, .md, .csv, .xls, .xlsx, .docx, .pptx, .odt, .ods, .odp
+ * Supports: .txt, .md, .csv, .xls, .xlsx, .docx, .pptx, .odt, .ods, .odp, .pdf
  *
  * @param {File} file - The uploaded file
  * @param {Object} db - Orama database instance
@@ -33,6 +33,15 @@ export async function ingestDocument(file, db, progressCallback) {
       step: "loading-parser",
       progress: 5,
       message: `Loading parser for ${file.name}...`,
+    });
+  }
+
+  // For PDF files, load PDF.js first
+  if (needsPdfJs(file.name)) {
+    progressCallback({
+      step: "loading-pdf-parser",
+      progress: 5,
+      message: `Loading PDF parser for ${file.name}...`,
     });
   }
 
