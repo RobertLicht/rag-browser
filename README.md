@@ -7,7 +7,7 @@ A fully client-side, browser-based **Retrieval-Augmented Generation (RAG)** agen
 RAG-Browser runs the entire AI pipeline inside your browser:
 
 - **Embedding** — `Qwen3-Embedding-0.6B` converts document chunks to vectors
-- **Vector Search** — [Orama](https://orama.com) provides in-memory vector storage and retrieval
+- **Vector Search** — [Orama](https://orama.com) provides in-memory vector storage and retrieval, with configurable BM25/semantic hybrid search modes
 - **Generation** — `Qwen3.5-2B` produces conversational responses grounded in your documents
 - **Inference Runtime** — [Transformers.js v4](https://huggingface.co/docs/transformers.js) (ONNX on WebGPU / WASM)
 
@@ -45,9 +45,12 @@ The server serves only static files. **No user data ever leaves your device.**
 - **WebGPU Acceleration** — GPU-accelerated inference via ONNX Runtime Web
 - **Offline Support** — Service worker caches static assets for offline use
 - **IndexedDB Persistence** — Document index survives page reloads
-- **Hardware Detection** — Auto-selects precision (`q4` / `q8`) based on device memory
+- **Database Portability** — Export and import document indexes as JSON files
+- **Hybrid Search (BM25 + Semantic)** — Configurable keyword vs. semantic balance with separate similarity thresholds
+- **Search Mode Toggle** — Switch between Hybrid and Vector-only search modes
 - **Streaming Responses** — Token-by-token output for responsive UX
 - **Multi-turn Conversations** — Context-aware dialogue with your documents
+- **Model Lifecycle Control** — Independent load/unload controls for embedding model and LLM to manage memory
 
 ## Technology Stack
 
@@ -67,6 +70,7 @@ The server serves only static files. **No user data ever leaves your device.**
 rag-v2-qwen3.6-27b/
 ├── index.html           # Main application shell
 ├── sw.js                # Service worker (offline caching)
+├── favicon.svg          # Favicon
 ├── css/
 │   └── styles.css       # Application styling
 ├── js/
@@ -78,9 +82,11 @@ rag-v2-qwen3.6-27b/
 │   ├── chunker.js       # Document chunking with overlap strategy
 │   ├── orama-db.js      # Orama vector DB + IndexedDB persistence
 │   ├── rag-pipeline.js  # Ingestion, retrieval & generation pipeline
-│   ├── ui.js            # DOM rendering & streaming message updates
+│   ├── renderer.js      # Token-by-token DOM rendering for streaming messages
+│   ├── ui.js            # DOM rendering & general UI updates
 │   └── utils.js         # Helpers (UUID, token estimation, formatting)
 ├── data/                # Minimal test pages for individual models
+├── debug_data/          # Debug screenshots and diagnostics
 ├── PRD.md               # Product Requirements Document
 └── IMPLEMENTATION_PLAN.md  # Detailed implementation plan
 ```
@@ -96,6 +102,7 @@ rag-v2-qwen3.6-27b/
 | `chunker.js`      | Split text into chunks with paragraph awareness   |
 | `orama-db.js`     | Create DB, insert chunks, vector search, persist  |
 | `rag-pipeline.js` | Orchestrate ingestion → embedding → retrieval     |
+| `renderer.js`     | Stream token-by-token rendering of LLM output    |
 | `ui.js`           | Render chat, progress, streaming, document list   |
 | `app.js`          | Wire everything together; event handlers          |
 | `utils.js`        | Shared utilities                                  |
@@ -125,9 +132,12 @@ Then open `http://localhost:8080` in your browser.
 ### Usage
 
 1. **Load Models** — Click "Load Models" to download and initialize the embedding model and LLM
-2. **Upload Documents** — Select `.txt` files via the file input
+2. **Upload Documents** — Select `.txt` files via the file input (supports multiple uploads)
 3. **Ask Questions** — Type a query in the chat panel and press Send
-4. **Stop Generation** — Click "Stop" to cancel a running response
+4. **Configure Search** — Use the Search Settings panel in the sidebar to adjust BM25/semantic weights, similarity thresholds, and top-N results
+5. **Manage Indexes** — Export your document index as JSON or import an existing index
+6. **Control Memory** — Unload individual models (embedding or LLM) independently via sidebar controls
+7. **Stop Generation** — Click "Stop" to cancel a running response
 
 ## System Requirements
 
@@ -143,6 +153,7 @@ Then open `http://localhost:8080` in your browser.
 - No data is transmitted to any external server
 - Document embeddings and conversation history are stored only in your browser's IndexedDB
 - Models are loaded from Hugging Face via the jsDelivr CDN
+- Database export/import allows local backups without any network transfer
 
 ## Development
 
