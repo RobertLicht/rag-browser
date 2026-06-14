@@ -12,6 +12,16 @@ import { generateUUID } from "./utils.js";
 /**
  * Default search configuration.
  */
+/**
+ * Default LLM configuration.
+ */
+export const DEFAULT_LLM_CONFIG = {
+  enableThinking: false, // Qwen3.5-2B defaults to non-thinking mode
+};
+
+/**
+ * Default search configuration.
+ */
 export const DEFAULT_SEARCH_CONFIG = {
   mode: "hybrid", // 'hybrid' | 'vector'
   hybridWeights: {
@@ -38,6 +48,7 @@ let state = {
   index: { totalChunks: 0, totalDocuments: 0, embeddingDimension: 1024 },
   conversation: [],
   searchConfig: { ...DEFAULT_SEARCH_CONFIG },
+  llmConfig: { ...DEFAULT_LLM_CONFIG },
 };
 
 const subscribers = [];
@@ -140,5 +151,26 @@ export function setSearchConfig(updates) {
  */
 export function resetSearchConfig() {
   state.searchConfig = { ...DEFAULT_SEARCH_CONFIG };
+  subscribers.forEach((fn) => fn(state));
+}
+
+/**
+ * Update LLM configuration. Merges partial config into existing state.
+ * @param {Object} updates - Partial LLM config to merge
+ */
+export function setLlmConfig(updates) {
+  for (const key of ["enableThinking"]) {
+    if (updates[key] !== undefined) {
+      state.llmConfig[key] = updates[key];
+    }
+  }
+  subscribers.forEach((fn) => fn(state));
+}
+
+/**
+ * Reset LLM configuration to defaults.
+ */
+export function resetLlmConfig() {
+  state.llmConfig = { ...DEFAULT_LLM_CONFIG };
   subscribers.forEach((fn) => fn(state));
 }

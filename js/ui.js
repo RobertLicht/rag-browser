@@ -2,7 +2,13 @@
 
 import { generateUUID } from "./utils.js";
 import { renderMarkdown, renderLaTeX } from "./renderer.js";
-import { setSearchConfig, resetSearchConfig, getState } from "./state.js";
+import {
+  setSearchConfig,
+  resetSearchConfig,
+  getState,
+  setLlmConfig,
+  resetLlmConfig,
+} from "./state.js";
 
 /**
  * Initialize all UI event listeners and render the initial state.
@@ -109,6 +115,9 @@ export function initUI(callbacks) {
 
   // Initialize search settings panel
   initSearchSettings({ onReset: callbacks.onResetSearchConfig });
+
+  // Initialize LLM settings panel
+  initLlmSettings({ onReset: callbacks.onResetLlmConfig });
 
   return { sendBtn, stopBtn, queryInput };
 }
@@ -714,4 +723,39 @@ export function initSearchSettings({ onReset }) {
 
   // Initial UI sync from state
   syncSettingsUI();
+}
+
+/**
+ * Initialize LLM settings panel controls.
+ * Wires up the thinking mode toggle to update LLM configuration.
+ *
+ * @param {Object} options - Options object
+ * @param {Function} options.onReset - Callback when reset is triggered
+ */
+export function initLlmSettings({ onReset }) {
+  // DOM references
+  const toggle = document.getElementById("thinking-toggle");
+
+  // ─── Thinking Mode Toggle ───────────────────────────────
+  if (toggle) {
+    toggle.addEventListener("change", (e) => {
+      setLlmConfig({ enableThinking: e.target.checked });
+    });
+  }
+
+  // Initial UI sync from state
+  syncLlmSettingsUI();
+}
+
+/**
+ * Sync LLM settings UI controls to match current state.
+ */
+export function syncLlmSettingsUI() {
+  const { llmConfig } = getState();
+
+  // Thinking toggle
+  const toggle = document.getElementById("thinking-toggle");
+  if (toggle) {
+    toggle.checked = llmConfig.enableThinking;
+  }
 }

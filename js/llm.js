@@ -6,6 +6,8 @@ import {
   InterruptableStoppingCriteria,
 } from "https://cdn.jsdelivr.net/npm/@huggingface/transformers@4.2.0/+esm";
 
+import { getState } from "./state.js";
+
 let processor = null;
 let model = null;
 let currentStoppingCriteria = null;
@@ -80,8 +82,12 @@ export async function generateResponse(messages, onToken, onComplete) {
   }));
 
   // Apply the model's chat template (handles special tokens, formatting, etc.)
+  // Pass enable_thinking from LLM config to control reasoning mode.
+  // Qwen3.5 outputs <thinking>...</thinking> blocks when enabled.
+  const { llmConfig } = getState();
   const text = processor.apply_chat_template(formattedMessages, {
     add_generation_prompt: true,
+    enable_thinking: llmConfig.enableThinking,
   });
 
   // Tokenize the formatted text

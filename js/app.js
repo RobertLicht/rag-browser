@@ -40,6 +40,7 @@ import {
   setFileInputEnabled,
   setUnloadButtonStates,
   syncSettingsUI,
+  syncLlmSettingsUI,
 } from "./ui.js";
 import { formatBytes } from "./utils.js";
 
@@ -99,6 +100,8 @@ export async function init() {
     onClearChat: handleClearChat,
     onExportDB: handleExportDB,
     onImportDB: handleImportDB,
+    onResetSearchConfig: handleResetSettings,
+    onResetLlmConfig: handleResetLlmSettings,
   });
 
   // Subscribe to state changes for UI updates
@@ -604,6 +607,14 @@ function resetUIButtons() {
 function handleResetSettings() {
   syncSettingsUI();
   showNotification("Search settings reset to defaults", "info");
+}
+
+/**
+ * Handle LLM settings reset.
+ */
+function handleResetLlmSettings() {
+  syncLlmSettingsUI();
+  showNotification("LLM settings reset to defaults", "info");
 }
 
 // Bootstrap

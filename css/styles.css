@@ -455,6 +455,76 @@ body {
     width: 100%;
 }
 
+/* ─── Setting Description ──────────────────────────────────────── */
+
+.setting-description {
+    font-size: 0.75rem;
+    color: var(--text-muted);
+    margin-bottom: 0.5rem;
+    line-height: 1.4;
+}
+
+/* ─── Toggle Switch ───────────────────────────────────────────── */
+
+.toggle-switch {
+    display: inline-flex;
+    align-items: center;
+    cursor: pointer;
+    user-select: none;
+}
+
+.toggle-switch input[type="checkbox"] {
+    position: absolute;
+    opacity: 0;
+    width: 0;
+    height: 0;
+}
+
+.toggle-slider {
+    display: inline-block;
+    width: 40px;
+    height: 22px;
+    background: var(--bg-tertiary);
+    border: 1px solid var(--border-color);
+    border-radius: 11px;
+    position: relative;
+    transition:
+        background 0.2s,
+        border-color 0.2s;
+}
+
+.toggle-slider::after {
+    content: "";
+    position: absolute;
+    top: 2px;
+    left: 2px;
+    width: 16px;
+    height: 16px;
+    background: var(--text-secondary);
+    border-radius: 50%;
+    transition:
+        transform 0.2s,
+        background 0.2s;
+}
+
+.toggle-switch input[type="checkbox"]:checked + .toggle-slider {
+    background: var(--accent);
+    border-color: var(--accent);
+}
+
+.toggle-switch input[type="checkbox"]:checked + .toggle-slider::after {
+    transform: translateX(18px);
+    background: white;
+}
+
+.toggle-switch:hover .toggle-slider {
+    border-color: var(--text-muted);
+}
+
+.toggle-switch input[type="checkbox"]:checked:hover + .toggle-slider {
+    border-color: var(--accent-hover);
+}
+
 /* ─── Chat Panel ───────────────────────────────────────────────── */
 
 #chat-panel {

@@ -38,6 +38,7 @@ graph TD
 - **Database Portability** — Export and import document indexes as JSON files
 - **Hybrid Search (BM25 + Semantic)** — Configurable keyword vs. semantic balance with separate similarity thresholds
 - **Search Mode Toggle** — Switch between Hybrid and Vector-only search modes
+- **Thinking Mode Toggle** — Enable or disable Qwen3.5's reasoning mode; thinking output renders as collapsible blocks
 - **Streaming Responses** — Token-by-token output for responsive UX
 - **Multi-turn Conversations** — Context-aware dialogue with your documents
 - **Model Lifecycle Control** — Independent load/unload controls for embedding model and LLM to manage memory
@@ -127,11 +128,12 @@ Then open `http://localhost:8080` in your browser.
 
 1. **Load Models** — Click "Load Models" to download and initialize the embedding model and LLM
 2. **Upload Documents** — Select files (`.txt`, `.md`, `.csv`, `.xls`, `.xlsx`, `.docx`, `.pptx`, `.odt`, `.ods`, `.odp`, `.pdf`) via the file input (supports multiple uploads)
-3. **Ask Questions** — Type a query in the chat panel and press Send
 4. **Configure Search** — Use the Search Settings panel in the sidebar to adjust BM25/semantic weights, similarity thresholds, and top-N results
-5. **Manage Indexes** — Export your document index as JSON or import an existing index
-6. **Control Memory** — Unload individual models (embedding or LLM) independently via sidebar controls
-7. **Stop Generation** — Click "Stop" to cancel a running response
+5. **Toggle Thinking Mode** — Use the LLM Settings panel to enable reasoning mode. When on, the model outputs a collapsible thinking block before its answer
+6. **Ask Questions** — Type a query in the chat panel and press Send
+6. **Manage Indexes** — Export your document index as JSON or import an existing index
+7. **Control Memory** — Unload individual models (embedding or LLM) independently via sidebar controls
+8. **Stop Generation** — Click "Stop" to cancel a running response
 
 ## System Requirements
 

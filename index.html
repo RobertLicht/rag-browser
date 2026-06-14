@@ -94,6 +94,25 @@
                     />
                 </div>
 
+                <!-- LLM Settings Panel -->
+                <details id="llm-settings" class="settings-panel">
+                    <summary>LLM Settings</summary>
+
+                    <!-- Thinking Mode Toggle -->
+                    <fieldset class="setting-group">
+                        <label for="thinking-toggle">Enable Thinking</label>
+                        <p class="setting-description">
+                            Model reasons through its response before answering.
+                            Useful for complex problems but slower and uses more
+                            tokens.
+                        </p>
+                        <label class="toggle-switch">
+                            <input type="checkbox" id="thinking-toggle" />
+                            <span class="toggle-slider"></span>
+                        </label>
+                    </fieldset>
+                </details>
+
                 <button id="clear-chat-btn">Clear Chat</button>
 
                 <!-- Search Settings Panel -->
