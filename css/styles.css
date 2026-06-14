@@ -250,6 +250,37 @@ body {
     margin-top: auto;
 }
 
+/* ─── Database Actions Group ───────────────────────────────────── */
+
+#db-actions {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0.4rem;
+    padding: 0.5rem 0;
+}
+
+#export-db-btn {
+    color: var(--accent);
+    border-color: var(--accent);
+    background: transparent;
+}
+
+#export-db-btn:hover:not(:disabled) {
+    background: var(--accent);
+    color: white;
+}
+
+#import-db-btn {
+    color: var(--success);
+    border-color: var(--success);
+    background: transparent;
+}
+
+#import-db-btn:hover:not(:disabled) {
+    background: var(--success);
+    color: white;
+}
+
 /* ─── Search Settings Panel ────────────────────────────────────── */
 
 #search-settings {

@@ -208,3 +208,129 @@ export async function restoreIndex() {
     return null;
   }
 }
+
+// ─── Export / Import helpers ────────────────────────────────────────
+
+const EXPORT_FORMAT = "rag-browser-orama";
+const EXPORT_VERSION = 1;
+const EXPECTED_DIMENSION = 1024;
+
+/**
+ * Serialize the Orama database into a versioned JSON envelope suitable for
+ * file export. The envelope adds metadata so import-side validation can verify
+ * compatibility before accepting the data.
+ *
+ * @param {Object} db - Orama database instance
+ * @returns {Blob} JSON blob ready for download
+ */
+export function serializeDB(db) {
+  const envelope = {
+    format: EXPORT_FORMAT,
+    version: EXPORT_VERSION,
+    exportedAt: new Date().toISOString(),
+    embeddingDimension: EXPECTED_DIMENSION,
+    documentCount: db.count,
+    database: db,
+  };
+
+  return new Blob([JSON.stringify(envelope)], {
+    type: "application/json",
+  });
+}
+
+/**
+ * Generate a human-friendly filename for an exported database.
+ * Pattern: rag-browser-db-YYYYMMDD-HHmmss-Nchunks.json
+ *
+ * @param {number} documentCount - Number of chunks in the database
+ * @returns {string}
+ */
+export function generateExportFilename(documentCount) {
+  const now = new Date();
+  const pad = (n, w = 2) => String(n).padStart(w, "0");
+  const ts = `${now.getFullYear()}${pad(now.getMonth() + 1)}${pad(now.getDate())}-${pad(now.getHours())}${pad(now.getMinutes())}${pad(now.getSeconds())}`;
+  return `rag-browser-db-${ts}-${documentCount}chunks.json`;
+}
+
+/**
+ * Validate an imported database file. Accepts both the versioned envelope
+ * format and raw Orama JSON objects (backward compatibility).
+ *
+ * @param {Object} data - Parsed JSON from the uploaded file
+ * @returns {{ valid: boolean, database?: Object, metadata?: Object, error?: string }}
+ */
+export function validateImport(data) {
+  // Allow null/empty
+  if (!data || typeof data !== "object") {
+    return { valid: false, error: "File does not contain valid JSON." };
+  }
+
+  let database = null;
+  let metadata = {};
+
+  // Detect format: envelope or raw Orama object
+  if (data.format === EXPORT_FORMAT && data.database) {
+    // Versioned envelope
+    database = data.database;
+    metadata = {
+      format: data.format,
+      version: data.version,
+      exportedAt: data.exportedAt,
+      embeddingDimension: data.embeddingDimension,
+      documentCount: data.documentCount,
+    };
+  } else if (data.schema && data.docs) {
+    // Raw Orama object (backward compatibility)
+    database = data;
+    metadata = { format: "raw-orama" };
+  } else {
+    return {
+      valid: false,
+      error:
+        "File is not a valid RAG-Browser database export. Expected a JSON file with 'format' and 'database' keys, or a raw Orama database.",
+    };
+  }
+
+  // Validate schema structure
+  const schema = database.schema;
+  if (!schema || typeof schema !== "object") {
+    return { valid: false, error: "Database is missing a valid schema." };
+  }
+
+  if (schema.content !== "string") {
+    return {
+      valid: false,
+      error: 'Schema mismatch: expected content field of type "string".',
+    };
+  }
+
+  // Validate embedding dimension
+  const embType = schema.embedding;
+  const dimMatch = String(embType).match(/^vector\[(\d+)\]$/);
+  if (!dimMatch) {
+    return {
+      valid: false,
+      error:
+        'Schema mismatch: expected an embedding field like "vector[1024]".',
+    };
+  }
+
+  const actualDim = parseInt(dimMatch[1], 10);
+  if (actualDim !== EXPECTED_DIMENSION) {
+    return {
+      valid: false,
+      error: `Embedding dimension mismatch. Expected ${EXPECTED_DIMENSION}, got ${actualDim}. This database was likely created with a different embedding model.`,
+    };
+  }
+
+  // Validate metadata sub-schema
+  const metaSchema = schema.metadata;
+  if (!metaSchema || typeof metaSchema !== "object") {
+    return {
+      valid: false,
+      error: 'Schema mismatch: expected a "metadata" nested field.',
+    };
+  }
+
+  return { valid: true, database, metadata };
+}

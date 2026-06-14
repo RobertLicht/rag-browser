@@ -72,6 +72,19 @@
                     Unload Embedding Model
                 </button>
                 <button id="unload-llm-btn" disabled>Unload LLM</button>
+
+                <!-- Database Import / Export -->
+                <div id="db-actions">
+                    <button id="export-db-btn">Export Database</button>
+                    <button id="import-db-btn">Import Database</button>
+                    <input
+                        type="file"
+                        id="import-db-input"
+                        accept=".json"
+                        style="display: none"
+                    />
+                </div>
+
                 <button id="clear-chat-btn">Clear Chat</button>
 
                 <!-- Search Settings Panel -->

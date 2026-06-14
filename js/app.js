@@ -19,6 +19,9 @@ import {
   getDocumentCount,
   persistIndex,
   restoreIndex,
+  serializeDB,
+  validateImport,
+  generateExportFilename,
 } from "./orama-db.js";
 import { ingestDocument, retrieveAndGenerate } from "./rag-pipeline.js";
 import {
@@ -100,6 +103,8 @@ export async function init() {
     onUnloadEmbedding: handleUnloadEmbedding,
     onUnloadLLM: handleUnloadLLM,
     onClearChat: handleClearChat,
+    onExportDB: handleExportDB,
+    onImportDB: handleImportDB,
   });
 
   // Subscribe to state changes for UI updates
@@ -454,6 +459,120 @@ function handleClearChat() {
   clearConversation();
   document.getElementById("conversation").innerHTML = "";
   showNotification("Chat cleared", "info");
+}
+
+/**
+ * Handle database export: serialize the Orama DB to a versioned JSON file
+ * and trigger a browser download.
+ */
+function handleExportDB() {
+  if (!db || getDocumentCount(db) === 0) {
+    showNotification(
+      "No data to export. Upload and index documents first.",
+      "warning",
+    );
+    return;
+  }
+
+  try {
+    const count = getDocumentCount(db);
+    const blob = serializeDB(db);
+    const filename = generateExportFilename(count);
+
+    // Trigger download via temporary anchor element
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = filename;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+
+    showNotification(`Exported ${count} chunks to ${filename}`, "info");
+  } catch (error) {
+    console.error("Export failed:", error);
+    showNotification(`Export failed: ${error.message}`, "error");
+  }
+}
+
+/**
+ * Handle database import: read a JSON file, validate it, and replace
+ * the current Orama database if the user confirms.
+ */
+async function handleImportDB(file) {
+  console.log("Importing database from:", file.name);
+
+  if (!file.name.endsWith(".json")) {
+    showNotification(
+      "Invalid file type. Please select a .json export file.",
+      "error",
+    );
+    return;
+  }
+
+  try {
+    const text = await file.text();
+    const parsed = JSON.parse(text);
+
+    // Validate the imported data
+    const result = validateImport(parsed);
+    if (!result.valid) {
+      showNotification(`Import validation failed: ${result.error}`, "error");
+      return;
+    }
+
+    const { database, metadata } = result;
+    const importCount = database.count || 0;
+
+    // Check current DB size and warn about data loss
+    const currentCount = db ? getDocumentCount(db) : 0;
+    if (currentCount > 0) {
+      const confirmed = confirm(
+        `This will REPLACE your current database (${currentCount} chunks) with the imported one (${importCount} chunks).\n\nContinue?`,
+      );
+      if (!confirmed) {
+        showNotification("Import cancelled.", "info");
+        return;
+      }
+    }
+
+    // Replace database
+    db = database;
+    ingestedDocuments.length = 0; // Clear old document list
+
+    // Update state and UI
+    setState({
+      index: {
+        totalChunks: getDocumentCount(db),
+        totalDocuments: 0,
+        embeddingDimension: 1024,
+      },
+    });
+
+    updateDocumentList([
+      {
+        name: `Imported (${metadata.exportedAt ? new Date(metadata.exportedAt).toLocaleString() : file.name})`,
+        chunks: importCount,
+        size: 0,
+      },
+    ]);
+
+    // Persist to IndexedDB
+    await persistIndex(db);
+
+    showNotification(
+      `Imported database with ${importCount} chunks from ${file.name}`,
+      "info",
+    );
+  } catch (error) {
+    console.error("Import failed:", error);
+    if (error instanceof SyntaxError) {
+      showNotification("Import failed: file is not valid JSON.", "error");
+    } else {
+      showNotification(`Import failed: ${error.message}`, "error");
+    }
+  }
 }
 
 /**

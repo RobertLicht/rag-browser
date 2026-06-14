@@ -81,6 +81,32 @@ export function initUI(callbacks) {
     }
   });
 
+  // Export database
+  const exportDbBtn = document.getElementById("export-db-btn");
+  if (exportDbBtn) {
+    exportDbBtn.addEventListener("click", () => {
+      if (callbacks.onExportDB) {
+        callbacks.onExportDB();
+      }
+    });
+  }
+
+  // Import database — visible button triggers hidden file input
+  const importDbBtn = document.getElementById("import-db-btn");
+  const importDbInput = document.getElementById("import-db-input");
+  if (importDbBtn && importDbInput) {
+    importDbBtn.addEventListener("click", () => {
+      importDbInput.click();
+    });
+    importDbInput.addEventListener("change", (e) => {
+      if (e.target.files.length > 0 && callbacks.onImportDB) {
+        callbacks.onImportDB(e.target.files[0]);
+        // Reset so re-importing same file triggers change
+        e.target.value = "";
+      }
+    });
+  }
+
   // Initialize search settings panel
   initSearchSettings({ onReset: callbacks.onResetSearchConfig });
 
