@@ -64,7 +64,16 @@
             <!-- Sidebar: Document Management -->
             <aside id="sidebar">
                 <h2>Documents</h2>
-                <input type="file" id="file-input" accept=".txt" multiple />
+                <input
+                    type="file"
+                    id="file-input"
+                    accept=".txt,.md,.csv,.xls,.xlsx,.docx,.pptx,.odt,.ods,.odp"
+                    multiple
+                />
+                <div id="format-hint">
+                    .txt · .md · .csv · .xls · .xlsx · .docx · .pptx · .odt ·
+                    .ods · .odp
+                </div>
                 <div id="upload-progress"></div>
                 <ul id="document-list"></ul>
                 <button id="load-models-btn">Load Models</button>

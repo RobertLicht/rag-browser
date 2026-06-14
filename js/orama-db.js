@@ -184,7 +184,13 @@ export async function persistIndex(db) {
 
 /**
  * Restore the Orama database from IndexedDB.
- * @returns {Promise<Object|null>} The deserialized Orama database, or null if not found
+ *
+ * After deserializing the JSON, we create a fresh Orama database and
+ * re-insert all documents. This is necessary because a deserialized JSON
+ * object lacks the internal Orama methods (e.g. validateSchema) that
+ * create() attaches, which would cause insertMultiple() to fail.
+ *
+ * @returns {Promise<Object>} The restored Orama database with all methods
  */
 export async function restoreIndex() {
   try {
@@ -197,15 +203,27 @@ export async function restoreIndex() {
       req.onsuccess = async () => {
         if (req.result && req.result.data) {
           const text = await req.result.data.text();
-          resolve(JSON.parse(text));
+          const raw = JSON.parse(text);
+
+          // Extract documents from the raw JSON (schema + docs array)
+          const docs = raw.docs || [];
+
+          // Create a fresh database with the same schema and re-insert
+          // documents so the database has all its internal methods
+          const db = createDB();
+          if (docs.length > 0) {
+            await insertMultiple(db, docs);
+          }
+
+          resolve(db);
         } else {
-          resolve(null);
+          resolve(createDB());
         }
       };
-      req.onerror = () => resolve(null);
+      req.onerror = () => resolve(createDB());
     });
   } catch {
-    return null;
+    return createDB();
   }
 }
 

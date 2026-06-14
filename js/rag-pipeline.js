@@ -2,6 +2,7 @@
 
 import { chunkText } from "./chunker.js";
 import { embedQuery, embedDocuments, getEmbeddingArrays } from "./embedding.js";
+import { parseFile, needsOfficeParser } from "./fileParser.js";
 import { generateResponse } from "./llm.js";
 import { insertChunks, searchHybrid, searchVector } from "./orama-db.js";
 import { getRecentHistory, getState } from "./state.js";
@@ -9,22 +10,33 @@ import { getRecentHistory, getState } from "./state.js";
 // ─── Ingestion Pipeline ───────────────────────────────────────────────
 
 /**
- * Ingest a .txt file: read, chunk, embed, and index in Orama.
+ * Ingest a supported document: parse, chunk, embed, and index in Orama.
+ * Supports: .txt, .md, .csv, .xls, .xlsx, .docx, .pptx, .odt, .ods, .odp
  *
- * @param {File} file - The uploaded .txt file
+ * @param {File} file - The uploaded file
  * @param {Object} db - Orama database instance
  * @param {Function} progressCallback - Called with { step, progress, message } at each stage
  * @returns {Promise<{ chunks: number, fileSize: number }>}
  */
 export async function ingestDocument(file, db, progressCallback) {
-  // Step 1: Read file
+  // Step 1: Read/parse file
   progressCallback({
     step: "reading",
     progress: 0,
     message: `Reading ${file.name}...`,
   });
-  const text = await file.text();
   const fileSize = file.size;
+
+  // For office files (docx, xlsx, etc.), load parser first
+  if (needsOfficeParser(file.name)) {
+    progressCallback({
+      step: "loading-parser",
+      progress: 5,
+      message: `Loading parser for ${file.name}...`,
+    });
+  }
+
+  const text = await parseFile(file);
 
   // Step 2: Chunk text
   progressCallback({

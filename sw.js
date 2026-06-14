@@ -1,6 +1,6 @@
 // sw.js — Service Worker for offline caching of static assets
 
-const CACHE_NAME = "rag-browser-v1";
+const CACHE_NAME = "rag-browser-v2";
 const ASSETS = [
   "/",
   "/index.html",
@@ -13,14 +13,22 @@ const ASSETS = [
   "/js/chunker.js",
   "/js/orama-db.js",
   "/js/rag-pipeline.js",
+  "/js/fileParser.js",
   "/js/ui.js",
   "/js/utils.js",
 ];
 
-// Install event: cache static assets
+// CDN assets to cache for offline use
+const CDN_ASSETS = [
+  "https://cdn.jsdelivr.net/npm/officeparser@7.2.0/dist/officeparser.browser.iife.js",
+];
+
+// Install event: cache static assets and CDN libraries
 self.addEventListener("install", (event) => {
   event.waitUntil(
-    caches.open(CACHE_NAME).then((cache) => cache.addAll(ASSETS)),
+    caches
+      .open(CACHE_NAME)
+      .then((cache) => cache.addAll([...ASSETS, ...CDN_ASSETS])),
   );
   // Activate immediately without waiting for tabs to close
   self.skipWaiting();
@@ -44,13 +52,13 @@ self.addEventListener("activate", (event) => {
 });
 
 // Fetch event: serve same-origin GET requests from cache, fall back to network.
-// Cross-origin requests (e.g., HuggingFace CDN) are passed through naturally
-// by NOT calling respondWith(), so the browser handles them directly.
+// Also cache cross-origin CDN assets (e.g., jsDelivr) on first network fetch.
 self.addEventListener("fetch", (event) => {
-  // Only intercept same-origin GET requests. Everything else bypasses the SW.
+  // Only intercept GET requests for same-origin or known CDN URLs
   if (
     event.request.method !== "GET" ||
-    !event.request.url.startsWith(self.location.origin)
+    (!event.request.url.startsWith(self.location.origin) &&
+      !CDN_ASSETS.includes(event.request.url))
   ) {
     return;
   }
@@ -59,7 +67,25 @@ self.addEventListener("fetch", (event) => {
     caches
       .match(event.request)
       .then((response) => {
-        return response || fetch(event.request);
+        if (response) {
+          return response; // Serve from cache
+        }
+        // Fetch from network and cache the response for future requests
+        return fetch(event.request).then((networkResponse) => {
+          // Cache same-origin responses (type: "basic") and known CDN assets
+          const shouldCache =
+            networkResponse.ok &&
+            (networkResponse.type === "basic" ||
+              CDN_ASSETS.includes(event.request.url));
+
+          if (shouldCache) {
+            const responseClone = networkResponse.clone();
+            caches.open(CACHE_NAME).then((cache) => {
+              cache.put(event.request, responseClone);
+            });
+          }
+          return networkResponse;
+        });
       })
       .catch(() => {
         // Never let the promise reject — that would cause a network error.

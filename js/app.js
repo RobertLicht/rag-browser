@@ -24,6 +24,7 @@ import {
   generateExportFilename,
 } from "./orama-db.js";
 import { ingestDocument, retrieveAndGenerate } from "./rag-pipeline.js";
+import { isSupportedFormat, SUPPORTED_EXTENSIONS } from "./fileParser.js";
 import {
   initUI,
   updateStatusBar,
@@ -63,16 +64,9 @@ export async function init() {
   const hardware = await detectHardware();
   setState({ hardware });
 
-  // Try to restore persisted index from IndexedDB
-  const restoredDb = await restoreIndex();
-  if (restoredDb) {
-    db = restoredDb;
-    console.log(
-      `Restored index from IndexedDB: ${getDocumentCount(db)} documents`,
-    );
-  } else {
-    db = createDB();
-  }
+  // Restore persisted index from IndexedDB (always returns a database)
+  db = await restoreIndex();
+  console.log(`Index loaded: ${getDocumentCount(db)} documents`);
 
   // Update index stats in state
   setState({
@@ -84,7 +78,7 @@ export async function init() {
   });
 
   // Restore document list if we have a persisted index
-  if (restoredDb && getDocumentCount(db) > 0) {
+  if (getDocumentCount(db) > 0) {
     updateDocumentList([
       {
         name: "Restored from IndexedDB",
@@ -131,11 +125,19 @@ export async function init() {
  */
 async function handleFileUpload(files) {
   for (const file of files) {
-    if (!file.name.endsWith(".txt")) {
-      showNotification(
-        `Skipping ${file.name}: only .txt files supported`,
-        "warning",
-      );
+    if (!isSupportedFormat(file.name)) {
+      const ext = file.name.includes(".")
+        ? file.name.slice(file.name.lastIndexOf(".")).toLowerCase()
+        : "";
+      let message;
+      if (ext === ".doc") {
+        message = `Skipping ${file.name}: .doc (binary) is unsupported in-browser. Please convert to .docx or .txt first.`;
+      } else if (ext === ".ppt") {
+        message = `Skipping ${file.name}: .ppt (binary) is unsupported in-browser. Please convert to .pptx or .txt first.`;
+      } else {
+        message = `Skipping ${file.name}: unsupported format. Supported: ${SUPPORTED_EXTENSIONS.join(", ")}`;
+      }
+      showNotification(message, "warning");
       continue;
     }
 

@@ -1,6 +1,6 @@
 # RAG-Browser
 
-A fully client-side, browser-based **Retrieval-Augmented Generation (RAG)** agent. Upload `.txt` documents, embed them locally, and query them conversationally — all without a server, API keys, or cloud infrastructure.
+A fully client-side, browser-based **Retrieval-Augmented Generation (RAG)** agent. Upload documents (`.txt`, `.md`, `.csv`, `.xls`, `.xlsx`, `.docx`, `.pptx`, `.odt`, `.ods`, `.odp`), embed them locally, and query them conversationally — all without a server, API keys, or cloud infrastructure.
 
 ## Overview
 
@@ -15,31 +15,21 @@ The server serves only static files. **No user data ever leaves your device.**
 
 ## Architecture
 
-```
-┌──────────────────────────────────────────────────────────┐
-│                      Browser (Client)                     │
-│                                                          │
-│  ┌──────────┐  ┌───────────┐  ┌──────────┐  ┌────────┐ │
-│  │  Upload   │→│  Chunker   │→│ Embedding │→│ Orama  │ │
-│  │  .txt     │  │  (split)  │  │  Model   │  │  DB    │ │
-│  └──────────┘  └───────────┘  └──────────┘  └───┬────┘ │
-│                                                   │     │
-│  ┌──────────┐  ┌───────────┐  ┌──────────┐      │     │
-│  │  Query    │→│ Embedding  │→│ Vector    │←─────┘     │
-│  │  Input    │  │  (query)  │  │ Search   │            │
-│  └──────────┘  └───────────┘  └─────┬────┘            │
-│                                     │                  │
-│                              ┌──────▼──────┐           │
-│                              │   LLM       │           │
-│                              │  (Qwen3.5)  │           │
-│                              └─────────────┘           │
-│                                                         │
-│  Runtime: Transformers.js v4  |  Acceleration: WebGPU  │
-└──────────────────────────────────────────────────────────┘
+```mermaid
+graph TD
+    A[Upload .txt .md .csv .xls .xlsx .docx .pptx .odt .ods .odp] --> B[File Parser]
+    B --> C[Chunker]
+    C --> D[Embedding Model]
+    D --> E[Orama DB]
+    F[Query Input] --> G[Embedding Query]
+    G --> E
+    E --> H[LLM Qwen3.5]
+    H --> I[Streaming Response]
 ```
 
 ## Key Features
 
+- **Multi-Format Ingestion** — Supports `.txt`, `.md`, `.csv`, `.xls`, `.xlsx`, `.docx`, `.pptx`, `.odt`, `.ods`, `.odp` (legacy `.doc`/`.ppt` binary formats are unsupported in-browser)
 - **100% Client-Side** — No backend, no API calls, no cloud dependencies
 - **Privacy-First** — All processing happens locally; nothing leaves your device
 - **WebGPU Acceleration** — GPU-accelerated inference via ONNX Runtime Web
@@ -54,15 +44,16 @@ The server serves only static files. **No user data ever leaves your device.**
 
 ## Technology Stack
 
-| Component              | Technology                              |
-|------------------------|-----------------------------------------|
-| Embedding Model        | Qwen3-Embedding-0.6B (ONNX)             |
-| LLM                    | Qwen3.5-2B (ONNX, q4 quantized)         |
-| Inference Runtime      | Transformers.js v4                      |
-| Vector Database        | Orama v3.1.x                            |
-| Acceleration           | WebGPU (with WASM fallback)             |
-| Persistence            | IndexedDB                               |
-| Offline                | Service Worker                          |
+| Component              | Technology                                       |
+|------------------------|---------------------------------------------------|
+| Embedding Model        | Qwen3-Embedding-0.6B (ONNX)                       |
+| LLM                    | Qwen3.5-2B (ONNX, q4 quantized)                   |
+| Inference Runtime      | Transformers.js v4                                |
+| Vector Database        | Orama v3.1.x                                      |
+| Document Parser        | officeParser 7.2.0 (CDN, lazy-loaded)             |
+| Acceleration           | WebGPU (with WASM fallback)                       |
+| Persistence            | IndexedDB                                         |
+| Offline                | Service Worker + CDN caching                      |
 
 ## Project Structure
 
@@ -71,24 +62,25 @@ rag-v2-qwen3.6-27b/
 ├── index.html           # Main application shell
 ├── sw.js                # Service worker (offline caching)
 ├── favicon.svg          # Favicon
-├── css/
-│   └── styles.css       # Application styling
-├── js/
-│   ├── app.js           # Application entry point & orchestration
-│   ├── hardware.js      # WebGPU detection & hardware capabilities
-│   ├── state.js         # Centralized application state (pub/sub)
-│   ├── embedding.js     # Embedding model loading & inference
-│   ├── llm.js           # LLM loading, generation & streaming
-│   ├── chunker.js       # Document chunking with overlap strategy
-│   ├── orama-db.js      # Orama vector DB + IndexedDB persistence
-│   ├── rag-pipeline.js  # Ingestion, retrieval & generation pipeline
-│   ├── renderer.js      # Token-by-token DOM rendering for streaming messages
-│   ├── ui.js            # DOM rendering & general UI updates
-│   └── utils.js         # Helpers (UUID, token estimation, formatting)
-├── data/                # Minimal test pages for individual models
-├── debug_data/          # Debug screenshots and diagnostics
-├── PRD.md               # Product Requirements Document
-└── IMPLEMENTATION_PLAN.md  # Detailed implementation plan
+├── css/                           # Application styling
+│   └── styles.css
+├── js/                            # Application logic
+│   ├── app.js                     # Application entry point & orchestration
+│   ├── hardware.js                # WebGPU detection & hardware capabilities
+│   ├── state.js                   # Centralized application state (pub/sub)
+│   ├── embedding.js               # Embedding model loading & inference
+│   ├── llm.js                     # LLM loading, generation & streaming
+│   ├── chunker.js                 # Document chunking with overlap strategy
+│   ├── fileParser.js              # Multi-format file parsing (officeParser)
+│   ├── orama-db.js                # Orama vector DB + IndexedDB persistence
+│   ├── rag-pipeline.js            # Ingestion, retrieval & generation pipeline
+│   ├── renderer.js                # Token-by-token DOM rendering for streaming messages
+│   ├── ui.js                      # DOM rendering & general UI updates
+│   └── utils.js                   # Helpers (UUID, token estimation, formatting)
+├── data/                          # Minimal test pages for individual models
+├── debug_data/                    # Debug screenshots and diagnostics
+├── PRD.md                         # Product Requirements Document
+└── IMPLEMENTATION_PLAN.md         # Detailed implementation plan
 ```
 
 ## Module Responsibilities
@@ -99,8 +91,9 @@ rag-v2-qwen3.6-27b/
 | `state.js`        | Central state management with subscriber pattern  |
 | `embedding.js`    | Load/unload embedding model, generate embeddings  |
 | `llm.js`          | Load/unload LLM, stream token generation          |
-| `chunker.js`      | Split text into chunks with paragraph awareness   |
-| `orama-db.js`     | Create DB, insert chunks, vector search, persist  |
+| `chunker.js`      | Split text into chunks with paragraph awareness        |
+| `fileParser.js`   | Parse multi-format documents to plain text             |
+| `orama-db.js`     | Create DB, insert chunks, vector search, persist       |
 | `rag-pipeline.js` | Orchestrate ingestion → embedding → retrieval     |
 | `renderer.js`     | Stream token-by-token rendering of LLM output    |
 | `ui.js`           | Render chat, progress, streaming, document list   |
@@ -132,7 +125,7 @@ Then open `http://localhost:8080` in your browser.
 ### Usage
 
 1. **Load Models** — Click "Load Models" to download and initialize the embedding model and LLM
-2. **Upload Documents** — Select `.txt` files via the file input (supports multiple uploads)
+2. **Upload Documents** — Select files (`.txt`, `.md`, `.csv`, `.xls`, `.xlsx`, `.docx`, `.pptx`, `.odt`, `.ods`, `.odp`) via the file input (supports multiple uploads)
 3. **Ask Questions** — Type a query in the chat panel and press Send
 4. **Configure Search** — Use the Search Settings panel in the sidebar to adjust BM25/semantic weights, similarity thresholds, and top-N results
 5. **Manage Indexes** — Export your document index as JSON or import an existing index

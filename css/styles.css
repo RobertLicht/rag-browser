@@ -157,6 +157,13 @@ body {
     background: var(--border-color);
 }
 
+#format-hint {
+    font-size: 0.75rem;
+    color: var(--text-muted);
+    margin: 0.3rem 0 0.2rem 0.3rem;
+    letter-spacing: 0.02em;
+}
+
 #upload-progress {
     min-height: 2rem;
     font-size: 0.8rem;
