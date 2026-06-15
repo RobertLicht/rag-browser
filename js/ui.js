@@ -775,6 +775,19 @@ export function initLlmSettings({ onReset }) {
     });
   }
 
+  // ─── Max Thinking Tokens Slider ─────────────────────────
+  const maxThinkingSlider = document.getElementById(
+    "max-thinking-tokens-slider",
+  );
+  const maxThinkingValue = document.getElementById("max-thinking-tokens-value");
+  if (maxThinkingSlider && maxThinkingValue) {
+    maxThinkingSlider.addEventListener("input", (e) => {
+      const val = parseInt(e.target.value, 10);
+      maxThinkingValue.textContent = e.target.value;
+      setLlmConfig({ maxThinkingTokens: val });
+    });
+  }
+
   // ─── Generation Parameter Sliders ───────────────────────
   const genParams = [
     {
@@ -842,6 +855,20 @@ export function syncLlmSettingsUI() {
   const toggle = document.getElementById("thinking-toggle");
   if (toggle) {
     toggle.checked = llmConfig.enableThinking;
+  }
+
+  // Max thinking tokens control — visibility and slider value
+  const thinkingControl = document.getElementById("thinking-tokens-control");
+  if (thinkingControl) {
+    thinkingControl.style.display = llmConfig.enableThinking ? "block" : "none";
+  }
+  const maxThinkingSlider = document.getElementById(
+    "max-thinking-tokens-slider",
+  );
+  const maxThinkingValue = document.getElementById("max-thinking-tokens-value");
+  if (maxThinkingSlider && maxThinkingValue) {
+    maxThinkingSlider.value = llmConfig.maxThinkingTokens;
+    maxThinkingValue.textContent = String(llmConfig.maxThinkingTokens);
   }
 
   // Generation parameter sliders

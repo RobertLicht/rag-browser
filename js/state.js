@@ -43,8 +43,19 @@ const THINKING_PRESET = {
   max_new_tokens: 2048,
 };
 
+/**
+ * Default maximum thinking tokens for Qwen3.5's reasoning mode.
+ * Controls the token budget allocated to the model's internal reasoning.
+ * Defaults to half of the thinking preset's max_new_tokens.
+ * Valid range: 256–2048.
+ */
+const DEFAULT_MAX_THINKING_TOKENS = Math.floor(
+  THINKING_PRESET.max_new_tokens / 2,
+);
+
 export const DEFAULT_LLM_CONFIG = {
   enableThinking: false, // Qwen3.5-2B defaults to non-thinking mode
+  maxThinkingTokens: DEFAULT_MAX_THINKING_TOKENS,
   generation: { ...NON_THINKING_PRESET },
 };
 
@@ -205,7 +216,15 @@ export function setLlmConfig(updates) {
       state.llmConfig.generation = {
         ...getGenerationPreset(state.llmConfig.enableThinking),
       };
+      // Reset maxThinkingTokens to default when enabling thinking mode
+      if (state.llmConfig.enableThinking) {
+        state.llmConfig.maxThinkingTokens = DEFAULT_MAX_THINKING_TOKENS;
+      }
     }
+  }
+  // Handle direct maxThinkingTokens updates (e.g., from slider)
+  if (updates.maxThinkingTokens !== undefined) {
+    state.llmConfig.maxThinkingTokens = updates.maxThinkingTokens;
   }
   if (updates.generation !== undefined) {
     state.llmConfig.generation = {

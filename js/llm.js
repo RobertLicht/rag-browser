@@ -84,11 +84,19 @@ export async function generateResponse(messages, onToken, onComplete) {
   // Apply the model's chat template (handles special tokens, formatting, etc.)
   // Pass enable_thinking from LLM config to control reasoning mode.
   // Qwen3.5 outputs <thinking>...</thinking> blocks when enabled.
+  // max_thinking_tokens limits the token budget for the reasoning process.
   const { llmConfig } = getState();
-  const text = processor.apply_chat_template(formattedMessages, {
+  const templateOptions = {
     add_generation_prompt: true,
     enable_thinking: llmConfig.enableThinking,
-  });
+  };
+  if (llmConfig.enableThinking) {
+    templateOptions.max_thinking_tokens = llmConfig.maxThinkingTokens;
+  }
+  const text = processor.apply_chat_template(
+    formattedMessages,
+    templateOptions,
+  );
 
   // Tokenize the formatted text
   const inputs = await processor(text);

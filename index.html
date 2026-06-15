@@ -113,6 +113,31 @@
                         </label>
                     </fieldset>
 
+                    <!-- Max Thinking Tokens (visible when thinking enabled) -->
+                    <div id="thinking-tokens-control" style="display: none">
+                        <fieldset class="setting-group">
+                            <label for="max-thinking-tokens-slider"
+                                >Max Thinking Tokens</label
+                            >
+                            <p class="setting-description">
+                                Maximum tokens allocated to the model's internal
+                                reasoning process. Lower values produce faster
+                                reasoning, higher values allow deeper analysis.
+                            </p>
+                            <div class="threshold-row">
+                                <input
+                                    type="range"
+                                    id="max-thinking-tokens-slider"
+                                    min="256"
+                                    max="2048"
+                                    value="1024"
+                                    step="64"
+                                />
+                                <span id="max-thinking-tokens-value">1024</span>
+                            </div>
+                        </fieldset>
+                    </div>
+
                     <!-- Generation Parameters -->
                     <fieldset class="setting-group">
                         <legend>Generation Parameters</legend>
