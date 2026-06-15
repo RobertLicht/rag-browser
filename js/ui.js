@@ -130,6 +130,9 @@ export function initUI(callbacks) {
   // Initialize LLM settings panel
   initLlmSettings({ onReset: callbacks.onResetLlmConfig });
 
+  // Initialize help modal
+  initHelpModal();
+
   return { sendBtn, stopBtn, queryInput };
 }
 
@@ -1018,6 +1021,57 @@ export function syncLlmSettingsUI() {
     if (s && v) {
       s.value = gen[key];
       v.textContent = String(gen[key]);
+    }
+  });
+}
+
+/**
+ * Initialize the Help/About modal with open/close behavior and Mermaid rendering.
+ */
+function initHelpModal() {
+  const helpBtn = document.getElementById("help-btn");
+  const helpModal = document.getElementById("help-modal");
+  const helpCloseBtn = document.getElementById("help-modal-close");
+
+  if (!helpBtn || !helpModal) return;
+
+  const openModal = async () => {
+    helpModal.style.display = "flex";
+    // Render Mermaid diagrams inside the modal
+    if (typeof mermaid !== "undefined") {
+      try {
+        await mermaid.run({
+          nodes: helpModal.querySelectorAll(".mermaid"),
+        });
+      } catch (err) {
+        console.warn("Mermaid rendering failed:", err);
+      }
+    }
+  };
+
+  const closeModal = () => {
+    helpModal.style.display = "none";
+  };
+
+  // Open modal on help button click
+  helpBtn.addEventListener("click", openModal);
+
+  // Close modal on close button click
+  if (helpCloseBtn) {
+    helpCloseBtn.addEventListener("click", closeModal);
+  }
+
+  // Close modal on overlay click (outside content)
+  helpModal.addEventListener("click", (e) => {
+    if (e.target === helpModal) {
+      closeModal();
+    }
+  });
+
+  // Close modal on Escape key
+  document.addEventListener("keydown", (e) => {
+    if (e.key === "Escape" && helpModal.style.display === "flex") {
+      closeModal();
     }
   });
 }

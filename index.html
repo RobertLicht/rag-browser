@@ -10,6 +10,7 @@
             href="https://cdn.jsdelivr.net/npm/katex@0.17.0/dist/katex.min.css"
         />
         <link rel="stylesheet" href="css/styles.css" />
+        <script src="https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.min.js"></script>
     </head>
     <body>
         <!-- Model Loading Modal -->
@@ -59,6 +60,13 @@
             <span id="index-status">Index: 0 chunks, 0 documents</span>
             <span id="token-status">Tokens: --</span>
             <span id="memory-status">Memory: --</span>
+            <button
+                id="help-btn"
+                class="help-btn"
+                data-tooltip="About this app"
+            >
+                ?
+            </button>
         </header>
 
         <!-- Token Warning Banner -->
@@ -405,6 +413,296 @@
                     <button id="stop-btn" style="display: none">Stop</button>
                 </div>
             </main>
+        </div>
+
+        <!-- Help / About Modal -->
+        <div id="help-modal" class="modal modal-help" style="display: none">
+            <div class="modal-help-content">
+                <button class="modal-close-btn" id="help-modal-close">
+                    &times;
+                </button>
+                <h2>RAG-Browser &mdash; About</h2>
+
+                <section class="help-section">
+                    <h3>Overview</h3>
+                    <p>
+                        A fully client-side, browser-based
+                        <strong>Retrieval-Augmented Generation (RAG)</strong>
+                        agent. Upload documents (<code>.txt</code>,
+                        <code>.md</code>, <code>.csv</code>, <code>.xls</code>,
+                        <code>.xlsx</code>, <code>.docx</code>,
+                        <code>.pptx</code>, <code>.odt</code>,
+                        <code>.ods</code>, <code>.odp</code>,
+                        <code>.pdf</code>), embed them locally, and query them
+                        conversationally &mdash; all without a server, API keys,
+                        or cloud infrastructure.
+                    </p>
+                    <p>
+                        <strong>No user data ever leaves your device.</strong>
+                        All inference runs locally in your browser.
+                    </p>
+                </section>
+
+                <section class="help-section">
+                    <h3>Architecture</h3>
+                    <pre class="ascii-diagram">
+┌─────────────────────────────────────────────────────────────────┐
+│  Upload: .txt .md .csv .xls .xlsx .docx .pptx                   │
+│          .odt .ods .odp .pdf                                    │
+└───────────────────────────────┬─────────────────────────────────┘
+                                ▼
+                     ┌──────────────────────┐
+                     │     File Parser      │
+                     └──────────┬───────────┘
+                                ▼
+                     ┌──────────────────────┐
+                     │       Chunker        │
+                     └──────────┬───────────┘
+                                ▼
+          ┌─────────  ┌──────────────────────┐  ┌────────┐
+          │           │   Embedding Model    │  │        │
+          │           │ Qwen3-Embedding-0.6B │  │        │
+          └────────►  └──────────┬───────────┘  │        │
+                                 ▼              │        │
+          ┌─────────  ┌──────────────────────┐  │        │
+          │           │      Orama DB        │◄─┘        │
+          │           │  Vector + BM25 Index │     ┌─────▼──────┐
+          │           └──────────┬───────────┘     │  Query     │
+          │                      │                 │   Input    │
+          │                      │                 └─────┬──────┘
+          │                      │                       ▼
+          │                      │              ┌────────────────┐
+          │                      └────────────► │ Embedding Query│
+          │                                     └────────┬───────┘
+          │                                              │
+          │                              ┌───────────────┘
+          │                              ▼
+          │                   ┌──────────────────────┐
+          │◄──────────────────│   LLM Qwen3.5-2B     │
+          │   (retrieved      └──────────┬───────────┘
+          │    context chunks)           ▼
+          │                   ┌──────────────────────┐
+          │◄──────────────────│  Streaming Response   │
+                              └──────────────────────┘</pre
+                    >
+                </section>
+
+                <section class="help-section">
+                    <h3>Model Storage &amp; Cache</h3>
+                    <div class="help-info-block">
+                        <h4>Where is the model stored?</h4>
+                        <p>The models are cached in your browser's storage:</p>
+                        <ol>
+                            <li>
+                                Open Developer Tools (<kbd>F12</kbd> or
+                                <kbd>Ctrl+Shift+I</kbd>)
+                            </li>
+                            <li>Go to the <strong>Application</strong> tab</li>
+                            <li>
+                                Expand <strong>Storage &rarr; IndexedDB</strong>
+                            </li>
+                            <li>
+                                Look for databases containing
+                                <em>transformers</em> or <em>huggingface</em>
+                            </li>
+                            <li>
+                                Model files are stored in
+                                <strong>Cache Storage</strong> under
+                                <em>transformers-cache</em>
+                            </li>
+                        </ol>
+                    </div>
+                    <div class="help-info-block">
+                        <h4>How to delete the model cache?</h4>
+                        <p>
+                            <strong
+                                >Method 1 &mdash; Via Developer Tools:</strong
+                            >
+                        </p>
+                        <ol>
+                            <li>Open Developer Tools (<kbd>F12</kbd>)</li>
+                            <li>Go to <strong>Application</strong> tab</li>
+                            <li>
+                                Click
+                                <strong>Storage &rarr; Clear storage</strong>
+                            </li>
+                            <li>
+                                Check <strong>Cache storage</strong> and
+                                <strong>IndexedDB</strong>
+                            </li>
+                            <li>Click <strong>Clear site data</strong></li>
+                        </ol>
+                        <p>
+                            <strong
+                                >Method 2 &mdash; Via Browser Settings:</strong
+                            >
+                        </p>
+                        <ol>
+                            <li>
+                                Go to browser
+                                <strong
+                                    >Settings &rarr; Privacy &amp;
+                                    Security</strong
+                                >
+                            </li>
+                            <li>Click <strong>Clear browsing data</strong></li>
+                            <li>
+                                Select <strong>Cached images and files</strong>
+                            </li>
+                            <li>Choose time range and clear</li>
+                        </ol>
+                        <p><strong>Method 3 &mdash; Via Console:</strong></p>
+                        <ol>
+                            <li>
+                                Open <strong>Console</strong> in Developer Tools
+                            </li>
+                            <li>
+                                Run:
+                                <code
+                                    >caches.keys().then(keys =&gt;
+                                    keys.forEach(k =&gt;
+                                    caches.delete(k)))</code
+                                >
+                            </li>
+                        </ol>
+                    </div>
+                </section>
+
+                <section class="help-section">
+                    <h3>Enable WebGPU</h3>
+                    <div class="help-warning">
+                        <strong>Important:</strong> WebGPU significantly
+                        improves performance. Without it, the model runs on CPU
+                        which can be <strong>10&ndash;50&times; slower</strong>.
+                    </div>
+                    <div class="help-info-block">
+                        <h4>Google Chrome &amp; Microsoft Edge (Chromium)</h4>
+                        <p>
+                            WebGPU is enabled by default starting with Chrome
+                            113 and Edge 113. If it is not available:
+                        </p>
+                        <ol>
+                            <li>
+                                Navigate to <code>chrome://flags</code> (or
+                                <code>edge://flags</code>)
+                            </li>
+                            <li>Search for <strong>WebGPU</strong></li>
+                            <li>
+                                Set <strong>Unsafe WebGPU</strong> to
+                                <em>Enabled</em>
+                            </li>
+                            <li>Click <strong>Relaunch</strong></li>
+                        </ol>
+                        <p>
+                            <strong>Command Line Alternative:</strong>
+                            <code>--enable-unsafe-webgpu</code>
+                        </p>
+                    </div>
+                    <div class="help-info-block">
+                        <h4>Mozilla Firefox</h4>
+                        <p>
+                            WebGPU is enabled by default from Firefox 141+
+                            (Windows) and 145+ (macOS). To enable manually:
+                        </p>
+                        <ol>
+                            <li>
+                                Type <code>about:config</code> in the address
+                                bar and accept the warning
+                            </li>
+                            <li>
+                                Search for
+                                <strong><code>dom.webgpu.enabled</code></strong>
+                            </li>
+                            <li>Toggle to <strong>true</strong></li>
+                            <li>
+                                Optionally set
+                                <strong
+                                    ><code
+                                        >gfx.webgpu.ignore-blocklist</code
+                                    ></strong
+                                >
+                                to <strong>true</strong> if blocked
+                            </li>
+                        </ol>
+                    </div>
+                    <div class="help-info-block">
+                        <h4>Safari</h4>
+                        <p>
+                            WebGPU is enabled by default starting with Safari 26
+                            (macOS Tahoe 26, iOS 26). Earlier versions require
+                            Safari Technology Preview.
+                        </p>
+                    </div>
+                    <div class="help-info-block">
+                        <h4>Linux (Chrome/Chromium)</h4>
+                        <p>Launch with the following flags:</p>
+                        <pre><code>--enable-unsafe-webgpu --ozone-platform=wayland --use-angle=vulkan --enable-features=Vulkan,VulkanFromANGLE</code></pre>
+                        <p>
+                            <em
+                                >Ensure your graphics drivers are up-to-date.
+                                You may also try
+                                <code>--ozone-platform=x11</code> instead of
+                                Wayland.</em
+                            >
+                        </p>
+                    </div>
+                    <div class="help-info-block">
+                        <h4>Browser Support Summary</h4>
+                        <table class="help-table">
+                            <thead>
+                                <tr>
+                                    <th>Browser</th>
+                                    <th>Status</th>
+                                    <th>How to Enable</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td>Chrome 113+</td>
+                                    <td>&#9989; Default</td>
+                                    <td>
+                                        <code>chrome://flags</code> &rarr;
+                                        Enable "Unsafe WebGPU"
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td>Edge 113+</td>
+                                    <td>&#9989; Default</td>
+                                    <td>
+                                        <code>edge://flags</code> &rarr; Enable
+                                        "Unsafe WebGPU"
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td>Firefox 141+</td>
+                                    <td>
+                                        &#9989; Default (Win) / 145+ (macOS)
+                                    </td>
+                                    <td>
+                                        <code>about:config</code> &rarr;
+                                        <code>dom.webgpu.enabled</code>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td>Safari 26+</td>
+                                    <td>&#9989; Default</td>
+                                    <td>Enabled by default</td>
+                                </tr>
+                                <tr>
+                                    <td>Linux (Chrome)</td>
+                                    <td>&#9888; Experimental</td>
+                                    <td>Command line flags required</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    <div class="help-tip">
+                        <strong>Tips:</strong> Ensure Hardware Acceleration is
+                        enabled in your browser settings. Keep your GPU drivers
+                        updated for best performance.
+                    </div>
+                </section>
+            </div>
         </div>
 
         <script type="module" src="js/app.js"></script>

@@ -1305,3 +1305,232 @@ body {
         opacity: 1;
     }
 }
+
+/* ─── Help Button ──────────────────────────────────────────── */
+
+.help-btn {
+    width: 24px;
+    height: 24px;
+    min-width: 24px;
+    margin-left: 0.5rem;
+    padding: 0;
+    font-size: 0.85rem;
+    font-weight: 700;
+    line-height: 1;
+    color: var(--text-secondary);
+    background: var(--bg-tertiary);
+    border: 1px solid var(--border-color);
+    border-radius: 50%;
+    cursor: pointer;
+    transition:
+        background 0.15s,
+        color 0.15s;
+}
+
+.help-btn:hover {
+    background: var(--accent);
+    color: #fff;
+    border-color: var(--accent);
+}
+
+/* ─── Help Modal ───────────────────────────────────────────── */
+
+.modal-help .modal-help-content {
+    position: relative;
+    max-width: 860px;
+    width: 92%;
+    max-height: 85vh;
+    padding: 2rem 2.5rem 2.5rem;
+    text-align: left;
+    overflow-y: auto;
+}
+
+.modal-close-btn {
+    position: absolute;
+    top: 0.75rem;
+    right: 1rem;
+    width: 28px;
+    height: 28px;
+    padding: 0;
+    font-size: 1.4rem;
+    line-height: 1;
+    color: var(--text-muted);
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    transition: color 0.15s;
+}
+
+.modal-close-btn:hover {
+    color: var(--text-primary);
+}
+
+.modal-help-content h2 {
+    margin-bottom: 1.5rem;
+    font-size: 1.35rem;
+    text-align: center;
+}
+
+/* ─── Help Sections ────────────────────────────────────────── */
+
+.help-section {
+    margin-bottom: 2rem;
+}
+
+.help-section h3 {
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: var(--text-primary);
+    margin-bottom: 0.75rem;
+    padding-bottom: 0.4rem;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.help-section p {
+    font-size: 0.9rem;
+    line-height: 1.6;
+    color: var(--text-secondary);
+    margin-bottom: 0.75rem;
+}
+
+.help-section code {
+    font-family: "JetBrains Mono", "Fira Code", monospace;
+    font-size: 0.82rem;
+    background: var(--bg-tertiary);
+    padding: 0.15em 0.4em;
+    border-radius: 3px;
+    color: var(--accent);
+}
+
+.help-section kbd {
+    font-family: inherit;
+    font-size: 0.8rem;
+    background: var(--bg-tertiary);
+    padding: 0.1em 0.45em;
+    border-radius: 3px;
+    border: 1px solid var(--border-color);
+    color: var(--text-secondary);
+}
+
+.help-section ol {
+    padding-left: 1.25rem;
+    margin-bottom: 0.75rem;
+}
+
+.help-section ol li {
+    font-size: 0.9rem;
+    line-height: 1.6;
+    color: var(--text-secondary);
+    margin-bottom: 0.35rem;
+}
+
+/* ─── Mermaid Diagram ──────────────────────────────────────── */
+
+.mermaid-diagram {
+    background: var(--bg-tertiary);
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    padding: 1rem;
+    margin-bottom: 1rem;
+    text-align: center;
+    overflow-x: auto;
+}
+
+.mermaid-diagram .mermaid {
+    display: inline-block;
+}
+
+/* ─── Help Info Blocks ─────────────────────────────────────── */
+
+.help-info-block {
+    background: var(--bg-tertiary);
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    padding: 1rem 1.25rem;
+    margin-bottom: 1rem;
+}
+
+.help-info-block h4 {
+    font-size: 0.95rem;
+    font-weight: 600;
+    color: var(--text-primary);
+    margin-bottom: 0.5rem;
+}
+
+.help-info-block pre {
+    background: var(--bg-secondary);
+    border: 1px solid var(--border-color);
+    border-radius: 6px;
+    padding: 0.6rem 1rem;
+    margin: 0.5rem 0;
+    overflow-x: auto;
+    font-size: 0.82rem;
+}
+
+/* ─── Help Warning ─────────────────────────────────────────── */
+
+.help-warning {
+    background: rgba(234, 179, 8, 0.1);
+    border: 1px solid rgba(234, 179, 8, 0.3);
+    border-radius: 8px;
+    padding: 0.75rem 1rem;
+    margin-bottom: 1rem;
+    font-size: 0.9rem;
+    color: var(--warning);
+}
+
+/* ─── Help Tip ─────────────────────────────────────────────── */
+
+.help-tip {
+    background: rgba(59, 130, 246, 0.1);
+    border: 1px solid rgba(59, 130, 246, 0.3);
+    border-radius: 8px;
+    padding: 0.75rem 1rem;
+    margin-top: 1rem;
+    font-size: 0.9rem;
+    color: var(--accent);
+}
+
+/* ─── Help Table ───────────────────────────────────────────── */
+
+.help-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.85rem;
+    margin-top: 0.5rem;
+}
+
+.help-table th,
+.help-table td {
+    padding: 0.5rem 0.75rem;
+    text-align: left;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.help-table th {
+    font-weight: 600;
+    color: var(--text-primary);
+    background: var(--bg-tertiary);
+}
+
+.help-table td {
+    color: var(--text-secondary);
+}
+
+.help-table code {
+    font-size: 0.8rem;
+}
+
+/* ─── Help Modal Responsive ────────────────────────────────── */
+
+@media (max-width: 768px) {
+    .modal-help .modal-help-content {
+        width: 96%;
+        max-height: 90vh;
+        padding: 1.5rem;
+    }
+
+    .help-info-block {
+        padding: 0.75rem 1rem;
+    }
+}
