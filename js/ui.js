@@ -10,6 +10,7 @@ import {
   resetLlmConfig,
   resetGenerationToPreset,
 } from "./state.js";
+import { t, setLanguage, getSupportedLanguages, getLanguage } from "./i18n.js";
 
 /**
  * Initialize all UI event listeners and render the initial state.
@@ -136,6 +137,9 @@ export function initUI(callbacks) {
   // Initialize theme toggle
   initThemeToggle();
 
+  // Initialize language selector
+  initLanguageSelector();
+
   return { sendBtn, stopBtn, queryInput };
 }
 
@@ -150,15 +154,24 @@ export function updateStatusBar(state) {
 
   // Hardware status
   const hwClass = state.hardware.webgpuAvailable ? "active" : "warning";
-  hwStatus.innerHTML = `<span class="status-dot ${hwClass}"></span> ${state.hardware.device.toUpperCase()}`;
+  const hwTemplate = state.hardware.webgpuAvailable
+    ? "status.hardware.gpu"
+    : "status.hardware.cpu";
+  hwStatus.innerHTML = `<span class="status-dot ${hwClass}"></span> ${t(hwTemplate, { device: state.hardware.device })}`;
 
   // Model status
-  const embState = state.models.embedding;
-  const llmState = state.models.llm;
-  modelStatus.innerHTML = `Embedding: ${embState} | LLM: ${llmState}`;
+  const embState = t(`status.modelState.${state.models.embedding}`);
+  const llmState = t(`status.modelState.${state.models.llm}`);
+  modelStatus.textContent = t("status.models.summary", {
+    emb: embState,
+    llm: llmState,
+  });
 
   // Index status
-  indexStatus.textContent = `Index: ${state.index.totalChunks} chunks, ${state.index.totalDocuments} documents`;
+  indexStatus.textContent = t("status.index", {
+    chunks: state.index.totalChunks,
+    docs: state.index.totalDocuments,
+  });
 
   // Token status
   updateTokenStatus(state.tokenTracking);
@@ -167,7 +180,10 @@ export function updateStatusBar(state) {
   if (performance.memory) {
     const usedMB = (performance.memory.usedJSHeapSize / 1048576).toFixed(1);
     const limitMB = (performance.memory.jsHeapSizeLimit / 1048576).toFixed(0);
-    memoryStatus.textContent = `Memory: ${usedMB} MB / ${limitMB} MB`;
+    memoryStatus.textContent = t("status.memory", {
+      used: usedMB,
+      limit: limitMB,
+    });
   }
 }
 
@@ -183,7 +199,11 @@ export function updateTokenStatus(tracking) {
     tracking;
 
   tokenStatus.className = warningLevel;
-  tokenStatus.textContent = `Tokens: ${formatTokens(totalTokens)} / ${formatTokens(contextWindow)} (${formatTokens(remainingTokens)} left)`;
+  tokenStatus.textContent = t("status.tokens.active", {
+    used: formatTokens(totalTokens),
+    limit: formatTokens(contextWindow),
+    remaining: formatTokens(remainingTokens),
+  });
 
   // Update warning banner
   updateTokenWarningBanner(warningLevel, remainingTokens);
@@ -209,12 +229,27 @@ export function updateTokenWarningBanner(level, remainingTokens) {
     level === "critical" || level === "exceeded" ? "critical" : "";
 
   if (level === "exceeded") {
-    warningText.textContent =
-      "Context window exceeded. Please clear the chat to continue.";
+    warningText.textContent = t("status.token.warning.critical", {
+      percent: 100,
+    });
   } else if (level === "critical") {
-    warningText.textContent = `Context nearly full (${remainingTokens} tokens remaining). Consider clearing the chat.`;
+    warningText.textContent = t("status.token.warning.critical", {
+      percent: Math.round(
+        ((contextWindow - remainingTokens) / contextWindow) * 100,
+      ),
+    });
+  } else if (level === "caution") {
+    warningText.textContent = t("status.token.warning.caution", {
+      percent: Math.round(
+        ((contextWindow - remainingTokens) / contextWindow) * 100,
+      ),
+    });
   } else {
-    warningText.textContent = `Context getting full (${remainingTokens} tokens remaining). You may want to clear the chat soon.`;
+    warningText.textContent = t("status.token.warning.warning", {
+      percent: Math.round(
+        ((contextWindow - remainingTokens) / contextWindow) * 100,
+      ),
+    });
   }
 }
 
@@ -263,16 +298,17 @@ export function renderAssistantMessage(
 
       const source = document.createElement("div");
       source.className = "citation-source";
-      source.textContent = `${chunk.metadata.sourceFile} (chunk ${chunk.metadata.chunkIndex})`;
+      source.textContent = `${chunk.metadata.sourceFile} ${t("citation.chunk", { index: chunk.metadata.chunkIndex })}`;
 
       const preview = document.createElement("div");
       preview.className = "citation-text";
-      preview.textContent =
-        chunk.content.slice(0, 200) + (chunk.content.length > 200 ? "..." : "");
+      preview.textContent = chunk.content.substring(0, 120).replace(/\n/g, " ");
 
       const sim = document.createElement("div");
       sim.className = "citation-similarity";
-      sim.textContent = `Similarity: ${(similarities[i] * 100).toFixed(1)}%`;
+      sim.textContent = t("citation.similarity", {
+        percent: (similarities[i] * 100).toFixed(1),
+      });
 
       card.appendChild(source);
       card.appendChild(preview);
@@ -316,13 +352,13 @@ export function renderStreamingMessage() {
   let renderTimeout = null;
 
   const PHASE_MESSAGES = {
-    embedding: "Preparing query...",
-    searching: "Searching knowledge base...",
-    generating: "Generating response...",
-    generating_composing: "Composing answer...",
-    generating_finalizing: "Finalizing response...",
-    generating_thinking: "Reasoning through the problem...",
-    generating_formulating: "Formulating answer...",
+    embedding: t("phase.embedding"),
+    searching: t("phase.searching"),
+    generating: t("phase.generating"),
+    generating_composing: t("phase.generating_composing"),
+    generating_finalizing: t("phase.generating_finalizing"),
+    generating_thinking: t("phase.generating_thinking"),
+    generating_formulating: t("phase.generating_formulating"),
   };
 
   return {
@@ -332,7 +368,9 @@ export function renderStreamingMessage() {
       phaseEl = document.createElement("div");
       phaseEl.className = "phase-indicator visible";
       phaseEl.innerHTML =
-        '<span class="phase-dot"></span><span class="phase-text">Processing...</span>';
+        '<span class="phase-dot"></span><span class="phase-text">' +
+        t("phase.embedding") +
+        "</span>";
       contentEl.insertBefore(phaseEl, cursor);
       scrollConversation();
     },
@@ -398,17 +436,19 @@ export function renderStreamingMessage() {
 
           const source = document.createElement("div");
           source.className = "citation-source";
-          source.textContent = `${chunk.metadata.sourceFile} (chunk ${chunk.metadata.chunkIndex})`;
+          source.textContent = `${chunk.metadata.sourceFile} ${t("citation.chunk", { index: chunk.metadata.chunkIndex })}`;
 
           const preview = document.createElement("div");
           preview.className = "citation-text";
-          preview.textContent =
-            chunk.content.slice(0, 200) +
-            (chunk.content.length > 200 ? "..." : "");
+          preview.textContent = chunk.content
+            .substring(0, 120)
+            .replace(/\n/g, " ");
 
           const sim = document.createElement("div");
           sim.className = "citation-similarity";
-          sim.textContent = `Similarity: ${(similarities[i] * 100).toFixed(1)}%`;
+          sim.textContent = t("citation.similarity", {
+            percent: (similarities[i] * 100).toFixed(1),
+          });
 
           card.appendChild(source);
           card.appendChild(preview);
@@ -466,7 +506,7 @@ export function updateDocumentList(documents) {
 
     const chunksSpan = document.createElement("span");
     chunksSpan.className = "doc-chunks";
-    chunksSpan.textContent = `${doc.chunks} chunks`;
+    chunksSpan.textContent = t("doc.chunks", { count: doc.chunks });
 
     li.appendChild(nameSpan);
     li.appendChild(chunksSpan);
@@ -533,9 +573,10 @@ export function showLoadingModal() {
 
   document.getElementById("modal-progress-fill").style.width = "0%";
   document.getElementById("modal-total-progress").textContent = "";
-  document.getElementById("modal-title").textContent = "Loading Models";
-  document.getElementById("modal-description").textContent =
-    "Downloading and initializing AI models...";
+  document.getElementById("modal-title").textContent = t("modal.loading.title");
+  document.getElementById("modal-description").textContent = t(
+    "modal.loading.description",
+  );
 }
 
 /**
@@ -563,7 +604,8 @@ export function updateLoadingModal(step, progress, status, file) {
   if (step === "llm") {
     stepEmbedding.className = "modal-step done";
     stepEmbedding.querySelector(".step-icon").textContent = "✓";
-    document.getElementById("step-embedding-progress").textContent = "done";
+    document.getElementById("step-embedding-progress").textContent =
+      t("modal.loading.done");
   }
 
   // Update current step
@@ -580,9 +622,9 @@ export function updateLoadingModal(step, progress, status, file) {
   if (file && status === "download") {
     currentProgress.textContent = file;
   } else if (status === "ready") {
-    currentProgress.textContent = "ready";
+    currentProgress.textContent = t("modal.loading.ready");
   } else if (status === "init") {
-    currentProgress.textContent = "initializing";
+    currentProgress.textContent = t("modal.loading.initializing");
   } else {
     currentProgress.textContent = `${Math.round(progress)}%`;
   }
@@ -596,7 +638,9 @@ export function updateLoadingModal(step, progress, status, file) {
     overallProgress = 50 + (modelProgress / 100) * 50;
   }
   progressFill.style.width = `${overallProgress}%`;
-  totalProgress.textContent = `Overall: ${Math.round(overallProgress)}%`;
+  totalProgress.textContent = t("modal.loading.overall", {
+    percent: Math.round(overallProgress),
+  });
 }
 
 /**
@@ -1107,4 +1151,63 @@ export function initThemeToggle() {
  */
 function applyThemeEmoji(btn, theme) {
   btn.textContent = theme === "dark" ? "🌙" : "☀️";
+}
+
+/**
+ * Initialize the language selector dropdown in the status bar.
+ * - Toggle dropdown open/close on button click
+ * - Close on click outside or Escape key
+ * - Highlight currently active language
+ * - Switch language on selection
+ */
+export function initLanguageSelector() {
+  const btn = document.getElementById("lang-selector-btn");
+  const dropdown = document.getElementById("lang-selector-dropdown");
+  if (!btn || !dropdown) return;
+
+  const languages = getSupportedLanguages();
+
+  // Update dropdown button with current language label
+  btn.textContent = languages[getLanguage()]?.nativeLabel ?? "EN";
+
+  // Toggle dropdown on button click
+  btn.addEventListener("click", (e) => {
+    e.stopPropagation();
+    const isOpen = dropdown.classList.toggle("open");
+    // Update active language indicator
+    dropdown.querySelectorAll("button").forEach((item) => {
+      item.setAttribute(
+        "data-lang-active",
+        item.dataset.lang === getLanguage() ? "true" : "false",
+      );
+    });
+  });
+
+  // Handle language selection
+  dropdown.querySelectorAll("button").forEach((item) => {
+    item.addEventListener("click", () => {
+      const lang = item.dataset.lang;
+      if (lang && languages[lang]) {
+        setLanguage(lang);
+        // Update button label
+        btn.textContent = languages[lang].nativeLabel;
+        // Close dropdown
+        dropdown.classList.remove("open");
+      }
+    });
+  });
+
+  // Close dropdown on click outside
+  document.addEventListener("click", (e) => {
+    if (!btn.contains(e.target) && !dropdown.contains(e.target)) {
+      dropdown.classList.remove("open");
+    }
+  });
+
+  // Close dropdown on Escape key
+  document.addEventListener("keydown", (e) => {
+    if (e.key === "Escape") {
+      dropdown.classList.remove("open");
+    }
+  });
 }

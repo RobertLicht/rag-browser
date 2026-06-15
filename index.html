@@ -25,14 +25,18 @@
         <div id="loading-modal" class="modal" style="display: none">
             <div class="modal-content">
                 <div class="modal-spinner"></div>
-                <h2 id="modal-title">Loading Models</h2>
-                <p id="modal-description">
+                <h2 id="modal-title" data-i18n="modal.loading.title">
+                    Loading Models
+                </h2>
+                <p id="modal-description" data-i18n="modal.loading.description">
                     Downloading and initializing AI models...
                 </p>
                 <div class="modal-steps">
                     <div id="step-embedding" class="modal-step">
                         <span class="step-icon">●</span>
-                        <span class="step-label"
+                        <span
+                            class="step-label"
+                            data-i18n="modal.loading.step.embedding"
                             >Embedding Model (Qwen3-Embedding-0.6B)</span
                         >
                         <span
@@ -42,7 +46,9 @@
                     </div>
                     <div id="step-llm" class="modal-step">
                         <span class="step-icon">●</span>
-                        <span class="step-label"
+                        <span
+                            class="step-label"
+                            data-i18n="modal.loading.step.llm"
                             >Language Model (Qwen3.5-2B)</span
                         >
                         <span
@@ -63,18 +69,42 @@
 
         <!-- Status Bar -->
         <header id="status-bar">
-            <span id="hardware-status">Detecting hardware...</span>
-            <span id="model-status">Models: unloaded</span>
-            <span id="index-status">Index: 0 chunks, 0 documents</span>
-            <span id="token-status">Tokens: --</span>
-            <span id="memory-status">Memory: --</span>
-            <button id="theme-toggle-btn" data-tooltip="Toggle theme">
+            <span id="hardware-status" data-i18n="status.hardware.detecting"
+                >Detecting hardware...</span
+            >
+            <span id="model-status" data-i18n="status.models.unloaded"
+                >Models: unloaded</span
+            >
+            <span id="index-status" data-i18n="status.index"
+                >Index: 0 chunks, 0 documents</span
+            >
+            <span id="token-status" data-i18n="status.tokens.idle"
+                >Tokens: --</span
+            >
+            <span id="memory-status" data-i18n="status.memory.idle"
+                >Memory: --</span
+            >
+            <!-- Language Selector -->
+            <div id="lang-selector" class="lang-selector">
+                <button id="lang-selector-btn" data-i18n-tooltip="lang.tooltip">
+                    English
+                </button>
+                <div id="lang-selector-dropdown" class="lang-dropdown">
+                    <button data-lang="en">English</button>
+                    <button data-lang="de">Deutsch</button>
+                    <button data-lang="it">Italiano</button>
+                    <button data-lang="es">Español</button>
+                    <button data-lang="fr">Français</button>
+                </div>
+            </div>
+
+            <button id="theme-toggle-btn" data-i18n-tooltip="tooltip.theme">
                 🌙
             </button>
             <button
                 id="help-btn"
                 class="help-btn"
-                data-tooltip="About this app"
+                data-i18n-tooltip="tooltip.help"
             >
                 ?
             </button>
@@ -85,7 +115,11 @@
             <div class="token-warning-content">
                 <span class="token-warning-icon">⚠</span>
                 <span class="token-warning-text" id="token-warning-text"></span>
-                <button id="clear-chat-warn-btn" class="clear-chat-warn-btn">
+                <button
+                    id="clear-chat-warn-btn"
+                    class="clear-chat-warn-btn"
+                    data-i18n="status.token.warning.clearChat"
+                >
                     Clear Chat
                 </button>
             </div>
@@ -94,10 +128,10 @@
         <div id="app-container">
             <!-- Sidebar: Document Management -->
             <aside id="sidebar">
-                <h2>Documents</h2>
+                <h2 data-i18n="sidebar.documents">Documents</h2>
                 <div
                     id="file-input-wrapper"
-                    data-tooltip="Load the embedding model first to enable file uploads."
+                    data-i18n-tooltip="sidebar.tooltip.embeddingRequired"
                 >
                     <input
                         type="file"
@@ -112,17 +146,35 @@
                 </div>
                 <div id="upload-progress"></div>
                 <ul id="document-list"></ul>
-                <button id="load-models-btn">Load Models</button>
-                <button id="unload-embedding-btn" disabled>
+                <button id="load-models-btn" data-i18n="sidebar.btn.loadModels">
+                    Load Models
+                </button>
+                <button
+                    id="unload-embedding-btn"
+                    disabled
+                    data-i18n="sidebar.btn.unloadEmbedding"
+                >
                     Unload Embedding Model
                 </button>
-                <button id="unload-llm-btn" disabled>Unload LLM</button>
+                <button
+                    id="unload-llm-btn"
+                    disabled
+                    data-i18n="sidebar.btn.unloadLlm"
+                >
+                    Unload LLM
+                </button>
 
                 <!-- Database Import / Export -->
                 <div id="db-actions">
-                    <button id="export-db-btn">Export Database</button>
-                    <button id="import-db-btn">Import Database</button>
-                    <button id="clear-db-btn">Clear Database</button>
+                    <button id="export-db-btn" data-i18n="db.export">
+                        Export Database
+                    </button>
+                    <button id="import-db-btn" data-i18n="db.import">
+                        Import Database
+                    </button>
+                    <button id="clear-db-btn" data-i18n="db.clear">
+                        Clear Database
+                    </button>
                     <input
                         type="file"
                         id="import-db-input"
@@ -133,12 +185,21 @@
 
                 <!-- LLM Settings Panel -->
                 <details id="llm-settings" class="settings-panel">
-                    <summary>LLM Settings</summary>
+                    <summary data-i18n="settings.llm.title">
+                        LLM Settings
+                    </summary>
 
                     <!-- Thinking Mode Toggle -->
                     <fieldset class="setting-group">
-                        <label for="thinking-toggle">Enable Thinking</label>
-                        <p class="setting-description">
+                        <label
+                            for="thinking-toggle"
+                            data-i18n="settings.llm.thinking"
+                            >Enable Thinking</label
+                        >
+                        <p
+                            class="setting-description"
+                            data-i18n="settings.llm.thinkingDesc"
+                        >
                             Model reasons through its response before answering.
                             Useful for complex problems but slower and uses more
                             tokens.
@@ -152,10 +213,15 @@
                     <!-- Max Thinking Tokens (visible when thinking enabled) -->
                     <div id="thinking-tokens-control" style="display: none">
                         <fieldset class="setting-group">
-                            <label for="max-thinking-tokens-slider"
+                            <label
+                                for="max-thinking-tokens-slider"
+                                data-i18n="settings.llm.maxThinkingTokens"
                                 >Max Thinking Tokens</label
                             >
-                            <p class="setting-description">
+                            <p
+                                class="setting-description"
+                                data-i18n="settings.llm.maxThinkingTokensDesc"
+                            >
                                 Maximum tokens allocated to the model's internal
                                 reasoning process. Lower values produce faster
                                 reasoning, higher values allow deeper analysis.
@@ -176,15 +242,24 @@
 
                     <!-- Generation Parameters -->
                     <fieldset class="setting-group">
-                        <legend>Generation Parameters</legend>
-                        <p class="setting-description">
+                        <legend data-i18n="settings.llm.genParams">
+                            Generation Parameters
+                        </legend>
+                        <p
+                            class="setting-description"
+                            data-i18n="settings.llm.genParamsDesc"
+                        >
                             Values auto-adjust when switching thinking mode.
                             Manual overrides are allowed.
                         </p>
 
                         <!-- Temperature -->
                         <div class="threshold-row">
-                            <label for="temperature-slider">Temperature</label>
+                            <label
+                                for="temperature-slider"
+                                data-i18n="settings.llm.temperature"
+                                >Temperature</label
+                            >
                             <input
                                 type="range"
                                 id="temperature-slider"
@@ -198,7 +273,11 @@
 
                         <!-- Top-p -->
                         <div class="threshold-row">
-                            <label for="top-p-slider">Top-p</label>
+                            <label
+                                for="top-p-slider"
+                                data-i18n="settings.llm.topP"
+                                >Top-p</label
+                            >
                             <input
                                 type="range"
                                 id="top-p-slider"
@@ -212,7 +291,11 @@
 
                         <!-- Top-k -->
                         <div class="threshold-row">
-                            <label for="top-k-slider">Top-k</label>
+                            <label
+                                for="top-k-slider"
+                                data-i18n="settings.llm.topK"
+                                >Top-k</label
+                            >
                             <input
                                 type="range"
                                 id="top-k-slider"
@@ -226,7 +309,11 @@
 
                         <!-- Min-p -->
                         <div class="threshold-row">
-                            <label for="min-p-slider">Min-p</label>
+                            <label
+                                for="min-p-slider"
+                                data-i18n="settings.llm.minP"
+                                >Min-p</label
+                            >
                             <input
                                 type="range"
                                 id="min-p-slider"
@@ -240,7 +327,9 @@
 
                         <!-- Presence Penalty -->
                         <div class="threshold-row">
-                            <label for="presence-penalty-slider"
+                            <label
+                                for="presence-penalty-slider"
+                                data-i18n="settings.llm.presencePenalty"
                                 >Presence Penalty</label
                             >
                             <input
@@ -256,7 +345,9 @@
 
                         <!-- Repetition Penalty -->
                         <div class="threshold-row">
-                            <label for="repetition-penalty-slider"
+                            <label
+                                for="repetition-penalty-slider"
+                                data-i18n="settings.llm.repetitionPenalty"
                                 >Repetition Penalty</label
                             >
                             <input
@@ -272,7 +363,9 @@
 
                         <!-- Max New Tokens -->
                         <div class="threshold-row">
-                            <label for="max-new-tokens-slider"
+                            <label
+                                for="max-new-tokens-slider"
+                                data-i18n="settings.llm.maxNewTokens"
                                 >Max New Tokens</label
                             >
                             <input
@@ -288,33 +381,60 @@
                     </fieldset>
 
                     <!-- Reset Button -->
-                    <button id="reset-llm-btn" type="button">
+                    <button
+                        id="reset-llm-btn"
+                        type="button"
+                        data-i18n="settings.llm.btn.resetPreset"
+                    >
                         Reset to Preset
                     </button>
                 </details>
 
-                <button id="clear-chat-btn">Clear Chat</button>
+                <button id="clear-chat-btn" data-i18n="sidebar.btn.clearChat">
+                    Clear Chat
+                </button>
 
                 <!-- Search Settings Panel -->
                 <details id="search-settings" class="settings-panel" open>
-                    <summary>Search Settings</summary>
+                    <summary data-i18n="settings.search.title">
+                        Search Settings
+                    </summary>
 
                     <!-- Mode Selector -->
                     <fieldset class="setting-group">
-                        <label for="search-mode-select">Search Mode</label>
+                        <label
+                            for="search-mode-select"
+                            data-i18n="settings.search.mode"
+                            >Search Mode</label
+                        >
                         <select id="search-mode-select">
-                            <option value="hybrid" selected>
+                            <option
+                                value="hybrid"
+                                selected
+                                data-i18n-option="settings.search.mode.hybrid"
+                            >
                                 Hybrid (Recommended)
                             </option>
-                            <option value="vector">Vector Only</option>
+                            <option
+                                value="vector"
+                                data-i18n-option="settings.search.mode.vector"
+                            >
+                                Vector Only
+                            </option>
                         </select>
                     </fieldset>
 
                     <!-- Hybrid Weights -->
                     <div id="hybrid-settings" class="setting-group">
-                        <label>Keyword vs Semantic Balance</label>
+                        <label data-i18n="settings.search.balance"
+                            >Keyword vs Semantic Balance</label
+                        >
                         <div class="slider-row">
-                            <span id="text-weight-label">BM25: 70%</span>
+                            <span
+                                id="text-weight-label"
+                                data-i18n="settings.search.bm25"
+                                >BM25: 70%</span
+                            >
                             <input
                                 type="range"
                                 id="text-weight-slider"
@@ -323,18 +443,26 @@
                                 value="70"
                                 step="5"
                             />
-                            <span id="vector-weight-label">Vector: 30%</span>
+                            <span
+                                id="vector-weight-label"
+                                data-i18n="settings.search.vector"
+                                >Vector: 30%</span
+                            >
                         </div>
                     </div>
 
                     <!-- Thresholds -->
                     <fieldset class="setting-group">
-                        <legend>Similarity Thresholds</legend>
+                        <legend data-i18n="settings.similarityThresholds">
+                            Similarity Thresholds
+                        </legend>
 
                         <!-- Hybrid thresholds (visible in hybrid mode) -->
                         <div id="hybrid-thresholds">
                             <div class="threshold-row">
-                                <label for="hybrid-similarity-slider"
+                                <label
+                                    for="hybrid-similarity-slider"
+                                    data-i18n="settings.hybridScore"
                                     >Hybrid Score</label
                                 >
                                 <input
@@ -349,7 +477,9 @@
                             </div>
 
                             <div class="threshold-row">
-                                <label for="min-vector-slider"
+                                <label
+                                    for="min-vector-slider"
+                                    data-i18n="settings.vectorGate"
                                     >Vector Gate</label
                                 >
                                 <input
@@ -367,7 +497,9 @@
                         <!-- Vector-only threshold (visible in vector mode) -->
                         <div id="vector-threshold" style="display: none">
                             <div class="threshold-row">
-                                <label for="vector-similarity-slider"
+                                <label
+                                    for="vector-similarity-slider"
+                                    data-i18n="settings.vectorSimilarity"
                                     >Vector Similarity</label
                                 >
                                 <input
@@ -385,7 +517,9 @@
 
                     <!-- Top-N -->
                     <div class="setting-group">
-                        <label>Max Results (Top-N)</label>
+                        <label data-i18n="settings.maxResults"
+                            >Max Results (Top-N)</label
+                        >
                         <div class="slider-row">
                             <input
                                 type="range"
@@ -399,7 +533,11 @@
                     </div>
 
                     <!-- Reset Button -->
-                    <button id="reset-settings-btn" type="button">
+                    <button
+                        id="reset-settings-btn"
+                        type="button"
+                        data-i18n="settings.btn.resetDefaults"
+                    >
                         Reset to Defaults
                     </button>
                 </details>
@@ -413,15 +551,23 @@
                         id="query-input"
                         placeholder="Ask a question about your documents..."
                         rows="3"
-                        data-tooltip="Load the relevant models first to enable querying."
+                        data-i18n-placeholder="chat.placeholder"
+                        data-i18n-tooltip="chat.tooltip.queryDisabled"
                     ></textarea>
                     <button
                         id="send-btn"
-                        data-tooltip="Load the relevant models first to enable querying."
+                        data-i18n="chat.send"
+                        data-i18n-tooltip="chat.tooltip.queryDisabled"
                     >
                         Send
                     </button>
-                    <button id="stop-btn" style="display: none">Stop</button>
+                    <button
+                        id="stop-btn"
+                        style="display: none"
+                        data-i18n="chat.stop"
+                    >
+                        Stop
+                    </button>
                 </div>
             </main>
         </div>

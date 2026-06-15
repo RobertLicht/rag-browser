@@ -1594,3 +1594,75 @@ body {
     background: var(--bg-tertiary);
     border-color: var(--accent);
 }
+
+/* ─── Language Selector Dropdown ────────────────────────────── */
+
+.lang-selector {
+    position: relative;
+    display: inline-block;
+}
+
+#lang-selector-btn {
+    background: none;
+    border: 1px solid var(--border-color);
+    border-radius: 6px;
+    padding: 0.25rem 0.5rem;
+    font-size: 0.8rem;
+    font-family: var(--font-sans);
+    color: var(--text-primary);
+    cursor: pointer;
+    line-height: 1;
+    transition:
+        background 0.15s,
+        border-color 0.15s;
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
+    white-space: nowrap;
+}
+
+#lang-selector-btn:hover {
+    background: var(--bg-tertiary);
+    border-color: var(--accent);
+}
+
+.lang-dropdown {
+    display: none;
+    position: absolute;
+    top: calc(100% + 4px);
+    right: 0;
+    background: var(--bg-secondary);
+    border: 1px solid var(--border-color);
+    border-radius: 6px;
+    padding: 0.25rem 0;
+    min-width: 130px;
+    z-index: 100;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+}
+
+.lang-dropdown.open {
+    display: block;
+}
+
+.lang-dropdown button {
+    display: block;
+    width: 100%;
+    background: none;
+    border: none;
+    padding: 0.4rem 0.75rem;
+    font-size: 0.85rem;
+    font-family: var(--font-sans);
+    color: var(--text-primary);
+    cursor: pointer;
+    text-align: left;
+    transition: background 0.1s;
+}
+
+.lang-dropdown button:hover {
+    background: var(--bg-tertiary);
+}
+
+.lang-dropdown button[data-lang-active="true"] {
+    color: var(--accent);
+    font-weight: 600;
+}

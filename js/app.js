@@ -46,6 +46,7 @@ import {
   syncLlmSettingsUI,
 } from "./ui.js";
 import { formatBytes } from "./utils.js";
+import { initI18n, t } from "./i18n.js";
 
 // Orama database instance (shared across ingestion and retrieval)
 let db = null;
@@ -64,6 +65,9 @@ let isGenerating = false;
  * 4. Wire up UI callbacks
  */
 export async function init() {
+  // Initialize i18n before anything else
+  initI18n();
+
   // Hardware detection
   const hardware = await detectHardware();
   setState({ hardware });
@@ -157,7 +161,7 @@ async function handleFileUpload(files) {
 
     // Load embedding model if not loaded
     if (!isEmbeddingLoaded()) {
-      showNotification("Loading embedding model...", "info");
+      showNotification(t("notif.loadingEmbedding"), "info");
       setState({ models: { ...getState().models, embedding: "loading" } });
 
       try {
@@ -167,7 +171,7 @@ async function handleFileUpload(files) {
         console.error("Failed to load embedding model:", error);
         setState({ models: { ...getState().models, embedding: "unloaded" } });
         showNotification(
-          `Failed to load embedding model: ${error.message || error}`,
+          t("notif.failedEmbedding", { error: error.message || error }),
           "error",
         );
         return;
@@ -200,11 +204,11 @@ async function handleFileUpload(files) {
       // Persist index to IndexedDB
       await persistIndex(db);
 
-      showNotification(`Successfully indexed ${file.name}`, "info");
+      showNotification(t("notif.fileIndexed", { file: file.name }), "info");
     } catch (error) {
       console.error("Ingestion failed:", error);
       showNotification(
-        `Failed to index ${file.name}: ${error.message}`,
+        t("notif.fileIndexFailed", { file: file.name, error: error.message }),
         "error",
       );
     }
@@ -253,14 +257,9 @@ async function handleQuery(query) {
     // Check if we have documents to search
     if (getDocumentCount(db) === 0) {
       const emptyMsg = renderStreamingMessage();
-      emptyMsg.onToken(
-        "Please upload some .txt documents first so I have context to answer your questions.",
-      );
+      emptyMsg.onToken(t("notif.noDocuments"));
       emptyMsg.finalize();
-      addMessage(
-        "assistant",
-        "Please upload some .txt documents first so I have context to answer your questions.",
-      );
+      addMessage("assistant", t("notif.noDocuments"));
       return;
     }
 
@@ -300,7 +299,7 @@ async function handleQuery(query) {
     }
   } catch (error) {
     console.error("Query failed:", error);
-    showNotification(`Query failed: ${error.message}`, "error");
+    showNotification(t("notif.queryFailed", { error: error.message }), "error");
   } finally {
     resetUIButtons();
   }
@@ -336,7 +335,7 @@ async function handleLoadModels() {
       console.error("Failed to load embedding model:", error);
       setState({ models: { ...getState().models, embedding: "unloaded" } });
       showNotification(
-        `Failed to load embedding model: ${error.message || error}`,
+        t("notif.failedEmbedding", { error: error.message || error }),
         "error",
       );
       hideLoadingModal();
@@ -361,7 +360,7 @@ async function handleLoadModels() {
       console.error("Failed to load LLM:", error);
       setState({ models: { ...getState().models, llm: "unloaded" } });
       showNotification(
-        `Failed to load LLM: ${error.message || error}`,
+        t("notif.failedLlm", { error: error.message || error }),
         "error",
       );
       hideLoadingModal();
@@ -375,7 +374,7 @@ async function handleLoadModels() {
   // Small delay so user sees the final state
   await new Promise((r) => setTimeout(r, 600));
   hideLoadingModal();
-  showNotification("Models loaded successfully", "info");
+  showNotification(t("notif.modelsLoaded"), "info");
 }
 
 /**
@@ -438,7 +437,7 @@ async function handleUnloadEmbedding() {
   });
 
   // Show notification immediately
-  showNotification("Embedding model unloaded", "info");
+  showNotification(t("notif.embeddingUnloaded"), "info");
 
   // If the LLM was loaded, reload it so the user can keep using it
   if (otherWasLoaded) {
@@ -448,10 +447,7 @@ async function handleUnloadEmbedding() {
     } catch (error) {
       console.error("Failed to reload LLM:", error);
       setState({ models: { ...getState().models, llm: "unloaded" } });
-      showNotification(
-        "Failed to reload LLM after unloading embedding",
-        "error",
-      );
+      showNotification(t("notif.reloadLlmFailed"), "error");
     }
   }
 }
@@ -477,7 +473,7 @@ async function handleUnloadLLM() {
   });
 
   // Show notification immediately
-  showNotification("LLM unloaded", "info");
+  showNotification(t("notif.llmUnloaded"), "info");
 
   // If the embedding model was loaded, reload it so the user can keep using it
   if (otherWasLoaded) {
@@ -487,10 +483,7 @@ async function handleUnloadLLM() {
     } catch (error) {
       console.error("Failed to reload embedding model:", error);
       setState({ models: { ...getState().models, embedding: "unloaded" } });
-      showNotification(
-        "Failed to reload embedding model after unloading LLM",
-        "error",
-      );
+      showNotification(t("notif.reloadEmbeddingFailed"), "error");
     }
   }
 }
@@ -502,7 +495,7 @@ function handleClearChat() {
   clearConversation();
   resetTokenTracking();
   document.getElementById("conversation").innerHTML = "";
-  showNotification("Chat cleared", "info");
+  showNotification(t("notif.chatCleared"), "info");
 }
 
 /**
@@ -512,7 +505,7 @@ function handleClearChat() {
 async function handleClearDB() {
   const count = getDocumentCount(db);
   const confirmed = confirm(
-    `This will permanently delete all indexed data (${count} chunks).\n\nThis action cannot be undone. Continue?`,
+    t("notif.dbClearConfirm", { count }) + "\n\n" + t("notif.cannotUndo"),
   );
   if (!confirmed) {
     return;
@@ -550,7 +543,7 @@ async function handleClearDB() {
     console.error("Failed to persist empty index:", error);
   }
 
-  showNotification(`Database cleared (${count} chunks removed)`, "info");
+  showNotification(t("notif.dbClearedWithCount", { count }), "info");
 }
 
 /**
@@ -559,10 +552,7 @@ async function handleClearDB() {
  */
 function handleExportDB() {
   if (!db || getDocumentCount(db) === 0) {
-    showNotification(
-      "No data to export. Upload and index documents first.",
-      "warning",
-    );
+    showNotification(t("notif.noDataExport"), "warning");
     return;
   }
 
@@ -581,10 +571,13 @@ function handleExportDB() {
     document.body.removeChild(a);
     URL.revokeObjectURL(url);
 
-    showNotification(`Exported ${count} chunks to ${filename}`, "info");
+    showNotification(t("notif.exported", { count, filename }), "info");
   } catch (error) {
     console.error("Export failed:", error);
-    showNotification(`Export failed: ${error.message}`, "error");
+    showNotification(
+      t("notif.exportFailed", { error: error.message }),
+      "error",
+    );
   }
 }
 
@@ -596,10 +589,7 @@ async function handleImportDB(file) {
   console.log("Importing database from:", file.name);
 
   if (!file.name.endsWith(".json")) {
-    showNotification(
-      "Invalid file type. Please select a .json export file.",
-      "error",
-    );
+    showNotification(t("notif.invalidFileType"), "error");
     return;
   }
 
@@ -610,7 +600,10 @@ async function handleImportDB(file) {
     // Validate the imported data
     const result = validateImport(parsed);
     if (!result.valid) {
-      showNotification(`Import validation failed: ${result.error}`, "error");
+      showNotification(
+        t("notif.importValidationFailed", { error: result.error }),
+        "error",
+      );
       return;
     }
 
@@ -621,10 +614,13 @@ async function handleImportDB(file) {
     const currentCount = db ? getDocumentCount(db) : 0;
     if (currentCount > 0) {
       const confirmed = confirm(
-        `This will REPLACE your current database (${currentCount} chunks) with the imported one (${importCount} chunks).\n\nContinue?`,
+        t("notif.importReplaceConfirm", {
+          current: currentCount,
+          imported: importCount,
+        }),
       );
       if (!confirmed) {
-        showNotification("Import cancelled.", "info");
+        showNotification(t("notif.importCancelled"), "info");
         return;
       }
     }
@@ -654,15 +650,18 @@ async function handleImportDB(file) {
     await persistIndex(db);
 
     showNotification(
-      `Imported database with ${importCount} chunks from ${file.name}`,
+      t("notif.imported", { count: importCount, file: file.name }),
       "info",
     );
   } catch (error) {
     console.error("Import failed:", error);
     if (error instanceof SyntaxError) {
-      showNotification("Import failed: file is not valid JSON.", "error");
+      showNotification(t("notif.invalidJson"), "error");
     } else {
-      showNotification(`Import failed: ${error.message}`, "error");
+      showNotification(
+        t("notif.importFailed", { error: error.message }),
+        "error",
+      );
     }
   }
 }
@@ -696,7 +695,7 @@ function resetUIButtons() {
  */
 function handleResetSettings() {
   syncSettingsUI();
-  showNotification("Search settings reset to defaults", "info");
+  showNotification(t("notif.settingsReset"), "info");
 }
 
 /**
@@ -704,7 +703,7 @@ function handleResetSettings() {
  */
 function handleResetLlmSettings() {
   syncLlmSettingsUI();
-  showNotification("LLM settings reset to defaults", "info");
+  showNotification(t("notif.llmSettingsReset"), "info");
 }
 
 // Bootstrap
