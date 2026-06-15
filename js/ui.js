@@ -133,6 +133,9 @@ export function initUI(callbacks) {
   // Initialize help modal
   initHelpModal();
 
+  // Initialize theme toggle
+  initThemeToggle();
+
   return { sendBtn, stopBtn, queryInput };
 }
 
@@ -1074,4 +1077,34 @@ function initHelpModal() {
       closeModal();
     }
   });
+}
+
+/**
+ * Initialize the theme toggle button.
+ * Reads persisted theme from localStorage (or defaults to "dark"),
+ * applies it, and wires the click handler.
+ */
+export function initThemeToggle() {
+  const btn = document.getElementById("theme-toggle-btn");
+  if (!btn) return;
+
+  const currentTheme = localStorage.getItem("theme") || "dark";
+  applyThemeEmoji(btn, currentTheme);
+
+  btn.addEventListener("click", () => {
+    const prev = localStorage.getItem("theme") || "dark";
+    const next = prev === "dark" ? "light" : "dark";
+    localStorage.setItem("theme", next);
+    document.documentElement.setAttribute("data-theme", next);
+    applyThemeEmoji(btn, next);
+  });
+}
+
+/**
+ * Update the toggle button emoji to match the active theme.
+ * @param {HTMLElement} btn
+ * @param {"dark"|"light"} theme
+ */
+function applyThemeEmoji(btn, theme) {
+  btn.textContent = theme === "dark" ? "🌙" : "☀️";
 }

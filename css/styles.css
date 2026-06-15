@@ -1,29 +1,65 @@
 /* ─── CSS Variables & Theme ─────────────────────────────────────── */
 
+/* ─── Dark Mode (default) ─────────────────────────────────────── */
+
 :root {
     --bg-primary: #0f0f0f;
-    --bg-secondary: #1a1a1a;
+    --bg-secondary: #1c1c1c;
     --bg-tertiary: #252525;
-    --bg-input: #1e1e1e;
-    --text-primary: #e4e4e7;
-    --text-secondary: #a1a1aa;
-    --text-muted: #71717a;
-    --border-color: #3f3f46;
-    --accent: #6366f1;
-    --accent-hover: #818cf8;
-    --accent-active: #4f46e5;
+    --bg-sidebar: #1c1c1c;
+    --bg-input: #1c1c1c;
+    --text-primary: #d4d4d4;
+    --text-secondary: #a0a0a0;
+    --text-muted: #6a6a6a;
+    --text-on-card: #d4d4d4;
+    --code-text: #d4d4d4;
+    --code-bg: #0f0f0f;
+    --border-color: #333333;
+    --accent: #ffcc00;
+    --accent-hover: #ffdd44;
+    --accent-active: #e6b800;
     --success: #22c55e;
     --warning: #eab308;
     --error: #ef4444;
-    --user-msg-bg: #2563eb;
-    --assistant-msg-bg: #27272a;
-    --citation-bg: #1e293b;
-    --scrollbar-track: #18181b;
-    --scrollbar-thumb: #3f3f46;
+    --user-msg-bg: #4488ff;
+    --assistant-msg-bg: #1c1c1c;
+    --citation-bg: #1c1c1c;
+    --scrollbar-track: #0f0f0f;
+    --scrollbar-thumb: #333333;
+    --tooltip-bg: #27272a;
     --font-sans:
         "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
         sans-serif;
     --font-mono: "JetBrains Mono", "Fira Code", "Cascadia Code", monospace;
+}
+
+/* ─── Light Mode ─────────────────────────────────────────────── */
+
+[data-theme="light"] {
+    --bg-primary: #f5f7fa;
+    --bg-secondary: #f0f2f5;
+    --bg-tertiary: #e2e6ec;
+    --bg-sidebar: #e2e8f0;
+    --bg-input: #ffffff;
+    --text-primary: #1a1a2e;
+    --text-secondary: #4a5568;
+    --text-muted: #718096;
+    --text-on-card: #1a1a2e;
+    --code-text: #1a1a2e;
+    --code-bg: #ffffff;
+    --border-color: #c8d0da;
+    --accent: #007cff;
+    --accent-hover: #3395ff;
+    --accent-active: #0066dd;
+    --success: #16a34a;
+    --warning: #d97706;
+    --error: #dc2626;
+    --user-msg-bg: #ff8504;
+    --assistant-msg-bg: #ffffff;
+    --citation-bg: #f0f4f8;
+    --scrollbar-track: #f0f2f5;
+    --scrollbar-thumb: #c8d0da;
+    --tooltip-bg: #f5f7fa;
 }
 
 /* ─── Reset & Base ─────────────────────────────────────────────── */
@@ -67,7 +103,7 @@ body {
 }
 
 ::-webkit-scrollbar-thumb:hover {
-    background: #52525b;
+    background: var(--border-color);
 }
 
 /* ─── Status Bar ───────────────────────────────────────────────── */
@@ -129,8 +165,8 @@ body {
     bottom: calc(100% + 8px);
     transform: translateX(-50%);
     padding: 0.35rem 0.65rem;
-    background: #27272a;
-    color: var(--text-primary);
+    background: var(--tooltip-bg);
+    color: var(--text-on-card);
     font-size: 0.75rem;
     line-height: 1.4;
     white-space: nowrap;
@@ -149,7 +185,7 @@ body {
     bottom: calc(100% + 2px);
     transform: translateX(-50%);
     border: 5px solid transparent;
-    border-top-color: #27272a;
+    border-top-color: var(--tooltip-bg);
     pointer-events: none;
     opacity: 0;
     transition: opacity 0.2s;
@@ -172,7 +208,7 @@ body {
 #sidebar {
     width: 320px;
     min-width: 280px;
-    background: var(--bg-secondary);
+    background: var(--bg-sidebar);
     border-right: 1px solid var(--border-color);
     display: flex;
     flex-direction: column;
@@ -630,7 +666,7 @@ body {
 .message-assistant {
     align-self: flex-start;
     background: var(--assistant-msg-bg);
-    color: var(--text-primary);
+    color: var(--text-on-card);
     border-bottom-left-radius: 4px;
 }
 
@@ -650,14 +686,16 @@ body {
 
 .message-content code {
     font-family: var(--font-mono);
-    background: var(--bg-primary);
+    background: var(--code-bg);
+    color: var(--code-text);
     padding: 0.15rem 0.35rem;
     border-radius: 4px;
     font-size: 0.85em;
 }
 
 .message-content pre {
-    background: var(--bg-primary);
+    background: var(--code-bg);
+    color: var(--code-text);
     padding: 0.75rem;
     border-radius: 8px;
     overflow-x: auto;
@@ -1533,4 +1571,26 @@ body {
     .help-info-block {
         padding: 0.75rem 1rem;
     }
+}
+
+/* ─── Theme Toggle Button ──────────────────────────────────── */
+
+#theme-toggle-btn {
+    background: none;
+    border: 1px solid var(--border-color);
+    border-radius: 6px;
+    padding: 0.25rem 0.5rem;
+    font-size: 1.2rem;
+    cursor: pointer;
+    line-height: 1;
+    transition:
+        background 0.15s,
+        border-color 0.15s;
+    display: flex;
+    align-items: center;
+}
+
+#theme-toggle-btn:hover {
+    background: var(--bg-tertiary);
+    border-color: var(--accent);
 }

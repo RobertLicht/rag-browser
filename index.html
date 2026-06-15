@@ -10,6 +10,15 @@
             href="https://cdn.jsdelivr.net/npm/katex@0.17.0/dist/katex.min.css"
         />
         <link rel="stylesheet" href="css/styles.css" />
+        <script>
+            /* Apply persisted theme before page render to avoid FOUC. */
+            (function () {
+                var theme = localStorage.getItem("theme");
+                if (theme) {
+                    document.documentElement.setAttribute("data-theme", theme);
+                }
+            })();
+        </script>
         <script src="https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.min.js"></script>
     </head>
     <body>
@@ -60,6 +69,9 @@
             <span id="index-status">Index: 0 chunks, 0 documents</span>
             <span id="token-status">Tokens: --</span>
             <span id="memory-status">Memory: --</span>
+            <button id="theme-toggle-btn" data-tooltip="Toggle theme">
+                🌙
+            </button>
             <button
                 id="help-btn"
                 class="help-btn"
