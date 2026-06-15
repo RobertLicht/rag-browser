@@ -11,12 +11,11 @@
         />
         <link rel="stylesheet" href="css/styles.css" />
         <script>
-            /* Apply persisted theme before page render to avoid FOUC. */
+            /* Apply persisted theme — defaults to dark. */
             (function () {
-                var theme = localStorage.getItem("theme");
-                if (theme) {
-                    document.documentElement.setAttribute("data-theme", theme);
-                }
+                var theme = localStorage.getItem("theme") || "dark";
+                localStorage.setItem("theme", theme);
+                document.documentElement.setAttribute("data-theme", theme);
             })();
         </script>
         <script src="https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.min.js"></script>
