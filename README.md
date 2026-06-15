@@ -44,6 +44,7 @@ graph TD
 - **Multi-turn Conversations** — Context-aware dialogue with your documents
 - **Model Lifecycle Control** — Independent load/unload controls for embedding model and LLM to manage memory
 - **Token Usage Tracking** — Real-time display of context window consumption (used / remaining tokens). Color-coded status indicator (green → yellow → red) with a pulsing animation when context is nearly full. A warning banner appears with a one-click "Clear Chat" button when remaining tokens are insufficient for a full response
+- **Help & About Modal** — Click the "?" button in the status bar to open a help panel with architecture overview, model storage and cache management instructions, and step-by-step WebGPU enablement guides for all major browsers
 
 ## Technology Stack
 
@@ -168,9 +169,53 @@ Then open `http://localhost:8080` in your browser.
 |----------------|----------|--------------------------------|
 | Chrome 113+    | ✅ Full  | WebGPU enabled by default      |
 | Edge 113+      | ✅ Full  | WebGPU enabled by default      |
-| Firefox        | ⚠️ WASM  | WebGPU behind a flag; WASM fallback |
-| Safari 17+     | ⚠️ WASM  | Limited WebGPU; WASM fallback  |
+| Firefox 141+   | ✅ Full  | WebGPU enabled by default (Windows). 145+ for macOS (Apple Silicon) |
+| Firefox (Linux/Android) | ⚠️ In Progress | Support expected in 2026 |
+| Safari 26+     | ✅ Full  | WebGPU enabled by default (macOS Tahoe 26, iOS 26) |
+| Safari < 26    | ⚠️ WASM  | WebGPU not available; WASM fallback |
+| Opera 99+      | ✅ Full  | Chromium-based, WebGPU enabled |
+
+## Intended Use
+
+RAG-Browser is designed as a **personal, privacy-first tool** for querying a small to medium
+collection of documents locally in your browser. It is best suited for:
+
+- **Personal knowledge management** — Searching through your own notes, articles, or research papers.
+- **Lightweight document Q&A** — Asking questions about a handful of uploaded documents without sending data to any cloud service.
+- **Prototyping and experimentation** — Evaluating RAG workflows entirely client-side before committing to a server-based solution.
+
+### Limitations
+
+Because the entire AI pipeline runs inside a web browser, the application is subject to the
+following constraints:
+
+- **Document size** — Only medium-sized documents are practical. Very large files (hundreds of pages or more) may cause slow parsing, high memory usage, or browser crashes.
+- **Document volume** — The application works best with a modest number of documents. Indexing many large files simultaneously can exhaust browser memory.
+- **Performance** — Inference speed depends on your device and browser. Without WebGPU acceleration, generation can be 10–50× slower. Even with WebGPU, throughput is lower than a dedicated server or native application.
+- **Memory constraints** — The browser sandbox limits available memory. Models and document embeddings reside in-process and may be evicted or cause tab instability under heavy load.
+- **No long-running background tasks** — Closing or refreshing the tab interrupts any in-progress generation or ingestion.
+
+RAG-Browser is **not intended** for enterprise-scale document retrieval, high-throughput production workloads, or scenarios where consistent response times are critical.
 
 ## License
 
 This project is provided as-is for personal and research use.
+
+This application incorporates the following models, licensed under the Apache License 2.0:
+
+- **Qwen3-Embedding-0.6B-ONNX** — [onnx-community/Qwen3-Embedding-0.6B-ONNX](https://huggingface.co/onnx-community/Qwen3-Embedding-0.6B-ONNX)
+  Licensed under the [Apache License 2.0](https://www.apache.org/licenses/LICENSE-2.0).
+- **Qwen3.5-2B-ONNX** — [huggingworld/Qwen3.5-2B-ONNX](https://huggingface.co/huggingworld/Qwen3.5-2B-ONNX) (derived from [Qwen/Qwen3.5-2B-Base](https://huggingface.co/Qwen/Qwen3.5-2B-Base))
+  Licensed under the [Apache License 2.0](https://www.apache.org/licenses/LICENSE-2.0).
+
+### Model Citation
+
+```bibtex
+@misc{qwen3.5,
+    title  = {{Qwen3.5}: Towards Native Multimodal Agents},
+    author = {{Qwen Team}},
+    month  = {February},
+    year   = {2026},
+    url    = {https://qwen.ai/blog?id=qwen3.5}
+}
+```
