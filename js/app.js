@@ -39,6 +39,7 @@ import {
   hideLoadingModal,
   updateLoadingModal,
   setFileInputEnabled,
+  setSendButtonEnabled,
   setUnloadButtonStates,
   syncSettingsUI,
   syncLlmSettingsUI,
@@ -293,7 +294,6 @@ async function handleQuery(query) {
     showNotification(`Query failed: ${error.message}`, "error");
   } finally {
     resetUIButtons();
-    isGenerating = false;
   }
 }
 
@@ -386,13 +386,24 @@ function onModelProgress(step, info) {
 }
 
 /**
- * React to model state changes: enable file input when both models are ready.
+ * React to model state changes: enable UI elements based on which models are loaded.
+ * - File uploads require only the embedding model (for generating embeddings).
+ * - Querying requires both embedding and LLM models.
  * @param {Object} state - Current application state
  */
 function updateModelState(state) {
   const { embedding, llm } = state.models;
-  setFileInputEnabled(embedding === "ready" && llm === "ready");
-  setUnloadButtonStates(embedding === "ready", llm === "ready");
+  const embeddingReady = embedding === "ready";
+  const llmReady = llm === "ready";
+
+  // File input: only embedding model required
+  setFileInputEnabled(embeddingReady);
+
+  // Send button + query input: both models required, but keep disabled during generation
+  setSendButtonEnabled(embeddingReady && llmReady, isGenerating);
+
+  // Unload buttons: enabled when their respective model is loaded
+  setUnloadButtonStates(embeddingReady, llmReady);
 }
 
 /**
@@ -658,13 +669,16 @@ function getUIButtons() {
 }
 
 /**
- * Reset UI buttons to default state.
+ * Reset UI buttons after query generation completes.
+ * Re-enables send button and query input based on current model state.
  */
 function resetUIButtons() {
-  const { sendBtn, stopBtn, queryInput } = getUIButtons();
-  sendBtn.disabled = false;
+  const { stopBtn } = getUIButtons();
   stopBtn.style.display = "none";
-  queryInput.disabled = false;
+
+  // Re-evaluate button states based on model availability (generation is now complete)
+  isGenerating = false;
+  updateModelState(getState());
 }
 
 /**

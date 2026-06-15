@@ -525,12 +525,36 @@ export function updateLoadingModal(step, progress, status, file) {
 
 /**
  * Enable or disable the file input based on model loading state.
- * Both embedding and LLM must be 'ready' to enable uploads.
+ * Only the embedding model is required for file uploads (needed for generating embeddings).
+ * Also toggles the wrapper's .disabled class for tooltip visibility.
  * @param {boolean} enabled
  */
 export function setFileInputEnabled(enabled) {
   const fileInput = document.getElementById("file-input");
+  const wrapper = document.getElementById("file-input-wrapper");
   fileInput.disabled = !enabled;
+  if (wrapper) {
+    wrapper.classList.toggle("disabled", !enabled);
+  }
+}
+
+/**
+ * Enable or disable the Send button and query input based on model loading state.
+ * Both embedding and LLM must be 'ready' to enable querying.
+ * If `isGenerating` is true, keeps the button disabled even if models are ready.
+ * @param {boolean} enabled
+ * @param {boolean} [isGenerating=false] - Whether LLM generation is currently in progress
+ */
+export function setSendButtonEnabled(enabled, isGenerating = false) {
+  const sendBtn = document.getElementById("send-btn");
+  const queryInput = document.getElementById("query-input");
+  const actuallyEnabled = enabled && !isGenerating;
+  if (sendBtn) {
+    sendBtn.disabled = !actuallyEnabled;
+  }
+  if (queryInput) {
+    queryInput.disabled = !actuallyEnabled;
+  }
 }
 
 /**

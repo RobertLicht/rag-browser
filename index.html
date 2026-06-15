@@ -64,12 +64,17 @@
             <!-- Sidebar: Document Management -->
             <aside id="sidebar">
                 <h2>Documents</h2>
-                <input
-                    type="file"
-                    id="file-input"
-                    accept=".txt,.md,.csv,.xls,.xlsx,.docx,.pptx,.odt,.ods,.odp,.pdf"
-                    multiple
-                />
+                <div
+                    id="file-input-wrapper"
+                    data-tooltip="Load the embedding model first to enable file uploads."
+                >
+                    <input
+                        type="file"
+                        id="file-input"
+                        accept=".txt,.md,.csv,.xls,.xlsx,.docx,.pptx,.odt,.ods,.odp,.pdf"
+                        multiple
+                    />
+                </div>
                 <div id="format-hint">
                     .txt · .md · .csv · .xls · .xlsx · .docx · .pptx · .odt ·
                     .ods · .odp · .pdf
@@ -377,8 +382,14 @@
                         id="query-input"
                         placeholder="Ask a question about your documents..."
                         rows="3"
+                        data-tooltip="Load the relevant models first to enable querying."
                     ></textarea>
-                    <button id="send-btn">Send</button>
+                    <button
+                        id="send-btn"
+                        data-tooltip="Load the relevant models first to enable querying."
+                    >
+                        Send
+                    </button>
                     <button id="stop-btn" style="display: none">Stop</button>
                 </div>
             </main>
