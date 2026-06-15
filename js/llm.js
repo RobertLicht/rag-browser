@@ -62,9 +62,10 @@ export async function loadLLM(config, onProgress) {
  * @param {Array} messages - Conversation messages
  * @param {Function} onToken - Callback receiving final full text (called once after generation)
  * @param {Function} onComplete - Callback receiving final full response text
+ * @param {Function} [onPhase] - Optional callback for phase updates during generation
  * @returns {Promise<string>} The full generated response text
  */
-export async function generateResponse(messages, onToken, onComplete) {
+export async function generateResponse(messages, onToken, onComplete, onPhase) {
   // Create interruptible stopping criteria for stop-generation support
   currentStoppingCriteria = new InterruptableStoppingCriteria();
 
@@ -119,39 +120,76 @@ export async function generateResponse(messages, onToken, onComplete) {
   const {
     llmConfig: { generation },
   } = getState();
-  const output = await model.generate({
-    ...inputs,
-    max_new_tokens: generation.max_new_tokens,
-    do_sample: true,
-    temperature: generation.temperature,
-    top_p: generation.top_p,
-    top_k: generation.top_k,
-    min_p: generation.min_p,
-    presence_penalty: generation.presence_penalty,
-    repetition_penalty: generation.repetition_penalty,
-    stopping_criteria: [currentStoppingCriteria],
-  });
 
-  // Decode all generated tokens in one shot using the tokenizer.
-  // This avoids the incremental decoding bug in TextStreamer.
-  //
-  // Extract the raw token IDs from the output tensor, slice off the input
-  // prefix, and decode the remaining generated tokens as a single batch.
-  const rawOutput = Array.from(output.data);
-  const generatedTokenIds = rawOutput.slice(inputLength);
-  const fullText = processor.tokenizer.decode(generatedTokenIds, {
-    skip_special_tokens: true,
-  });
+  // Signal that generation is about to start. Because model.generate() runs
+  // async on WebGPU, the event loop remains free and setInterval callbacks
+  // fire during generation, allowing calm, time-based phase updates.
+  let genInterval = null;
+  if (onPhase) {
+    const initialPhase = llmConfig.enableThinking
+      ? "generating_thinking"
+      : "generating";
+    onPhase(initialPhase);
 
-  // Exact output token count from the generated token IDs
-  const outputTokenCount = generatedTokenIds.length;
+    const startTime = Date.now();
+    let currentPhase = initialPhase;
 
-  // Dispatch to UI callbacks
-  if (onToken) onToken(fullText);
-  if (onComplete) onComplete(fullText, { outputTokenCount });
+    genInterval = setInterval(() => {
+      const elapsed = (Date.now() - startTime) / 1000;
+      let newPhase = currentPhase;
 
-  currentStoppingCriteria = null;
-  return { text: fullText, outputTokenCount };
+      if (llmConfig.enableThinking) {
+        if (elapsed >= 50) newPhase = "generating_finalizing";
+        else if (elapsed >= 20) newPhase = "generating_formulating";
+      } else {
+        if (elapsed >= 30) newPhase = "generating_finalizing";
+        else if (elapsed >= 10) newPhase = "generating_composing";
+      }
+
+      if (newPhase !== currentPhase) {
+        currentPhase = newPhase;
+        onPhase(newPhase);
+      }
+    }, 2000);
+  }
+
+  try {
+    const output = await model.generate({
+      ...inputs,
+      max_new_tokens: generation.max_new_tokens,
+      do_sample: true,
+      temperature: generation.temperature,
+      top_p: generation.top_p,
+      top_k: generation.top_k,
+      min_p: generation.min_p,
+      presence_penalty: generation.presence_penalty,
+      repetition_penalty: generation.repetition_penalty,
+      stopping_criteria: [currentStoppingCriteria],
+    });
+
+    // Decode all generated tokens in one shot using the tokenizer.
+    // This avoids the incremental decoding bug in TextStreamer.
+    //
+    // Extract the raw token IDs from the output tensor, slice off the input
+    // prefix, and decode the remaining generated tokens as a single batch.
+    const rawOutput = Array.from(output.data);
+    const generatedTokenIds = rawOutput.slice(inputLength);
+    const fullText = processor.tokenizer.decode(generatedTokenIds, {
+      skip_special_tokens: true,
+    });
+
+    // Exact output token count from the generated token IDs
+    const outputTokenCount = generatedTokenIds.length;
+
+    // Dispatch to UI callbacks
+    if (onToken) onToken(fullText);
+    if (onComplete) onComplete(fullText, { outputTokenCount });
+
+    currentStoppingCriteria = null;
+    return { text: fullText, outputTokenCount };
+  } finally {
+    if (genInterval) clearInterval(genInterval);
+  }
 }
 
 /**

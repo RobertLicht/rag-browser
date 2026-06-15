@@ -829,6 +829,57 @@ body {
 
 /* ─── Streaming Cursor ─────────────────────────────────────────── */
 
+/* ─── Phase Indicator (during generation) ─────────────────────── */
+
+.phase-indicator {
+    display: inline-flex;
+    align-items: baseline;
+    gap: 0.5rem;
+    opacity: 0;
+    transition: opacity 0.4s ease;
+}
+
+.phase-indicator.visible {
+    opacity: 1;
+}
+
+.phase-indicator.fading {
+    opacity: 0;
+    transition: opacity 0.6s ease;
+}
+
+.phase-dot {
+    flex-shrink: 0;
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background: var(--accent);
+    animation: phase-pulse 2.5s ease-in-out infinite;
+}
+
+.phase-text {
+    font-size: 0.85em;
+    color: var(--text-muted);
+    transition: opacity 0.3s ease;
+    user-select: none;
+}
+
+.phase-text.updating {
+    opacity: 0;
+}
+
+@keyframes phase-pulse {
+    0%,
+    100% {
+        opacity: 0.35;
+        transform: scale(1);
+    }
+    50% {
+        opacity: 1;
+        transform: scale(1.25);
+    }
+}
+
 .streaming-cursor {
     display: inline-block;
     width: 8px;

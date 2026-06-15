@@ -285,6 +285,7 @@ async function handleQuery(query) {
         messageRenderer.finalize(sourceChunks, similarity);
         addMessage("assistant", fullText, sourceChunks);
       },
+      messageRenderer.onPhase,
     );
 
     const { sourceChunks, similarity } = pipelineResult;

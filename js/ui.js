@@ -306,24 +306,44 @@ export function renderStreamingMessage() {
   scrollConversation();
 
   let previousText = "";
-  let thinkingNode = null; // tracks the "Thinking..." text node
-  let renderTimeout = null; // debounces markdown re-rendering during streaming
+  let phaseEl = null; // tracks the phase indicator element
+  let renderTimeout = null;
+
+  const PHASE_MESSAGES = {
+    embedding: "Preparing query...",
+    searching: "Searching knowledge base...",
+    generating: "Generating response...",
+    generating_composing: "Composing answer...",
+    generating_finalizing: "Finalizing response...",
+    generating_thinking: "Reasoning through the problem...",
+    generating_formulating: "Formulating answer...",
+  };
 
   return {
     messageEl: el,
-    // Show "Thinking..." loading state during model generation
+    // Show the phase indicator with a pulsing dot and initial text
     showThinking: () => {
-      thinkingNode = document.createTextNode("Thinking...");
-      contentEl.insertBefore(thinkingNode, cursor);
+      phaseEl = document.createElement("div");
+      phaseEl.className = "phase-indicator visible";
+      phaseEl.innerHTML =
+        '<span class="phase-dot"></span><span class="phase-text">Processing...</span>';
+      contentEl.insertBefore(phaseEl, cursor);
       scrollConversation();
     },
+    // Update phase text as the RAG pipeline progresses through each step
+    onPhase: (phase) => {
+      if (!phaseEl) return;
+      const textEl = phaseEl.querySelector(".phase-text");
+      if (textEl && PHASE_MESSAGES[phase]) {
+        textEl.textContent = PHASE_MESSAGES[phase];
+      }
+    },
     // Called with the final FULL accumulated text after generation completes.
-    // Previously called per-token during streaming; now called once with full text.
     onToken: (fullText) => {
-      // Clear the "Thinking..." placeholder before showing actual response
-      if (thinkingNode && thinkingNode.parentNode) {
-        thinkingNode.parentNode.removeChild(thinkingNode);
-        thinkingNode = null;
+      // Remove phase indicator before showing actual response
+      if (phaseEl && phaseEl.parentNode) {
+        phaseEl.parentNode.removeChild(phaseEl);
+        phaseEl = null;
       }
 
       previousText = fullText;
@@ -342,7 +362,7 @@ export function renderStreamingMessage() {
       }, 80);
     },
     getFullText: () => previousText,
-    // Remove cursor, clear thinking placeholder, render final markdown+LaTeX, and optionally add citations
+    // Remove cursor and phase indicator, render final markdown+LaTeX, and optionally add citations
     finalize: (sourceChunks = null, similarities = null) => {
       // Clear any pending render timeout
       if (renderTimeout) {
@@ -350,10 +370,10 @@ export function renderStreamingMessage() {
         renderTimeout = null;
       }
 
-      // Always clear the thinking placeholder (in case onToken was never called)
-      if (thinkingNode && thinkingNode.parentNode) {
-        thinkingNode.parentNode.removeChild(thinkingNode);
-        thinkingNode = null;
+      // Remove phase indicator if still present (e.g., if onToken was never called)
+      if (phaseEl && phaseEl.parentNode) {
+        phaseEl.parentNode.removeChild(phaseEl);
+        phaseEl = null;
       }
       cursor.remove();
 

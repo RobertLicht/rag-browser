@@ -120,7 +120,7 @@ Question: {question}`;
  * Instructs Qwen3.5 to keep reasoning brief and focused, avoiding
  * over-analysis. Context and question are injected at runtime.
  */
-const SYSTEM_PROMPT_THINKING = `You are a helpful assistant. Keep your reasoning brief and focused. Do NOT overthink. Answer the user's question using ONLY the provided context and highlight the final conclusion. If the context does not contain enough information, say so clearly. Cite your sources by referencing the document chunks.
+const SYSTEM_PROMPT_THINKING = `You are a helpful assistant. Keep your reasoning brief and focused. Do not loop. Do NOT overthink. Answer the user's question using ONLY the provided context and highlight the final conclusion. If the context does not contain enough information, say so clearly. Cite your sources by referencing the document chunks.
 
 Context:
 {context}
@@ -139,16 +139,26 @@ const MAX_HISTORY = 10;
  * @param {Object} db - Orama database instance
  * @param {Function} onToken - Streaming callback receiving accumulated text
  * @param {Function} onComplete - Completion callback receiving final text
+ * @param {Function} [onPhase] - Optional callback for UI phase updates ("embedding", "searching", "generating")
  * @returns {Promise<{ sourceChunks: Array, similarity: Array }>}
  */
-export async function retrieveAndGenerate(query, db, onToken, onComplete) {
+export async function retrieveAndGenerate(
+  query,
+  db,
+  onToken,
+  onComplete,
+  onPhase,
+) {
   // Step 1: Embed query (with instruction wrapper)
+  if (onPhase) onPhase("embedding");
   const queryEmbedding = await embedQuery(query);
 
   // Step 2: Get current configuration from state
   const { searchConfig, llmConfig } = getState();
   const enableThinking = llmConfig.enableThinking;
 
+  // Step 3: Search for relevant chunks
+  if (onPhase) onPhase("searching");
   let results;
   if (searchConfig.mode === "hybrid") {
     // Hybrid search — combines BM25 keyword matching with vector similarity.
@@ -214,20 +224,25 @@ export async function retrieveAndGenerate(query, db, onToken, onComplete) {
   const inputTokens = estimateInputTokens(messages);
 
   // Step 6: Generate response via LLM
-  const result = await generateResponse(messages, onToken, (fullText, meta) => {
-    // Update token tracking with actual counts
-    if (meta?.outputTokenCount !== undefined) {
-      updateTokenTracking(inputTokens, meta.outputTokenCount);
-    }
+  const result = await generateResponse(
+    messages,
+    onToken,
+    (fullText, meta) => {
+      // Update token tracking with actual counts
+      if (meta?.outputTokenCount !== undefined) {
+        updateTokenTracking(inputTokens, meta.outputTokenCount);
+      }
 
-    if (onComplete) {
-      onComplete(fullText, {
-        sourceChunks: results.hits?.map((hit) => hit.document) ?? [],
-        similarity: results.hits?.map((hit) => hit.score) ?? [],
-        outputTokenCount: meta?.outputTokenCount ?? 0,
-      });
-    }
-  });
+      if (onComplete) {
+        onComplete(fullText, {
+          sourceChunks: results.hits?.map((hit) => hit.document) ?? [],
+          similarity: results.hits?.map((hit) => hit.score) ?? [],
+          outputTokenCount: meta?.outputTokenCount ?? 0,
+        });
+      }
+    },
+    onPhase,
+  );
 
   return {
     sourceChunks: results.hits?.map((hit) => hit.document) ?? [],
