@@ -43,6 +43,7 @@ graph TD
 - **Streaming Responses** — Token-by-token output for responsive UX
 - **Multi-turn Conversations** — Context-aware dialogue with your documents
 - **Model Lifecycle Control** — Independent load/unload controls for embedding model and LLM to manage memory
+- **Token Usage Tracking** — Real-time display of context window consumption (used / remaining tokens). Color-coded status indicator (green → yellow → red) with a pulsing animation when context is nearly full. A warning banner appears with a one-click "Clear Chat" button when remaining tokens are insufficient for a full response
 
 ## Technology Stack
 
@@ -91,17 +92,17 @@ rag-v2-qwen3.6-27b/
 | Module            | Responsibility                                    |
 |-------------------|---------------------------------------------------|
 | `hardware.js`     | Detect WebGPU, device memory, select dtype        |
-| `state.js`        | Central state management with subscriber pattern  |
+| `state.js`        | Central state management with subscriber pattern; token tracking state  |
 | `embedding.js`    | Load/unload embedding model, generate embeddings  |
-| `llm.js`          | Load/unload LLM, stream token generation          |
+| `llm.js`          | Load/unload LLM, stream token generation; reports exact output token count  |
 | `chunker.js`      | Split text into chunks with paragraph awareness        |
 | `fileParser.js`   | Parse multi-format documents to plain text             |
 | `orama-db.js`     | Create DB, insert chunks, vector search, persist       |
-| `rag-pipeline.js` | Orchestrate ingestion → embedding → retrieval     |
+| `rag-pipeline.js` | Orchestrate ingestion → embedding → retrieval; estimates input tokens and updates tracking  |
 | `renderer.js`     | Stream token-by-token rendering of LLM output    |
-| `ui.js`           | Render chat, progress, streaming, document list   |
+| `ui.js`           | Render chat, progress, streaming, document list, token status indicator and warning banner  |
 | `app.js`          | Wire everything together; event handlers          |
-| `utils.js`        | Shared utilities                                  |
+| `utils.js`        | Shared utilities; token estimation with chat template overhead and warning level logic  |
 
 ## Getting Started
 
@@ -129,12 +130,14 @@ Then open `http://localhost:8080` in your browser.
 
 1. **Load Models** — Click "Load Models" to download and initialize the embedding model and LLM
 2. **Upload Documents** — Select files (`.txt`, `.md`, `.csv`, `.xls`, `.xlsx`, `.docx`, `.pptx`, `.odt`, `.ods`, `.odp`, `.pdf`) via the file input (supports multiple uploads)
-4. **Configure Search** — Use the Search Settings panel in the sidebar to adjust BM25/semantic weights, similarity thresholds, and top-N results
-5. **Toggle Thinking Mode** — Use the LLM Settings panel to enable reasoning mode. When on, the model outputs a collapsible thinking block before its answer. Use the "Max Thinking Tokens" slider to control the reasoning budget (1024–8192 tokens, default 2048)
-6. **Ask Questions** — Type a query in the chat panel and press Send
-6. **Manage Indexes** — Export your document index as JSON or import an existing index
-7. **Control Memory** — Unload individual models (embedding or LLM) independently via sidebar controls
-8. **Stop Generation** — Click "Stop" to cancel a running response
+3. **Configure Search** — Use the Search Settings panel in the sidebar to adjust BM25/semantic weights, similarity thresholds, and top-N results
+4. **Toggle Thinking Mode** — Use the LLM Settings panel to enable reasoning mode. When on, the model outputs a collapsible thinking block before its answer. Use the "Max Thinking Tokens" slider to control the reasoning budget (1024–8192 tokens, default 2048)
+5. **Ask Questions** — Type a query in the chat panel and press Send
+6. **Monitor Token Usage** — The status bar shows real-time context window consumption. When tokens run low, a color-coded indicator warns you and a banner offers a one-click "Clear Chat" to reset the context
+7. **Manage Indexes** — Export your document index as JSON or import an existing index
+8. **Control Memory** — Unload individual models (embedding or LLM) independently via sidebar controls
+9. **Stop Generation** — Click "Stop" to cancel a running response
+10. **Clear Chat** — Reset the conversation and token usage from the sidebar or the warning banner
 
 ## System Requirements
 
