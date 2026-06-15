@@ -1,6 +1,6 @@
 // ui.js — UI rendering, DOM manipulation, event handling
 
-import { generateUUID } from "./utils.js";
+import { generateUUID, formatTokens } from "./utils.js";
 import { renderMarkdown, renderLaTeX } from "./renderer.js";
 import {
   setSearchConfig,
@@ -154,11 +154,61 @@ export function updateStatusBar(state) {
   // Index status
   indexStatus.textContent = `Index: ${state.index.totalChunks} chunks, ${state.index.totalDocuments} documents`;
 
+  // Token status
+  updateTokenStatus(state.tokenTracking);
+
   // Memory status (if performance API available)
   if (performance.memory) {
     const usedMB = (performance.memory.usedJSHeapSize / 1048576).toFixed(1);
     const limitMB = (performance.memory.jsHeapSizeLimit / 1048576).toFixed(0);
     memoryStatus.textContent = `Memory: ${usedMB} MB / ${limitMB} MB`;
+  }
+}
+
+/**
+ * Update the token status indicator in the status bar.
+ * @param {Object} tracking - Token tracking state from state.js
+ */
+export function updateTokenStatus(tracking) {
+  const tokenStatus = document.getElementById("token-status");
+  if (!tokenStatus) return;
+
+  const { totalTokens, remainingTokens, contextWindow, warningLevel } =
+    tracking;
+
+  tokenStatus.className = warningLevel;
+  tokenStatus.textContent = `Tokens: ${formatTokens(totalTokens)} / ${formatTokens(contextWindow)} (${formatTokens(remainingTokens)} left)`;
+
+  // Update warning banner
+  updateTokenWarningBanner(warningLevel, remainingTokens);
+}
+
+/**
+ * Show/hide the token warning banner based on warning level.
+ * @param {'ok' | 'warning' | 'critical' | 'exceeded'} level
+ * @param {number} remainingTokens
+ */
+export function updateTokenWarningBanner(level, remainingTokens) {
+  const banner = document.getElementById("token-warning-banner");
+  const warningText = document.getElementById("token-warning-text");
+  if (!banner || !warningText) return;
+
+  if (level === "ok") {
+    banner.style.display = "none";
+    return;
+  }
+
+  banner.style.display = "flex";
+  banner.className =
+    level === "critical" || level === "exceeded" ? "critical" : "";
+
+  if (level === "exceeded") {
+    warningText.textContent =
+      "Context window exceeded. Please clear the chat to continue.";
+  } else if (level === "critical") {
+    warningText.textContent = `Context nearly full (${remainingTokens} tokens remaining). Consider clearing the chat.`;
+  } else {
+    warningText.textContent = `Context getting full (${remainingTokens} tokens remaining). You may want to clear the chat soon.`;
   }
 }
 

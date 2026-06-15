@@ -5,7 +5,8 @@ import { embedQuery, embedDocuments, getEmbeddingArrays } from "./embedding.js";
 import { parseFile, needsOfficeParser, needsPdfJs } from "./fileParser.js";
 import { generateResponse } from "./llm.js";
 import { insertChunks, searchHybrid, searchVector } from "./orama-db.js";
-import { getRecentHistory, getState } from "./state.js";
+import { getRecentHistory, getState, updateTokenTracking } from "./state.js";
+import { estimateInputTokens } from "./utils.js";
 
 // ─── Ingestion Pipeline ───────────────────────────────────────────────
 
@@ -119,7 +120,7 @@ Question: {question}`;
  * Instructs Qwen3.5 to keep reasoning brief and focused, avoiding
  * over-analysis. Context and question are injected at runtime.
  */
-const SYSTEM_PROMPT_THINKING = `You are a helpful assistant. Keep your reasoning brief and focused. Do NOT overthink. Answer the user's question using ONLY the provided context. If the context does not contain enough information, say so clearly. Cite your sources by referencing the document chunks.
+const SYSTEM_PROMPT_THINKING = `You are a helpful assistant. Keep your reasoning brief and focused. Do NOT overthink. Answer the user's question using ONLY the provided context and highlight the final conclusion. If the context does not contain enough information, say so clearly. Cite your sources by referencing the document chunks.
 
 Context:
 {context}
@@ -209,12 +210,21 @@ export async function retrieveAndGenerate(query, db, onToken, onComplete) {
     { role: "user", content: [{ type: "text", text: query }] },
   ];
 
+  // Estimate input tokens for tracking
+  const inputTokens = estimateInputTokens(messages);
+
   // Step 6: Generate response via LLM
-  await generateResponse(messages, onToken, (fullText) => {
+  const result = await generateResponse(messages, onToken, (fullText, meta) => {
+    // Update token tracking with actual counts
+    if (meta?.outputTokenCount !== undefined) {
+      updateTokenTracking(inputTokens, meta.outputTokenCount);
+    }
+
     if (onComplete) {
       onComplete(fullText, {
         sourceChunks: results.hits?.map((hit) => hit.document) ?? [],
         similarity: results.hits?.map((hit) => hit.score) ?? [],
+        outputTokenCount: meta?.outputTokenCount ?? 0,
       });
     }
   });

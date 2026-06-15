@@ -36,3 +36,53 @@ export function formatBytes(bytes) {
 export function getNewText(fullText, previousText) {
   return fullText.slice(previousText.length);
 }
+
+// ─── Token Tracking Utilities ───────────────────────────────────────
+
+/**
+ * Chat template adds formatting tokens (role markers, separators, special tokens).
+ * This multiplier accounts for the overhead the processor.apply_chat_template() adds.
+ */
+const CHAT_TEMPLATE_OVERHEAD = 1.15;
+
+/**
+ * Estimate tokens for an array of messages, accounting for chat template overhead.
+ * Each message is { role, content: [{ type: 'text', text: '...' }] } or { role, content: '...' }
+ */
+export function estimateInputTokens(messages) {
+  if (!messages || messages.length === 0) return 0;
+
+  const rawCharCount = messages.reduce((sum, msg) => {
+    const text =
+      typeof msg.content === "string"
+        ? msg.content
+        : msg.content?.[0]?.type === "text"
+          ? msg.content[0].text
+          : "";
+    return sum + text.length;
+  }, 0);
+
+  return Math.ceil((rawCharCount / 4) * CHAT_TEMPLATE_OVERHEAD);
+}
+
+/**
+ * Format token count with K/M suffix for display.
+ */
+export function formatTokens(n) {
+  if (n >= 1_000_000) return `${(n / 1_000_000).toFixed(1)}M`;
+  if (n >= 1_000) return `${(n / 1_000).toFixed(1)}K`;
+  return n.toString();
+}
+
+/**
+ * Determine warning level based on remaining tokens and reserved output budget.
+ * @param {number} remaining - Remaining tokens in context window
+ * @param {number} reservedOutput - Tokens reserved for model output (max_new_tokens)
+ * @returns {'ok' | 'warning' | 'critical' | 'exceeded'}
+ */
+export function getWarningLevel(remaining, reservedOutput) {
+  if (remaining <= 0) return "exceeded";
+  if (remaining <= reservedOutput * 0.25) return "critical";
+  if (remaining <= reservedOutput * 0.75) return "warning";
+  return "ok";
+}

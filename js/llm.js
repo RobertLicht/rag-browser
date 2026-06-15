@@ -143,12 +143,15 @@ export async function generateResponse(messages, onToken, onComplete) {
     skip_special_tokens: true,
   });
 
+  // Exact output token count from the generated token IDs
+  const outputTokenCount = generatedTokenIds.length;
+
   // Dispatch to UI callbacks
   if (onToken) onToken(fullText);
-  if (onComplete) onComplete(fullText);
+  if (onComplete) onComplete(fullText, { outputTokenCount });
 
   currentStoppingCriteria = null;
-  return fullText;
+  return { text: fullText, outputTokenCount };
 }
 
 /**

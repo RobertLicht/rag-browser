@@ -57,8 +57,20 @@
             <span id="hardware-status">Detecting hardware...</span>
             <span id="model-status">Models: unloaded</span>
             <span id="index-status">Index: 0 chunks, 0 documents</span>
+            <span id="token-status">Tokens: --</span>
             <span id="memory-status">Memory: --</span>
         </header>
+
+        <!-- Token Warning Banner -->
+        <div id="token-warning-banner" style="display: none">
+            <div class="token-warning-content">
+                <span class="token-warning-icon">⚠</span>
+                <span class="token-warning-text" id="token-warning-text"></span>
+                <button id="clear-chat-warn-btn" class="clear-chat-warn-btn">
+                    Clear Chat
+                </button>
+            </div>
+        </div>
 
         <div id="app-container">
             <!-- Sidebar: Document Management -->

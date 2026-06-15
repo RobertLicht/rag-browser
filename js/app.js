@@ -7,6 +7,7 @@ import {
   subscribe,
   addMessage,
   clearConversation,
+  resetTokenTracking,
 } from "./state.js";
 import {
   loadEmbeddingModel,
@@ -106,6 +107,13 @@ export async function init() {
     onResetSearchConfig: handleResetSettings,
     onResetLlmConfig: handleResetLlmSettings,
   });
+
+  // Wire warning banner clear-chat button
+  document
+    .getElementById("clear-chat-warn-btn")
+    .addEventListener("click", () => {
+      handleClearChat();
+    });
 
   // Subscribe to state changes for UI updates
   subscribe(updateStatusBar);
@@ -491,6 +499,7 @@ async function handleUnloadLLM() {
  */
 function handleClearChat() {
   clearConversation();
+  resetTokenTracking();
   document.getElementById("conversation").innerHTML = "";
   showNotification("Chat cleared", "info");
 }

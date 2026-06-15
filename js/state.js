@@ -1,6 +1,11 @@
 // state.js — Central application state with observable pattern
 
-import { generateUUID } from "./utils.js";
+import {
+  generateUUID,
+  estimateInputTokens,
+  formatTokens,
+  getWarningLevel,
+} from "./utils.js";
 
 /**
  * Application state schema:
@@ -53,6 +58,13 @@ const DEFAULT_MAX_THINKING_TOKENS = Math.floor(
   THINKING_PRESET.max_new_tokens / 2,
 );
 
+/**
+ * Effective context window size for the browser environment.
+ * While Qwen3.5-2B supports 262K tokens natively, WebGPU memory constraints
+ * in the browser limit the practical context window to ~32K tokens.
+ */
+const DEFAULT_CONTEXT_WINDOW = 32768;
+
 export const DEFAULT_LLM_CONFIG = {
   enableThinking: false, // Qwen3.5-2B defaults to non-thinking mode
   maxThinkingTokens: DEFAULT_MAX_THINKING_TOKENS,
@@ -98,6 +110,14 @@ let state = {
   conversation: [],
   searchConfig: { ...DEFAULT_SEARCH_CONFIG },
   llmConfig: { ...DEFAULT_LLM_CONFIG },
+  tokenTracking: {
+    contextWindow: DEFAULT_CONTEXT_WINDOW,
+    inputTokens: 0,
+    outputTokens: 0,
+    totalTokens: 0,
+    remainingTokens: DEFAULT_CONTEXT_WINDOW,
+    warningLevel: "ok",
+  },
 };
 
 const subscribers = [];
@@ -251,5 +271,46 @@ export function resetGenerationToPreset() {
   state.llmConfig.generation = {
     ...getGenerationPreset(state.llmConfig.enableThinking),
   };
+  subscribers.forEach((fn) => fn(state));
+}
+
+// ─── Token Tracking ─────────────────────────────────────────────────
+
+export function updateTokenTracking(inputTokens, outputTokens, maxNewTokens) {
+  const reserved = maxNewTokens ?? state.llmConfig.generation.max_new_tokens;
+  const total = inputTokens + outputTokens;
+  const remaining = state.tokenTracking.contextWindow - total;
+
+  state.tokenTracking = {
+    ...state.tokenTracking,
+    inputTokens,
+    outputTokens,
+    totalTokens: total,
+    remainingTokens: remaining,
+    warningLevel: getWarningLevel(remaining, reserved),
+  };
+  subscribers.forEach((fn) => fn(state));
+}
+
+export function getTokenTracking() {
+  return { ...state.tokenTracking };
+}
+
+export function resetTokenTracking() {
+  state.tokenTracking = {
+    contextWindow: state.tokenTracking.contextWindow,
+    inputTokens: 0,
+    outputTokens: 0,
+    totalTokens: 0,
+    remainingTokens: state.tokenTracking.contextWindow,
+    warningLevel: "ok",
+  };
+  subscribers.forEach((fn) => fn(state));
+}
+
+export function setContextWindow(windowSize) {
+  state.tokenTracking.contextWindow = windowSize;
+  state.tokenTracking.remainingTokens =
+    windowSize - state.tokenTracking.totalTokens;
   subscribers.forEach((fn) => fn(state));
 }
