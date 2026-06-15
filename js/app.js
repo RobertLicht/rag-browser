@@ -156,7 +156,11 @@ async function handleFileUpload(files) {
         setState({ models: { ...getState().models, embedding: "ready" } });
       } catch (error) {
         console.error("Failed to load embedding model:", error);
-        showNotification("Failed to load embedding model", "error");
+        setState({ models: { ...getState().models, embedding: "unloaded" } });
+        showNotification(
+          `Failed to load embedding model: ${error.message || error}`,
+          "error",
+        );
         return;
       }
     }
@@ -227,7 +231,11 @@ async function handleQuery(query) {
         setState({ models: { ...getState().models, llm: "ready" } });
       } catch (error) {
         console.error("Failed to load LLM:", error);
-        showNotification("Failed to load LLM", "error");
+        setState({ models: { ...getState().models, llm: "unloaded" } });
+        showNotification(
+          `Failed to load LLM: ${error.message || error}`,
+          "error",
+        );
         resetUIButtons();
         return;
       }
@@ -317,7 +325,11 @@ async function handleLoadModels() {
       updateLoadingModal("embedding", 100, "ready");
     } catch (error) {
       console.error("Failed to load embedding model:", error);
-      showNotification("Failed to load embedding model", "error");
+      setState({ models: { ...getState().models, embedding: "unloaded" } });
+      showNotification(
+        `Failed to load embedding model: ${error.message || error}`,
+        "error",
+      );
       hideLoadingModal();
       return;
     }
@@ -338,7 +350,11 @@ async function handleLoadModels() {
       updateLoadingModal("llm", 100, "ready");
     } catch (error) {
       console.error("Failed to load LLM:", error);
-      showNotification("Failed to load LLM", "error");
+      setState({ models: { ...getState().models, llm: "unloaded" } });
+      showNotification(
+        `Failed to load LLM: ${error.message || error}`,
+        "error",
+      );
       hideLoadingModal();
       return;
     }
