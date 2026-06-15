@@ -39,7 +39,7 @@ graph TD
 - **Hybrid Search (BM25 + Semantic)** — Configurable keyword vs. semantic balance with separate similarity thresholds
 - **Search Mode Toggle** — Switch between Hybrid and Vector-only search modes
 - **Thinking Mode Toggle** — Enable or disable Qwen3.5's reasoning mode; thinking output renders as collapsible blocks
-- **Adjustable Thinking Budget** — Control the maximum tokens allocated to the model's internal reasoning (256–2048, default 1024) when thinking mode is active
+- **Adjustable Thinking Budget** — Control the maximum tokens allocated to the model's internal reasoning (1024–8192, default 2048) when thinking mode is active
 - **Streaming Responses** — Token-by-token output for responsive UX
 - **Multi-turn Conversations** — Context-aware dialogue with your documents
 - **Model Lifecycle Control** — Independent load/unload controls for embedding model and LLM to manage memory
@@ -130,7 +130,7 @@ Then open `http://localhost:8080` in your browser.
 1. **Load Models** — Click "Load Models" to download and initialize the embedding model and LLM
 2. **Upload Documents** — Select files (`.txt`, `.md`, `.csv`, `.xls`, `.xlsx`, `.docx`, `.pptx`, `.odt`, `.ods`, `.odp`, `.pdf`) via the file input (supports multiple uploads)
 4. **Configure Search** — Use the Search Settings panel in the sidebar to adjust BM25/semantic weights, similarity thresholds, and top-N results
-5. **Toggle Thinking Mode** — Use the LLM Settings panel to enable reasoning mode. When on, the model outputs a collapsible thinking block before its answer. Use the "Max Thinking Tokens" slider to control the reasoning budget (256–2048 tokens, default 1024)
+5. **Toggle Thinking Mode** — Use the LLM Settings panel to enable reasoning mode. When on, the model outputs a collapsible thinking block before its answer. Use the "Max Thinking Tokens" slider to control the reasoning budget (1024–8192 tokens, default 2048)
 6. **Ask Questions** — Type a query in the chat panel and press Send
 6. **Manage Indexes** — Export your document index as JSON or import an existing index
 7. **Control Memory** — Unload individual models (embedding or LLM) independently via sidebar controls

@@ -30,7 +30,7 @@ const NON_THINKING_PRESET = {
   min_p: 0.0,
   presence_penalty: 1.5,
   repetition_penalty: 1.0,
-  max_new_tokens: 1024,
+  max_new_tokens: 8192,
 };
 
 const THINKING_PRESET = {
@@ -40,14 +40,14 @@ const THINKING_PRESET = {
   min_p: 0.0,
   presence_penalty: 1.5,
   repetition_penalty: 1.0,
-  max_new_tokens: 2048,
+  max_new_tokens: 8192,
 };
 
 /**
  * Default maximum thinking tokens for Qwen3.5's reasoning mode.
  * Controls the token budget allocated to the model's internal reasoning.
  * Defaults to half of the thinking preset's max_new_tokens.
- * Valid range: 256–2048.
+ * Valid range: 1024–8192.
  */
 const DEFAULT_MAX_THINKING_TOKENS = Math.floor(
   THINKING_PRESET.max_new_tokens / 2,
