@@ -1339,6 +1339,12 @@ const translations = {
 let currentLang = FALLBACK_LANG;
 
 /**
+ * Callbacks invoked after every language change.
+ * Registered components can refresh their dynamic content.
+ */
+const languageChangeCallbacks = [];
+
+/**
  * Detect the best matching language from the browser's language preference.
  * @returns {string} Language code
  */
@@ -1401,6 +1407,15 @@ export function setLanguage(lang) {
   localStorage.setItem("lang", lang);
   document.documentElement.lang = lang;
   applyStaticTranslations();
+
+  // Notify registered callbacks so dynamic UI can refresh translations
+  languageChangeCallbacks.forEach((cb) => {
+    try {
+      cb(currentLang);
+    } catch (e) {
+      console.error("Language change callback failed:", e);
+    }
+  });
 }
 
 /**
@@ -1472,4 +1487,15 @@ function applyStaticTranslations() {
  */
 export function getSupportedLanguages() {
   return SUPPORTED_LANGUAGES;
+}
+
+/**
+ * Register a callback to be invoked after every language change.
+ * Useful for components that render dynamic content with translations.
+ * @param {Function} cb - Callback receiving the new language code
+ */
+export function registerLanguageChangeListener(cb) {
+  if (typeof cb === "function") {
+    languageChangeCallbacks.push(cb);
+  }
 }

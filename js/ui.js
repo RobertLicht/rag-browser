@@ -10,7 +10,13 @@ import {
   resetLlmConfig,
   resetGenerationToPreset,
 } from "./state.js";
-import { t, setLanguage, getSupportedLanguages, getLanguage } from "./i18n.js";
+import {
+  t,
+  setLanguage,
+  getSupportedLanguages,
+  getLanguage,
+  registerLanguageChangeListener,
+} from "./i18n.js";
 
 /**
  * Initialize all UI event listeners and render the initial state.
@@ -139,6 +145,11 @@ export function initUI(callbacks) {
 
   // Initialize language selector
   initLanguageSelector();
+
+  // Refresh dynamic status bar when language changes
+  registerLanguageChangeListener(() => {
+    updateStatusBar(getState());
+  });
 
   return { sendBtn, stopBtn, queryInput };
 }
