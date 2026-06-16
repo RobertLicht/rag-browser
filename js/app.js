@@ -608,7 +608,15 @@ async function handleImportDB(file) {
     }
 
     const { rawData, metadata } = result;
-    const importCount = getDocumentCount(rawData) || rawData.docs?.length || 0;
+    // Count documents from metadata or raw structure. Cannot use getDocumentCount()
+    // here because rawData is serialized state, not a live Orama instance.
+    let importCount = metadata.documentCount || 0;
+    if (!importCount && rawData.docs) {
+      const docs = rawData.docs;
+      importCount = Array.isArray(docs)
+        ? docs.length
+        : Object.values(docs).length;
+    }
 
     // Check current DB size and warn about data loss
     const currentCount = db ? getDocumentCount(db) : 0;
