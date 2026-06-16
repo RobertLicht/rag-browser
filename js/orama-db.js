@@ -1,6 +1,7 @@
 // orama-db.js — Orama database operations with IndexedDB persistence
 
 import {
+  count,
   create,
   insertMultiple,
   search,
@@ -127,7 +128,7 @@ export async function searchHybrid(
  * Get the total number of documents in the Orama database.
  */
 export function getDocumentCount(db) {
-  return db.count;
+  return count(db);
 }
 
 /**
@@ -260,7 +261,7 @@ export function serializeDB(db) {
     version: EXPORT_VERSION,
     exportedAt: new Date().toISOString(),
     embeddingDimension: EXPECTED_DIMENSION,
-    documentCount: db.count,
+    documentCount: count(db),
     rawData: rawData,
   };
 
