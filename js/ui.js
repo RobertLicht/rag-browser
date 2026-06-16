@@ -237,15 +237,20 @@ export function updateTokenStatus(tracking) {
   });
 
   // Update warning banner
-  updateTokenWarningBanner(warningLevel, remainingTokens);
+  updateTokenWarningBanner(warningLevel, remainingTokens, contextWindow);
 }
 
 /**
  * Show/hide the token warning banner based on warning level.
  * @param {'ok' | 'warning' | 'critical' | 'exceeded'} level
  * @param {number} remainingTokens
+ * @param {number} contextWindow
  */
-export function updateTokenWarningBanner(level, remainingTokens) {
+export function updateTokenWarningBanner(
+  level,
+  remainingTokens,
+  contextWindow,
+) {
   const banner = document.getElementById("token-warning-banner");
   const warningText = document.getElementById("token-warning-text");
   if (!banner || !warningText) return;
