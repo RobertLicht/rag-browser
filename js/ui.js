@@ -198,6 +198,24 @@ export function updateStatusBar(state) {
       limit: limitMB,
     });
   }
+
+  // WebGPU warning banner
+  updateWebGpuBanner(state.hardware.webgpuAvailable);
+}
+
+/**
+ * Show/hide the WebGPU warning banner based on WebGPU availability.
+ * @param {boolean} webgpuAvailable
+ */
+export function updateWebGpuBanner(webgpuAvailable) {
+  const banner = document.getElementById("webgpu-warning-banner");
+  if (!banner) return;
+
+  if (webgpuAvailable) {
+    banner.style.display = "none";
+  } else {
+    banner.style.display = "flex";
+  }
 }
 
 /**
@@ -1095,7 +1113,7 @@ function initHelpModal() {
 
   if (!helpBtn || !helpModal) return;
 
-  const openModal = async () => {
+  const openModal = async (scrollToId) => {
     helpModal.style.display = "flex";
     // Render Mermaid diagrams inside the modal
     if (typeof mermaid !== "undefined") {
@@ -1107,6 +1125,15 @@ function initHelpModal() {
         console.warn("Mermaid rendering failed:", err);
       }
     }
+    // Scroll to specific section if requested
+    if (scrollToId) {
+      const target = document.getElementById(scrollToId);
+      if (target) {
+        setTimeout(() => {
+          target.scrollIntoView({ behavior: "smooth", block: "start" });
+        }, 100); // Small delay to ensure modal is rendered
+      }
+    }
   };
 
   const closeModal = () => {
@@ -1114,7 +1141,7 @@ function initHelpModal() {
   };
 
   // Open modal on help button click
-  helpBtn.addEventListener("click", openModal);
+  helpBtn.addEventListener("click", () => openModal());
 
   // Close modal on close button click
   if (helpCloseBtn) {
@@ -1134,6 +1161,14 @@ function initHelpModal() {
       closeModal();
     }
   });
+
+  // WebGPU help button — open modal and scroll to Enable WebGPU section
+  const webgpuHelpBtn = document.getElementById("webgpu-help-btn");
+  if (webgpuHelpBtn) {
+    webgpuHelpBtn.addEventListener("click", () =>
+      openModal("help-enable-webgpu"),
+    );
+  }
 }
 
 /**
