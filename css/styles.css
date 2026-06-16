@@ -6,10 +6,12 @@
     --bg-primary: #0f0f0f;
     --bg-secondary: #1c1c1c;
     --bg-tertiary: #252525;
+    --bg-quaternary: #242004;
     --bg-sidebar: #1c1c1c;
     --bg-input: #1c1c1c;
     --text-primary: #d4d4d4;
     --text-secondary: #a0a0a0;
+    --text-tertiary: #4a5568;
     --text-muted: #6a6a6a;
     --text-on-card: #d4d4d4;
     --code-text: #d4d4d4;
@@ -39,10 +41,12 @@
     --bg-primary: #f5f7fa;
     --bg-secondary: #f0f2f5;
     --bg-tertiary: #e2e6ec;
+    --bg-quaternary: #749edb;
     --bg-sidebar: #e2e8f0;
     --bg-input: #ffffff;
     --text-primary: #1a1a2e;
     --text-secondary: #4a5568;
+    --text-tertiary: #d4d4d4;
     --text-muted: #718096;
     --text-on-card: #1a1a2e;
     --code-text: #1a1a2e;
@@ -1029,7 +1033,7 @@ body {
 
 #send-btn {
     background: var(--accent);
-    color: white;
+    color: var(--text-tertiary);
 }
 
 #send-btn:hover:not(:disabled) {
@@ -1043,7 +1047,7 @@ body {
 
 #stop-btn {
     background: var(--error);
-    color: white;
+    color: var(--text-tertiary);
 }
 
 #stop-btn:hover {
@@ -1427,7 +1431,7 @@ body {
 .help-section p {
     font-size: 0.9rem;
     line-height: 1.6;
-    color: var(--text-secondary);
+    color: var(--text-tertiary);
     margin-bottom: 0.75rem;
 }
 
@@ -1443,11 +1447,11 @@ body {
 .help-section kbd {
     font-family: inherit;
     font-size: 0.8rem;
-    background: var(--bg-tertiary);
+    background: var(--accent);
     padding: 0.1em 0.45em;
     border-radius: 3px;
     border: 1px solid var(--border-color);
-    color: var(--text-secondary);
+    color: var(--text-tertiary);
 }
 
 .help-section ol {
@@ -1458,7 +1462,7 @@ body {
 .help-section ol li {
     font-size: 0.9rem;
     line-height: 1.6;
-    color: var(--text-secondary);
+    color: var(--text-tertiary);
     margin-bottom: 0.35rem;
 }
 
@@ -1481,7 +1485,7 @@ body {
 /* ─── Help Info Blocks ─────────────────────────────────────── */
 
 .help-info-block {
-    background: var(--bg-tertiary);
+    background: var(--bg-quaternary);
     border: 1px solid var(--border-color);
     border-radius: 8px;
     padding: 1rem 1.25rem;
