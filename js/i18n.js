@@ -183,7 +183,8 @@ const translations = {
     "app.restoredIndexedDb": "Restored from IndexedDB",
 
     // Chat placeholder
-    "chat.empty": "Upload some documents, then ask a question about them.",
+    "chat.empty":
+      "Upload some documents or an existing data base, to ask questions related to the content.",
 
     // Notifications
     "notif.fileSkipped.doc":
@@ -441,7 +442,8 @@ const translations = {
     "app.restoredIndexedDb": "Wiederhergestellt aus IndexedDB",
 
     // Chat placeholder
-    "chat.empty": "Lade einige Dokumente hoch und stelle eine Frage dazu.",
+    "chat.empty":
+      "Lade einige Dokumente oder eine bestehende Datenbank hoch, um Fragen zum Inhalt zu stellen.",
 
     // Notifications
     "notif.fileSkipped.doc":
@@ -701,7 +703,8 @@ const translations = {
     "app.restoredIndexedDb": "Ripristinato da IndexedDB",
 
     // Chat placeholder
-    "chat.empty": "Carica alcuni documenti, poi fai una domanda.",
+    "chat.empty":
+      "Carica alcuni documenti o un database esistente, per porre domande relative al contenuto.",
 
     // Notifications
     "notif.fileSkipped.doc":
@@ -963,7 +966,7 @@ const translations = {
 
     // Chat placeholder
     "chat.empty":
-      "Suba algunos documentos y luego haga una pregunta sobre ellos.",
+      "Cargue algunos documentos o una base de datos existente, para hacer preguntas relacionadas con el contenido.",
 
     // Notifications
     "notif.fileSkipped.doc":
@@ -1226,7 +1229,7 @@ const translations = {
 
     // Chat placeholder
     "chat.empty":
-      "Téléchargez des documents, puis posez une question à leur sujet.",
+      "Téléchargez des documents ou une base de données existante, pour poser des questions relatives au contenu.",
 
     // Notifications
     "notif.fileSkipped.doc":

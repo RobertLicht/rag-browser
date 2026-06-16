@@ -1056,13 +1056,16 @@ body {
 
 /* ─── Empty State ──────────────────────────────────────────────── */
 
-#conversation:empty::after {
-    content: "Upload some .txt documents, then ask a question about them.";
+#conversation-empty-placeholder {
     color: var(--text-muted);
     font-size: 0.9rem;
-    display: block;
     text-align: center;
     padding: 3rem 1rem;
+}
+
+#conversation:has(:not(#conversation-empty-placeholder))
+    #conversation-empty-placeholder {
+    display: none;
 }
 
 /* ─── Loading Modal ──────────────────────────────────────────── */
