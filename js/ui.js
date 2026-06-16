@@ -170,13 +170,15 @@ export function updateStatusBar(state) {
     : "status.hardware.cpu";
   hwStatus.innerHTML = `<span class="status-dot ${hwClass}"></span> ${t(hwTemplate, { device: state.hardware.device })}`;
 
-  // Model status
+  // Model status (colored by state)
   const embState = t(`status.modelState.${state.models.embedding}`);
   const llmState = t(`status.modelState.${state.models.llm}`);
-  modelStatus.textContent = t("status.models.summary", {
-    emb: embState,
-    llm: llmState,
-  });
+  const embClass = `model-state-${state.models.embedding}`;
+  const llmClass = `model-state-${state.models.llm}`;
+  const template = t("status.models.summary");
+  modelStatus.innerHTML = template
+    .replace("{emb}", `<span class="${embClass}">${embState}</span>`)
+    .replace("{llm}", `<span class="${llmClass}">${llmState}</span>`);
 
   // Index status
   indexStatus.textContent = t("status.index", {

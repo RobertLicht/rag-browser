@@ -149,6 +149,18 @@ body {
     background: var(--error);
 }
 
+#status-bar .model-state-ready {
+    color: var(--success);
+}
+
+#status-bar .model-state-loading {
+    color: var(--warning);
+}
+
+#status-bar .model-state-unloaded {
+    color: var(--error);
+}
+
 /* ─── App Layout ───────────────────────────────────────────────── */
 
 #app-container {
