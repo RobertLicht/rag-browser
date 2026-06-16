@@ -280,6 +280,8 @@ const translations = {
       "This application incorporates the following models, licensed under the Apache License 2.0:",
     "help.license.seeLicense":
       'See the <a href="https://www.apache.org/licenses/LICENSE-2.0" target="_blank" rel="noopener">Apache License 2.0</a> for full terms.',
+    "footer.text":
+      "© 2026 Robert-Vincent Lichterfeld. Built with passion for technology.",
   },
 
   // ─── German ─────────────────────────────────────────────────
@@ -544,6 +546,8 @@ const translations = {
       "Diese Anwendung verwendet die folgenden Modelle, lizenziert unter Apache License 2.0:",
     "help.license.seeLicense":
       'Siehe <a href="https://www.apache.org/licenses/LICENSE-2.0" target="_blank" rel="noopener">Apache License 2.0</a> für vollständige Bedingungen.',
+    "footer.text":
+      "© 2026 Robert-Vincent Lichterfeld. Mit Leidenschaft für Technologie entwickelt.",
   },
 
   // ─── Italian ────────────────────────────────────────────────
@@ -805,6 +809,8 @@ const translations = {
       "Questa applicazione incorpora i seguenti modelli, licenziati sotto Apache License 2.0:",
     "help.license.seeLicense":
       'Vedi <a href="https://www.apache.org/licenses/LICENSE-2.0" target="_blank" rel="noopener">Apache License 2.0</a> per i termini completi.',
+    "footer.text":
+      "© 2026 Robert-Vincent Lichterfeld. Creato con passione per la tecnologia.",
   },
 
   // ─── Spanish ────────────────────────────────────────────────
@@ -1068,6 +1074,8 @@ const translations = {
       "Esta aplicación incorpora los siguientes modelos, licenciados bajo Apache License 2.0:",
     "help.license.seeLicense":
       'Vea <a href="https://www.apache.org/licenses/LICENSE-2.0" target="_blank" rel="noopener">Apache License 2.0</a> para términos completos.',
+    "footer.text":
+      "© 2026 Robert-Vincent Lichterfeld. Construido con pasión por la tecnología.",
   },
 
   // ─── French ─────────────────────────────────────────────────
@@ -1333,6 +1341,8 @@ const translations = {
       "Cette application incorpore les modèles suivants, sous licence Apache License 2.0 :",
     "help.license.seeLicense":
       'Voir <a href="https://www.apache.org/licenses/LICENSE-2.0" target="_blank" rel="noopener">Apache License 2.0</a> pour les conditions complètes.',
+    "footer.text":
+      "© 2026 Robert-Vincent Lichterfeld. Conçu avec passion pour la technologie.",
   },
 };
 
