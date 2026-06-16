@@ -280,6 +280,10 @@ const translations = {
       "This application incorporates the following models, licensed under the Apache License 2.0:",
     "help.license.seeLicense":
       'See the <a href="https://www.apache.org/licenses/LICENSE-2.0" target="_blank" rel="noopener">Apache License 2.0</a> for full terms.',
+    "infoBar.private":
+      "100% Private — All processing happens locally in your browser",
+    "infoBar.poweredBy":
+      'Powered by <a href="https://huggingface.co/docs/transformers.js" target="_blank" rel="noopener noreferrer">Transformers.js</a>',
     "footer.text":
       "© 2026 Robert-Vincent Lichterfeld. Built with passion for technology.",
   },
@@ -546,6 +550,10 @@ const translations = {
       "Diese Anwendung verwendet die folgenden Modelle, lizenziert unter Apache License 2.0:",
     "help.license.seeLicense":
       'Siehe <a href="https://www.apache.org/licenses/LICENSE-2.0" target="_blank" rel="noopener">Apache License 2.0</a> für vollständige Bedingungen.',
+    "infoBar.private":
+      "100% Privat — Alle Verarbeitung findet lokal in Ihrem Browser statt",
+    "infoBar.poweredBy":
+      'Angetrieben von <a href="https://huggingface.co/docs/transformers.js" target="_blank" rel="noopener noreferrer">Transformers.js</a>',
     "footer.text":
       "© 2026 Robert-Vincent Lichterfeld. Mit Leidenschaft für Technologie entwickelt.",
   },
@@ -809,6 +817,10 @@ const translations = {
       "Questa applicazione incorpora i seguenti modelli, licenziati sotto Apache License 2.0:",
     "help.license.seeLicense":
       'Vedi <a href="https://www.apache.org/licenses/LICENSE-2.0" target="_blank" rel="noopener">Apache License 2.0</a> per i termini completi.',
+    "infoBar.private":
+      "100% Privato — Tutto l'elaborazione avviene localmente nel tuo browser",
+    "infoBar.poweredBy":
+      'Basato su <a href="https://huggingface.co/docs/transformers.js" target="_blank" rel="noopener noreferrer">Transformers.js</a>',
     "footer.text":
       "© 2026 Robert-Vincent Lichterfeld. Creato con passione per la tecnologia.",
   },
@@ -1074,6 +1086,10 @@ const translations = {
       "Esta aplicación incorpora los siguientes modelos, licenciados bajo Apache License 2.0:",
     "help.license.seeLicense":
       'Vea <a href="https://www.apache.org/licenses/LICENSE-2.0" target="_blank" rel="noopener">Apache License 2.0</a> para términos completos.',
+    "infoBar.private":
+      "100% Privado — Todo el procesamiento ocurre localmente en su navegador",
+    "infoBar.poweredBy":
+      'Impulsado por <a href="https://huggingface.co/docs/transformers.js" target="_blank" rel="noopener noreferrer">Transformers.js</a>',
     "footer.text":
       "© 2026 Robert-Vincent Lichterfeld. Construido con pasión por la tecnología.",
   },
@@ -1341,6 +1357,10 @@ const translations = {
       "Cette application incorpore les modèles suivants, sous licence Apache License 2.0 :",
     "help.license.seeLicense":
       'Voir <a href="https://www.apache.org/licenses/LICENSE-2.0" target="_blank" rel="noopener">Apache License 2.0</a> pour les conditions complètes.',
+    "infoBar.private":
+      "100% Privé — Tout le traitement s'exécute localement dans votre navigateur",
+    "infoBar.poweredBy":
+      'Propulsé par <a href="https://huggingface.co/docs/transformers.js" target="_blank" rel="noopener noreferrer">Transformers.js</a>',
     "footer.text":
       "© 2026 Robert-Vincent Lichterfeld. Conçu avec passion pour la technologie.",
   },

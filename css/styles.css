@@ -153,7 +153,7 @@ body {
 
 #app-container {
     display: flex;
-    height: calc(100vh - 40px - 32px);
+    height: calc(100vh - 40px - 28px - 32px);
 }
 
 /* ─── Tooltips for disabled preconditions ─────────────────────── */
@@ -1672,6 +1672,56 @@ body {
 .lang-dropdown button[data-lang-active="true"] {
     color: var(--accent);
     font-weight: 600;
+}
+
+/* ─── Info Bar ─────────────────────────────────────────────── */
+
+#info-bar {
+    height: 28px;
+    display: flex;
+    align-items: center;
+    position: relative;
+    background: var(--bg-secondary);
+    border-top: 1px solid var(--border-color);
+    font-size: 0.75rem;
+    color: var(--text-muted);
+}
+
+.info-bar-left {
+    display: flex;
+    align-items: center;
+    gap: 0.35rem;
+    position: absolute;
+    left: 25%;
+    transform: translateX(-25%);
+}
+
+.info-bar-icon {
+    flex-shrink: 0;
+    width: 14px;
+    height: 14px;
+    color: var(--success);
+}
+
+.info-bar-right {
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
+    position: absolute;
+    left: 75%;
+    transform: translateX(-75%);
+}
+
+#info-bar a {
+    color: var(--accent);
+    text-decoration: none;
+    font-weight: 500;
+    transition: color 0.15s;
+}
+
+#info-bar a:hover {
+    color: var(--accent-hover);
+    text-decoration: underline;
 }
 
 /* ─── Footer ───────────────────────────────────────────────── */
