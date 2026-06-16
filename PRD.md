@@ -105,7 +105,7 @@ sequenceDiagram
 | Multimodal             | Yes (text + image input, text output)           |
 | License                | Apache 2.0                                     |
 | ONNX Variant           | `huggingworld/Qwen3.5-2B-ONNX`                 |
-| Quantization Options   | q4, q4fp16 (embed_tokens, vision_encoder, decoder_model_merged) |
+| Quantization Options   | q4 (WebGPU), q8 (WASM fallback) for embed_tokens, vision_encoder, decoder_model_merged |
 | Thinking Mode          | Non-thinking by default                         |
 
 ### 3.4 Transformers.js v4 Runtime

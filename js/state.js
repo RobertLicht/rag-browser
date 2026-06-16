@@ -102,6 +102,7 @@ let state = {
   hardware: {
     webgpuAvailable: false,
     device: "wasm",
+    llmModelId: "",
     dtype: "",
     deviceMemoryGB: undefined,
   },

@@ -4,62 +4,92 @@ import {
   AutoProcessor,
   Qwen3_5ForConditionalGeneration,
   InterruptableStoppingCriteria,
+  pipeline,
 } from "https://cdn.jsdelivr.net/npm/@huggingface/transformers@4.2.0/+esm";
 
 import { getState } from "./state.js";
 
+// ─── Model-specific constants ──────────────────────────────────────────
+
+const LLM_MODEL_WEBGPU = "huggingworld/Qwen3.5-2B-ONNX";
+
+// Qwen3.5-2B (WebGPU): 32K practical context in browser
+const CONTEXT_WINDOW_WEBGPU = 32768;
+// Qwen3-0.6B (WASM): 4K native context
+const CONTEXT_WINDOW_WASM = 4096;
+
+// ─── Module state ──────────────────────────────────────────────────────
+
 let processor = null;
-let model = null;
+let model = null; // Qwen3.5 low-level model
+let generator = null; // Pipeline generator for Qwen3-0.6B
 let currentStoppingCriteria = null;
+let modelType = null; // 'qwen3_5' | 'pipeline'
 
 /**
- * Qwen3.5-2B ONNX model (multi-modal).
- * Uses huggingworld export for optimal WebGPU performance.
- *
- * IMPORTANT: The pipeline() API does NOT correctly handle Qwen3_5ForConditionalGeneration
- * (multi-modal architecture). This module uses the low-level processor + model API
- * directly to ensure proper tokenization, chat templating, and generation.
- *
- * Reference: data/minimal-qwen3.5-2b.html
+ * Return the context window for the currently loaded model.
  */
-const MODEL_ID = "huggingworld/Qwen3.5-2B-ONNX";
+export function getContextWindow() {
+  if (modelType === "qwen3_5") return CONTEXT_WINDOW_WEBGPU;
+  return CONTEXT_WINDOW_WASM;
+}
+
+/**
+ * Check if the currently loaded model supports thinking mode.
+ */
+export function supportsThinking() {
+  return modelType === "qwen3_5";
+}
 
 /**
  * Load the LLM processor and model.
  *
- * Qwen3.5 requires AutoProcessor (not AutoTokenizer) because it's a multi-modal
- * model. The processor handles chat templating and tokenization for the model.
+ * WebGPU  → Qwen3.5-2B: low-level API (multi-modal architecture)
+ * WASM    → Qwen3-0.6B: pipeline API (text-only causal LM)
  *
- * @param {Object} config - Hardware config with llmDtype and device
+ * @param {Object} config - Hardware config with llmModelId, llmDtype and device
  * @param {Function} [onProgress] - Optional progress callback from transformers.js
  */
 export async function loadLLM(config, onProgress) {
-  processor = await AutoProcessor.from_pretrained(MODEL_ID);
-  model = await Qwen3_5ForConditionalGeneration.from_pretrained(MODEL_ID, {
-    dtype: config.llmDtype,
-    device: config.device,
-    progress_callback: onProgress,
-  });
+  if (config.llmModelId === LLM_MODEL_WEBGPU) {
+    // ── Qwen3.5-2B (WebGPU) — low-level API ──────────────────────────
+    // Uses AutoProcessor (multi-modal) + Qwen3_5ForConditionalGeneration.
+    // The pipeline() API does NOT correctly handle this architecture.
+    modelType = "qwen3_5";
+    processor = await AutoProcessor.from_pretrained(config.llmModelId);
+    model = await Qwen3_5ForConditionalGeneration.from_pretrained(
+      config.llmModelId,
+      {
+        dtype: config.llmDtype,
+        device: config.device,
+        progress_callback: onProgress,
+      },
+    );
+  } else {
+    // ── Qwen3-0.6B (WASM) — pipeline API ─────────────────────────────
+    // Simple decoder-only model. pipeline() handles tokenization,
+    // chat templating, and generation automatically.
+    modelType = "pipeline";
+    generator = await pipeline("text-generation", config.llmModelId, {
+      dtype: config.llmDtype,
+      device: config.device,
+      progress_callback: onProgress,
+    });
+  }
 }
+
+// ─── Generation ────────────────────────────────────────────────────────
 
 /**
  * Generate a response from the LLM.
  *
- * Messages are expected in the format:
+ * Messages are expected in the nested content format:
  *   [{ role: 'system', content: [{ type: 'text', text: '...' }] }, ...]
  *
- * Internally, messages are transformed to the flat format expected by
- * processor.apply_chat_template(): [{ role: 'system', content: '...' }]
+ * For Qwen3.5 (WebGPU): applies chat template + model.generate() + batch decode.
+ * For Qwen3-0.6B (WASM): converts to flat messages + pipeline call.
  *
- * NOTE: We do NOT use TextStreamer for generation. TextStreamer performs
- * incremental token-by-token decoding, which corrupts output with Qwen3.5's
- * BPE tokenizer. The BPE merge rules are not applied correctly during
- * incremental decoding, producing garbled/fragmented text. Instead, we
- * collect all generated token IDs and decode them in one batch after
- * generation completes. This matches the official Python reference code:
- *   processor.decode(outputs[0][input_ids.shape[-1]:], skip_special_tokens=True)
- *
- * @param {Array} messages - Conversation messages
+ * @param {Array} messages - Conversation messages (nested content format)
  * @param {Function} onToken - Callback receiving final full text (called once after generation)
  * @param {Function} onComplete - Callback receiving final full response text
  * @param {Function} [onPhase] - Optional callback for phase updates during generation
@@ -69,9 +99,31 @@ export async function generateResponse(messages, onToken, onComplete, onPhase) {
   // Create interruptible stopping criteria for stop-generation support
   currentStoppingCriteria = new InterruptableStoppingCriteria();
 
-  // Transform messages to flat format expected by processor.apply_chat_template().
-  // Our app uses nested content arrays: { role, content: [{ type: 'text', text: '...' }] }
-  // The processor expects flat format: { role, content: '...' }
+  const {
+    llmConfig: { generation },
+  } = getState();
+
+  if (modelType === "qwen3_5") {
+    return generateQwen3_5(messages, onToken, onComplete, onPhase, generation);
+  }
+
+  // modelType === "pipeline"
+  return generatePipeline(messages, onToken, onComplete, onPhase, generation);
+}
+
+/**
+ * Generate with Qwen3.5-2B (low-level API).
+ * Collects all tokens then batch-decodes — avoids TextStreamer incremental
+ * BPE decoding bug that corrupts Qwen3.5 output.
+ */
+async function generateQwen3_5(
+  messages,
+  onToken,
+  onComplete,
+  onPhase,
+  generation,
+) {
+  // Transform to flat format for processor.apply_chat_template()
   const formattedMessages = messages.map((msg) => ({
     role: msg.role,
     content:
@@ -82,10 +134,7 @@ export async function generateResponse(messages, onToken, onComplete, onPhase) {
           : "",
   }));
 
-  // Apply the model's chat template (handles special tokens, formatting, etc.)
-  // Pass enable_thinking from LLM config to control reasoning mode.
-  // Qwen3.5 outputs <thinking>...</thinking> blocks when enabled.
-  // max_thinking_tokens limits the token budget for the reasoning process.
+  // Apply chat template
   const { llmConfig } = getState();
   const templateOptions = {
     add_generation_prompt: true,
@@ -99,31 +148,11 @@ export async function generateResponse(messages, onToken, onComplete, onPhase) {
     templateOptions,
   );
 
-  // Tokenize the formatted text
+  // Tokenize
   const inputs = await processor(text);
-
-  // Record input sequence length so we can extract only the generated tokens
   const inputLength = inputs.input_ids.dims[1];
 
-  // Generate using the model directly (low-level API for multi-modal models).
-  // IMPORTANT: No streamer is used. TextStreamer corrupts Qwen3.5 output
-  // due to buggy incremental BPE decoding in transformers.js.
-  //
-  // Generation parameters are read from llmConfig.generation. These include:
-  // - temperature: controls randomness (0.0-2.0)
-  // - top_p: nucleus sampling threshold (0.0-1.0)
-  // - top_k: top-k sampling (1-100)
-  // - min_p: min-p sampling (0.0-1.0)
-  // - max_new_tokens: maximum tokens to generate
-  // - presence_penalty: penalizes new tokens based on presence (-2.0 to 2.0)
-  // - repetition_penalty: penalizes repeated tokens (0.1-2.0)
-  const {
-    llmConfig: { generation },
-  } = getState();
-
-  // Signal that generation is about to start. Because model.generate() runs
-  // async on WebGPU, the event loop remains free and setInterval callbacks
-  // fire during generation, allowing calm, time-based phase updates.
+  // Phase tracking
   let genInterval = null;
   if (onPhase) {
     const initialPhase = llmConfig.enableThinking
@@ -167,21 +196,15 @@ export async function generateResponse(messages, onToken, onComplete, onPhase) {
       stopping_criteria: [currentStoppingCriteria],
     });
 
-    // Decode all generated tokens in one shot using the tokenizer.
-    // This avoids the incremental decoding bug in TextStreamer.
-    //
-    // Extract the raw token IDs from the output tensor, slice off the input
-    // prefix, and decode the remaining generated tokens as a single batch.
+    // Batch decode all generated tokens
     const rawOutput = Array.from(output.data);
     const generatedTokenIds = rawOutput.slice(inputLength);
     const fullText = processor.tokenizer.decode(generatedTokenIds, {
       skip_special_tokens: true,
     });
 
-    // Exact output token count from the generated token IDs
     const outputTokenCount = generatedTokenIds.length;
 
-    // Dispatch to UI callbacks
     if (onToken) onToken(fullText);
     if (onComplete) onComplete(fullText, { outputTokenCount });
 
@@ -190,6 +213,62 @@ export async function generateResponse(messages, onToken, onComplete, onPhase) {
   } finally {
     if (genInterval) clearInterval(genInterval);
   }
+}
+
+/**
+ * Generate with Qwen3-0.6B via pipeline API.
+ * Converts nested content messages to flat format expected by the pipeline.
+ */
+async function generatePipeline(
+  messages,
+  onToken,
+  onComplete,
+  onPhase,
+  generation,
+) {
+  // Convert nested content messages to flat format for pipeline
+  const flatMessages = messages.map((msg) => ({
+    role: msg.role,
+    content:
+      typeof msg.content === "string"
+        ? msg.content
+        : msg.content?.[0]?.type === "text"
+          ? msg.content[0].text
+          : "",
+  }));
+
+  // Phase tracking
+  if (onPhase) onPhase("generating");
+
+  // Generate via pipeline (no streaming — full output at once)
+  const output = await generator(flatMessages, {
+    max_new_tokens: generation.max_new_tokens,
+    do_sample: true,
+    temperature: generation.temperature,
+    top_p: generation.top_p,
+    top_k: generation.top_k,
+    repetition_penalty: generation.repetition_penalty,
+    return_full_text: false,
+    stopping_criteria: [currentStoppingCriteria],
+  });
+
+  // Pipeline returns: [{ generated_text: [...messages including assistant response] }]
+  // Extract the assistant's response from the last generated message
+  const generatedMessages = output[0].generated_text;
+  const assistantMessage = generatedMessages[generatedMessages.length - 1];
+  const fullText =
+    typeof assistantMessage.content === "string"
+      ? assistantMessage.content
+      : "";
+
+  // Estimate output tokens from text length (~4 chars per token)
+  const outputTokenCount = Math.ceil(fullText.length / 4);
+
+  if (onToken) onToken(fullText);
+  if (onComplete) onComplete(fullText, { outputTokenCount });
+
+  currentStoppingCriteria = null;
+  return { text: fullText, outputTokenCount };
 }
 
 /**
@@ -210,11 +289,17 @@ export async function unloadLLM() {
     await model.dispose();
     model = null;
   }
+  if (generator) {
+    await generator.dispose();
+    generator = null;
+  }
+  modelType = null;
+  processor = null;
 }
 
 /**
  * Check if the LLM model is currently loaded.
  */
 export function isLLMLoaded() {
-  return model !== null;
+  return (model !== null || generator !== null) && modelType !== null;
 }

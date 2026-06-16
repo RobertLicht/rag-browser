@@ -8,13 +8,22 @@ import {
   addMessage,
   clearConversation,
   resetTokenTracking,
+  setContextWindow,
+  setLlmConfig,
 } from "./state.js";
 import {
   loadEmbeddingModel,
   unloadEmbeddingModel,
   isEmbeddingLoaded,
 } from "./embedding.js";
-import { loadLLM, unloadLLM, stopGeneration, isLLMLoaded } from "./llm.js";
+import {
+  loadLLM,
+  unloadLLM,
+  stopGeneration,
+  isLLMLoaded,
+  getContextWindow,
+  supportsThinking,
+} from "./llm.js";
 import {
   createDB,
   getDocumentCount,
@@ -354,6 +363,17 @@ async function handleLoadModels() {
       await loadLLM(config, (info) => {
         onModelProgress("llm", info);
       });
+
+      // Apply model-specific settings after successful load
+      const contextWindow = getContextWindow();
+      setContextWindow(contextWindow);
+      resetTokenTracking();
+
+      // Auto-disable thinking mode if the loaded model doesn't support it
+      if (!supportsThinking()) {
+        setLlmConfig({ enableThinking: false });
+      }
+
       setState({ models: { ...getState().models, llm: "ready" } });
       updateLoadingModal("llm", 100, "ready");
     } catch (error) {
