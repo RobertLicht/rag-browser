@@ -226,6 +226,6 @@ export function getContextWindow() {
  */
 export function supportsThinking() {
   if (_webgpuLlm) return _webgpuLlm.supportsThinking();
-  // WASM model (Qwen3-0.6B) does not support thinking
+  // WASM model (Qwen3-0.6B-Instruct) does not support thinking
   return false;
 }

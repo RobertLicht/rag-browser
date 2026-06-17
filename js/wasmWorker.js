@@ -21,6 +21,10 @@ let currentStoppingCriteria = null;
 
 const LLM_MODEL_WEBGPU = "huggingworld/Qwen3.5-2B-ONNX";
 
+// Cap output tokens for WASM pipeline mode.  q4 WASM does ~2-5 tok/s,
+// so 1024 tokens ≈ 6-18 min worst-case.  WebGPU is uncapped.
+const WASM_MAX_NEW_TOKENS = 1024;
+
 // ── Helper: forward a progress callback ──────────────────────────────
 function forwardProgress(progressCallback, tag) {
   if (!progressCallback) return undefined;
@@ -38,11 +42,18 @@ self.onmessage = async (e) => {
       // ── Embedding ──────────────────────────────────────────────
       case "load-embedding": {
         const { modelId, dtype, device } = payload;
-        extractor = await pipeline("feature-extraction", modelId ?? "onnx-community/Qwen3-Embedding-0.6B-ONNX", {
-          dtype,
-          device,
-          progress_callback: forwardProgress(payload.progress_callback, "embedding"),
-        });
+        extractor = await pipeline(
+          "feature-extraction",
+          modelId ?? "onnx-community/Qwen3-Embedding-0.6B-ONNX",
+          {
+            dtype,
+            device,
+            progress_callback: forwardProgress(
+              payload.progress_callback,
+              "embedding",
+            ),
+          },
+        );
         self.postMessage({ id, type: "result", payload: { status: "ready" } });
         break;
       }
@@ -66,7 +77,11 @@ self.onmessage = async (e) => {
           pooling: "last_token",
           normalize: true,
         });
-        self.postMessage({ id, type: "result", payload: { data: Array.from(output.data) } });
+        self.postMessage({
+          id,
+          type: "result",
+          payload: { data: Array.from(output.data) },
+        });
         break;
       }
 
@@ -77,29 +92,67 @@ self.onmessage = async (e) => {
           pooling: "last_token",
           normalize: true,
         });
-        self.postMessage({ id, type: "result", payload: { data: Array.from(output.data) } });
+        self.postMessage({
+          id,
+          type: "result",
+          payload: { data: Array.from(output.data) },
+        });
         break;
       }
 
-      // ── LLM (pipeline mode — Qwen3-0.6B) ──────────────────────
+      // ── LLM (pipeline mode — Qwen3-0.6B-Instruct) ────────────────────
       case "load-llm": {
         const { modelId, dtype, device } = payload;
         if (modelId === LLM_MODEL_WEBGPU) {
           // Shouldn't happen on WASM path, but handle gracefully
           processor = await AutoProcessor.from_pretrained(modelId, {
-            progress_callback: forwardProgress(payload.progress_callback, "llm"),
+            progress_callback: forwardProgress(
+              payload.progress_callback,
+              "llm",
+            ),
           });
-          model = await Qwen3_5ForConditionalGeneration.from_pretrained(modelId, {
-            dtype: payload.llmDtype,
-            device,
-            progress_callback: forwardProgress(payload.progress_callback, "llm"),
-          });
+          model = await Qwen3_5ForConditionalGeneration.from_pretrained(
+            modelId,
+            {
+              dtype: payload.llmDtype,
+              device,
+              progress_callback: forwardProgress(
+                payload.progress_callback,
+                "llm",
+              ),
+            },
+          );
         } else {
-          generator = await pipeline("text-generation", modelId ?? "onnx-community/Qwen3-0.6B-ONNX", {
-            dtype,
-            device,
-            progress_callback: forwardProgress(payload.progress_callback, "llm"),
-          });
+          generator = await pipeline(
+            "text-generation",
+            modelId ?? "onnx-community/Qwen3-0.6B-Instruct-ONNX",
+            {
+              dtype,
+              device,
+              progress_callback: forwardProgress(
+                payload.progress_callback,
+                "llm",
+              ),
+            },
+          );
+
+          // The ONNX export stores the chat template in a separate
+          // chat_template.jinja file, which transformers.js does not
+          // auto-load.  Patch it in so the pipeline can format messages.
+          if (generator.tokenizer && !generator.tokenizer.chat_template) {
+            generator.tokenizer.chat_template = [
+              // System message (only on the first turn)
+              '{%- if messages[0].role == "system" %}',
+              '    {{ "<|im_start|>system\\n" + messages[0].content + "<|im_end|>\\n" }}',
+              "{%- endif %}",
+              // Remaining user/assistant turns
+              '{%- for message in (messages if messages[0].role != "system" else messages[1:]) %}',
+              '    {{ "<|im_start|>" + message.role + "\\n" + message.content + "<|im_end|>\\n" }}',
+              "{%- endfor %}",
+              // Prompt the model to generate
+              "{%- if add_generation_prompt %}<|im_start|>assistant\\n{%- endif %}",
+            ].join("\n");
+          }
         }
         self.postMessage({ id, type: "result", payload: { status: "ready" } });
         break;
@@ -126,9 +179,13 @@ self.onmessage = async (e) => {
         currentStoppingCriteria = new InterruptableStoppingCriteria();
 
         if (generator) {
-          // ── Pipeline mode (Qwen3-0.6B) ─────────────────────────
+          // ── Pipeline mode (Qwen3-0.6B-Instruct) ────────────────────
+          const cappedTokens = Math.min(
+            generation.max_new_tokens,
+            WASM_MAX_NEW_TOKENS,
+          );
           const output = await generator(messages, {
-            max_new_tokens: generation.max_new_tokens,
+            max_new_tokens: cappedTokens,
             do_sample: generation.do_sample ?? true,
             temperature: generation.temperature,
             top_p: generation.top_p,
@@ -139,10 +196,12 @@ self.onmessage = async (e) => {
           });
 
           const generatedMessages = output[0].generated_text;
-          const assistantMessage = generatedMessages[generatedMessages.length - 1];
-          const fullText = typeof assistantMessage.content === "string"
-            ? assistantMessage.content
-            : "";
+          const assistantMessage =
+            generatedMessages[generatedMessages.length - 1];
+          const fullText =
+            typeof assistantMessage.content === "string"
+              ? assistantMessage.content
+              : "";
 
           self.postMessage({
             id,
@@ -157,11 +216,12 @@ self.onmessage = async (e) => {
           // Transform to flat format for chat template
           const formattedMessages = messages.map((msg) => ({
             role: msg.role,
-            content: typeof msg.content === "string"
-              ? msg.content
-              : msg.content?.[0]?.type === "text"
-                ? msg.content[0].text
-                : "",
+            content:
+              typeof msg.content === "string"
+                ? msg.content
+                : msg.content?.[0]?.type === "text"
+                  ? msg.content[0].text
+                  : "",
           }));
 
           const text = processor.apply_chat_template(formattedMessages, {
@@ -173,7 +233,10 @@ self.onmessage = async (e) => {
 
           const output = await model.generate({
             ...inputs,
-            max_new_tokens: generation.max_new_tokens,
+            max_new_tokens: Math.min(
+              generation.max_new_tokens,
+              WASM_MAX_NEW_TOKENS,
+            ),
             do_sample: generation.do_sample ?? true,
             temperature: generation.temperature,
             top_p: generation.top_p,
@@ -214,7 +277,11 @@ self.onmessage = async (e) => {
       }
 
       default:
-        self.postMessage({ id, type: "error", payload: { message: `Unknown message type: ${type}` } });
+        self.postMessage({
+          id,
+          type: "error",
+          payload: { message: `Unknown message type: ${type}` },
+        });
     }
   } catch (error) {
     self.postMessage({

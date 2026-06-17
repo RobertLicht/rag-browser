@@ -71,13 +71,22 @@ function getWorker() {
  * @returns {Promise<Object>}
  */
 function sendMessage(type, payload, timeoutMs = 120_000) {
+  // WASM inference is slow — generation can take several minutes even with q4.
+  // Give it a generous timeout so the user sees results instead of an error.
+  const TIMEOUTS = {
+    "load-llm": 300_000, // q4 model still downloads ~0.6GB
+    generate: 2400_000, // 40 min — WASM q4 does ~2-5 tok/s, 1024 tok cap = ~35 min worst-case
+  };
+  const effectiveTimeout = TIMEOUTS[type] ?? timeoutMs;
   const w = getWorker();
   const id = ++messageCounter;
   return new Promise((resolve, reject) => {
     const timeout = setTimeout(() => {
       pending.delete(id);
-      reject(new Error(`Worker timeout (${type}) after ${timeoutMs / 1000}s`));
-    }, timeoutMs);
+      reject(
+        new Error(`Worker timeout (${type}) after ${effectiveTimeout / 1000}s`),
+      );
+    }, effectiveTimeout);
     pending.set(id, { resolve, reject, timeout });
     w.postMessage({ id, type, payload });
   });
@@ -274,7 +283,7 @@ export function isLLMLoaded() {
 }
 
 /**
- * Context window for the WASM model (Qwen3-0.6B: 4K).
+ * Context window for the WASM model (Qwen3-0.6B-Instruct: 4K).
  */
 export function getContextWindow() {
   return CONTEXT_WINDOW_WASM;

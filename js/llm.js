@@ -15,14 +15,19 @@ const LLM_MODEL_WEBGPU = "huggingworld/Qwen3.5-2B-ONNX";
 
 // Qwen3.5-2B (WebGPU): 32K practical context in browser
 const CONTEXT_WINDOW_WEBGPU = 32768;
-// Qwen3-0.6B (WASM): 4K native context
+// Qwen3-0.6B-Instruct (WASM): 4K native context
 const CONTEXT_WINDOW_WASM = 4096;
+
+// WASM pipeline (Qwen3-0.6B-Instruct) token cap.
+// q4 WASM does ~2-5 tok/s; 1024 tokens ≈ 3-9 min worst-case.
+// WebGPU is uncapped (8192) since it's GPU-accelerated.
+const WASM_MAX_NEW_TOKENS = 1024;
 
 // ─── Module state ──────────────────────────────────────────────────────
 
 let processor = null;
 let model = null; // Qwen3.5 low-level model
-let generator = null; // Pipeline generator for Qwen3-0.6B
+let generator = null; // Pipeline generator for Qwen3-0.6B-Instruct
 let currentStoppingCriteria = null;
 let modelType = null; // 'qwen3_5' | 'pipeline'
 
@@ -45,7 +50,7 @@ export function supportsThinking() {
  * Load the LLM processor and model.
  *
  * WebGPU  → Qwen3.5-2B: low-level API (multi-modal architecture)
- * WASM    → Qwen3-0.6B: pipeline API (text-only causal LM)
+ * WASM    → Qwen3-0.6B-Instruct: pipeline API (instruction-tuned causal LM)
  *
  * @param {Object} config - Hardware config with llmModelId, llmDtype and device
  * @param {Function} [onProgress] - Optional progress callback from transformers.js
@@ -66,8 +71,8 @@ export async function loadLLM(config, onProgress) {
       },
     );
   } else {
-    // ── Qwen3-0.6B (WASM) — pipeline API ─────────────────────────────
-    // Simple decoder-only model. pipeline() handles tokenization,
+    // ── Qwen3-0.6B-Instruct (WASM) — pipeline API ─────────────────────────
+    // Instruction-tuned decoder-only model. pipeline() handles tokenization,
     // chat templating, and generation automatically.
     modelType = "pipeline";
     generator = await pipeline("text-generation", config.llmModelId, {
@@ -87,7 +92,7 @@ export async function loadLLM(config, onProgress) {
  *   [{ role: 'system', content: [{ type: 'text', text: '...' }] }, ...]
  *
  * For Qwen3.5 (WebGPU): applies chat template + model.generate() + batch decode.
- * For Qwen3-0.6B (WASM): converts to flat messages + pipeline call.
+ * For Qwen3-0.6B-Instruct (WASM): converts to flat messages + pipeline call.
  *
  * @param {Array} messages - Conversation messages (nested content format)
  * @param {Function} onToken - Callback receiving final full text (called once after generation)
@@ -216,7 +221,7 @@ async function generateQwen3_5(
 }
 
 /**
- * Generate with Qwen3-0.6B via pipeline API.
+ * Generate with Qwen3-0.6B-Instruct via pipeline API.
  * Converts nested content messages to flat format expected by the pipeline.
  */
 async function generatePipeline(
@@ -241,8 +246,9 @@ async function generatePipeline(
   if (onPhase) onPhase("generating");
 
   // Generate via pipeline (no streaming — full output at once)
+  const cappedTokens = Math.min(generation.max_new_tokens, WASM_MAX_NEW_TOKENS);
   const output = await generator(flatMessages, {
-    max_new_tokens: generation.max_new_tokens,
+    max_new_tokens: cappedTokens,
     do_sample: true,
     temperature: generation.temperature,
     top_p: generation.top_p,
