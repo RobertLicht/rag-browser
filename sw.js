@@ -1,6 +1,6 @@
 // sw.js — Service Worker for offline caching of static assets
 
-const CACHE_NAME = "rag-browser-v2";
+const CACHE_NAME = "rag-browser-v3";
 const ASSETS = [
   "/",
   "/index.html",
@@ -16,6 +16,11 @@ const ASSETS = [
   "/js/fileParser.js",
   "/js/ui.js",
   "/js/utils.js",
+  "/js/i18n.js",
+  "/js/renderer.js",
+  "/js/inference.js",
+  "/js/wasmWorker.js",
+  "/js/wasmWorkerProxy.js",
 ];
 
 // CDN assets to cache for offline use

@@ -15,15 +15,13 @@ import {
   loadEmbeddingModel,
   unloadEmbeddingModel,
   isEmbeddingLoaded,
-} from "./embedding.js";
-import {
   loadLLM,
   unloadLLM,
   stopGeneration,
   isLLMLoaded,
   getContextWindow,
   supportsThinking,
-} from "./llm.js";
+} from "./inference.js";
 import {
   createDB,
   getDocumentCount,

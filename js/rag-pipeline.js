@@ -1,9 +1,13 @@
 // rag-pipeline.js — RAG pipeline orchestration (ingestion + retrieval & generation)
 
 import { chunkText } from "./chunker.js";
-import { embedQuery, embedDocuments, getEmbeddingArrays } from "./embedding.js";
+import {
+  embedQuery,
+  embedDocuments,
+  getEmbeddingArrays,
+  generateResponse,
+} from "./inference.js";
 import { parseFile, needsOfficeParser, needsPdfJs } from "./fileParser.js";
-import { generateResponse } from "./llm.js";
 import { insertChunks, searchHybrid, searchVector } from "./orama-db.js";
 import { getRecentHistory, getState, updateTokenTracking } from "./state.js";
 import { estimateInputTokens } from "./utils.js";
