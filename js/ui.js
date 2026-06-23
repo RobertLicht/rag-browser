@@ -242,7 +242,7 @@ export function updateTokenStatus(tracking) {
 
 /**
  * Show/hide the token warning banner based on warning level.
- * @param {'ok' | 'warning' | 'critical' | 'exceeded'} level
+ * @param {'ok' | 'caution' | 'warning' | 'critical' | 'exceeded'} level
  * @param {number} remainingTokens
  * @param {number} contextWindow
  */
@@ -261,8 +261,13 @@ export function updateTokenWarningBanner(
   }
 
   banner.style.display = "flex";
-  banner.className =
-    level === "critical" || level === "exceeded" ? "critical" : "";
+  if (level === "critical" || level === "exceeded") {
+    banner.className = "critical";
+  } else if (level === "caution") {
+    banner.className = "caution";
+  } else {
+    banner.className = "";
+  }
 
   if (level === "exceeded") {
     warningText.textContent = t("status.token.warning.critical", {

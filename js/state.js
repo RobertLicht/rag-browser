@@ -277,8 +277,7 @@ export function resetGenerationToPreset() {
 
 // ─── Token Tracking ─────────────────────────────────────────────────
 
-export function updateTokenTracking(inputTokens, outputTokens, maxNewTokens) {
-  const reserved = maxNewTokens ?? state.llmConfig.generation.max_new_tokens;
+export function updateTokenTracking(inputTokens, outputTokens) {
   const total = inputTokens + outputTokens;
   const remaining = state.tokenTracking.contextWindow - total;
 
@@ -288,7 +287,7 @@ export function updateTokenTracking(inputTokens, outputTokens, maxNewTokens) {
     outputTokens,
     totalTokens: total,
     remainingTokens: remaining,
-    warningLevel: getWarningLevel(remaining, reserved),
+    warningLevel: getWarningLevel(remaining, state.tokenTracking.contextWindow),
   };
   subscribers.forEach((fn) => fn(state));
 }
@@ -313,5 +312,9 @@ export function setContextWindow(windowSize) {
   state.tokenTracking.contextWindow = windowSize;
   state.tokenTracking.remainingTokens =
     windowSize - state.tokenTracking.totalTokens;
+  state.tokenTracking.warningLevel = getWarningLevel(
+    state.tokenTracking.remainingTokens,
+    windowSize,
+  );
   subscribers.forEach((fn) => fn(state));
 }

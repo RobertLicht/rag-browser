@@ -1336,6 +1336,11 @@ body {
     color: var(--success);
 }
 
+#token-status.caution {
+    background: rgba(250, 204, 21, 0.1);
+    color: var(--warning);
+}
+
 #token-status.warning {
     background: rgba(234, 179, 8, 0.1);
     color: var(--warning);
@@ -1376,6 +1381,11 @@ body {
 
 #token-warning-banner.critical {
     border-bottom-color: var(--error);
+}
+
+#token-warning-banner.caution {
+    background: rgba(250, 204, 21, 0.1);
+    border-bottom-color: rgba(234, 179, 8, 0.6);
 }
 
 .token-warning-content {

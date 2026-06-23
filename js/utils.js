@@ -75,14 +75,25 @@ export function formatTokens(n) {
 }
 
 /**
- * Determine warning level based on remaining tokens and reserved output budget.
+ * Determine warning level based on context window usage percentage.
+ * The banner only appears once usage exceeds 75% of the context window.
+ *
+ * Levels:
+ *   ok        — usage ≤ 75% (no banner)
+ *   caution   — usage > 75% (gentle suggestion)
+ *   warning   — usage > 90% (stronger message)
+ *   critical  — usage > 95% (urgent)
+ *   exceeded  — remaining ≤ 0 (already full)
+ *
  * @param {number} remaining - Remaining tokens in context window
- * @param {number} reservedOutput - Tokens reserved for model output (max_new_tokens)
- * @returns {'ok' | 'warning' | 'critical' | 'exceeded'}
+ * @param {number} contextWindow - Total context window size
+ * @returns {'ok' | 'caution' | 'warning' | 'critical' | 'exceeded'}
  */
-export function getWarningLevel(remaining, reservedOutput) {
+export function getWarningLevel(remaining, contextWindow) {
   if (remaining <= 0) return "exceeded";
-  if (remaining <= reservedOutput * 0.25) return "critical";
-  if (remaining <= reservedOutput * 0.75) return "warning";
+  const usage = (contextWindow - remaining) / contextWindow;
+  if (usage > 0.95) return "critical";
+  if (usage > 0.9) return "warning";
+  if (usage > 0.75) return "caution";
   return "ok";
 }
