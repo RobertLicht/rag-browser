@@ -13,7 +13,8 @@ marked.setOptions({
 const renderer = new marked.Renderer();
 renderer.link = function (href, title, text) {
   const hrefAttr = href ? href.replace(/^javascript:/gi, "") : "";
-  let html = '<a href="' + hrefAttr + '" target="_blank" rel="noopener noreferrer"';
+  let html =
+    '<a href="' + hrefAttr + '" target="_blank" rel="noopener noreferrer"';
   if (title) html += ' title="' + title + '"';
   html += '">' + text + "</a>";
   return html;
@@ -22,6 +23,7 @@ renderer.link = function (href, title, text) {
 /**
  * Pre-process raw model output to handle think tags before markdown parsing.
  * Collapses model "thinking" blocks into expandable details elements.
+ * The thinking content itself is rendered as markdown for readability.
  */
 function preprocessThinking(content) {
   if (!content) return "";
@@ -31,12 +33,15 @@ function preprocessThinking(content) {
   var closeTag = "<" + "/think>";
   var regex = new RegExp(openTag + "([\\s\\S]*?)" + closeTag, "gi");
 
-  return content.replace(
-    regex,
-    function(_match, thought) {
-      return '<details class="think-block"><summary>Thinking Process</summary><div class="think-content">' + thought.trim() + '</div></details>';
-    }
-  );
+  return content.replace(regex, function (_match, thought) {
+    // Render thinking content as markdown so bold, lists, code, etc. appear correctly
+    var renderedThought = marked.parse(thought.trim());
+    return (
+      '<details class="think-block"><summary>Thinking Process</summary><div class="think-content">' +
+      renderedThought +
+      "</div></details>"
+    );
+  });
 }
 
 /**

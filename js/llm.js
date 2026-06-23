@@ -204,11 +204,36 @@ async function generateQwen3_5(
     // Batch decode all generated tokens
     const rawOutput = Array.from(output.data);
     const generatedTokenIds = rawOutput.slice(inputLength);
-    const fullText = processor.tokenizer.decode(generatedTokenIds, {
+    let fullText = processor.tokenizer.decode(generatedTokenIds, {
       skip_special_tokens: true,
     });
 
     const outputTokenCount = generatedTokenIds.length;
+
+    // When thinking mode is enabled, the chat template places the opening
+    // think tag in the prompt (input tokens), so the decoded generated
+    // text starts directly with the thinking content and only contains the
+    // closing /think> tag.  Wrap the thinking portion in proper tags
+    // so that renderer.preprocessThinking() can convert it into a collapsible
+    // <details> element.
+    if (llmConfig.enableThinking) {
+      var closeThinkTag = "<" + "/think>";
+      var closeIndex = fullText.indexOf(closeThinkTag);
+      if (closeIndex !== -1) {
+        var thinkingContent = fullText.substring(0, closeIndex).trim();
+        var answerContent = fullText.substring(
+          closeIndex + closeThinkTag.length,
+        );
+        var openThinkTag = "<" + "think>";
+        fullText =
+          openThinkTag +
+          "\n" +
+          thinkingContent +
+          "\n" +
+          closeThinkTag +
+          answerContent;
+      }
+    }
 
     if (onToken) onToken(fullText);
     if (onComplete) onComplete(fullText, { outputTokenCount });

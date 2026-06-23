@@ -866,7 +866,25 @@ body {
     padding: 0 0.75rem 0.5rem;
     font-size: 0.85em;
     color: var(--text-muted);
-    white-space: pre-wrap;
+}
+
+/* Ensure markdown elements inside think blocks inherit muted styling */
+.message-content details.think-block .think-content p,
+.message-content details.think-block .think-content li,
+.message-content details.think-block .think-content code,
+.message-content details.think-block .think-content strong,
+.message-content details.think-block .think-content em {
+    color: var(--text-muted);
+}
+
+.message-content details.think-block .think-content pre {
+    background: var(--bg-secondary);
+    border: 1px solid var(--border-color);
+    color: var(--text-muted);
+}
+
+.message-content details.think-block .think-content a {
+    color: var(--text-secondary);
 }
 
 /* KaTeX overrides for dark theme */
