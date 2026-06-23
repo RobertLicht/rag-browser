@@ -212,9 +212,16 @@ export async function retrieveAndGenerate(
   const promptTemplate = enableThinking
     ? SYSTEM_PROMPT_THINKING
     : SYSTEM_PROMPT;
-  const systemPrompt = promptTemplate
+  let systemPrompt = promptTemplate
     .replace("{context}", contextChunks || "(no relevant context found)")
     .replace("{question}", query);
+
+  // WASM fallback (Qwen3-0.6B): append /think or /no_think based on
+  // the user's thinking toggle.  WebGPU (Qwen3.5) uses chat-template
+  // options instead of prompt flags.
+  if (getState().hardware.device === "wasm") {
+    systemPrompt += enableThinking ? "/think" : "/no_think";
+  }
 
   // Step 5: Build conversation messages with history
   const recentHistory = getRecentHistory(MAX_HISTORY);
