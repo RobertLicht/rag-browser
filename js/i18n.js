@@ -45,6 +45,12 @@ const translations = {
     "modal.loading.description": "Downloading and initializing AI models...",
     "modal.loading.step.embedding": "Embedding Model (Qwen3-Embedding-0.6B)",
     "modal.loading.step.llm": "Language Model (Qwen3.5-2B)",
+    "modal.loading.step.llm.webgpu": "Language Model (Qwen3.5-2B)",
+    "modal.loading.step.llm.wasm": "Language Model (Qwen3-0.6B-Instruct)",
+    "modal.loading.description.webgpu":
+      "Loading Qwen3-Embedding-0.6B and Qwen3.5-2B via WebGPU...",
+    "modal.loading.description.wasm":
+      "WebGPU unavailable — loading Qwen3-Embedding-0.6B and Qwen3-0.6B-Instruct via WASM (slower)...",
     "modal.loading.done": "done",
     "modal.loading.ready": "ready",
     "modal.loading.initializing": "initializing",
@@ -317,6 +323,12 @@ const translations = {
       "KI-Modelle werden heruntergeladen und initialisiert...",
     "modal.loading.step.embedding": "Embedding-Modell (Qwen3-Embedding-0.6B)",
     "modal.loading.step.llm": "Sprachmodell (Qwen3.5-2B)",
+    "modal.loading.step.llm.webgpu": "Sprachmodell (Qwen3.5-2B)",
+    "modal.loading.step.llm.wasm": "Sprachmodell (Qwen3-0.6B-Instruct)",
+    "modal.loading.description.webgpu":
+      "Lade Qwen3-Embedding-0.6B und Qwen3.5-2B via WebGPU...",
+    "modal.loading.description.wasm":
+      "WebGPU nicht verfügbar — lade Qwen3-Embedding-0.6B und Qwen3-0.6B-Instruct via WASM (langsamer)...",
     "modal.loading.done": "fertig",
     "modal.loading.ready": "bereit",
     "modal.loading.initializing": "wird initialisiert",
@@ -587,6 +599,12 @@ const translations = {
       "Download e inizializzazione dei modelli AI...",
     "modal.loading.step.embedding": "Modello Embedding (Qwen3-Embedding-0.6B)",
     "modal.loading.step.llm": "Modello Linguistico (Qwen3.5-2B)",
+    "modal.loading.step.llm.webgpu": "Modello Linguistico (Qwen3.5-2B)",
+    "modal.loading.step.llm.wasm": "Modello Linguistico (Qwen3-0.6B-Instruct)",
+    "modal.loading.description.webgpu":
+      "Caricamento di Qwen3-Embedding-0.6B e Qwen3.5-2B via WebGPU...",
+    "modal.loading.description.wasm":
+      "WebGPU non disponibile — caricamento di Qwen3-Embedding-0.6B e Qwen3-0.6B-Instruct via WASM (più lento)",
     "modal.loading.done": "fatto",
     "modal.loading.ready": "pronto",
     "modal.loading.initializing": "inizializzazione",
@@ -854,6 +872,12 @@ const translations = {
     "modal.loading.step.embedding":
       "Modelo de Embedding (Qwen3-Embedding-0.6B)",
     "modal.loading.step.llm": "Modelo de Lenguaje (Qwen3.5-2B)",
+    "modal.loading.step.llm.webgpu": "Modelo de Lenguaje (Qwen3.5-2B)",
+    "modal.loading.step.llm.wasm": "Modelo de Lenguaje (Qwen3-0.6B-Instruct)",
+    "modal.loading.description.webgpu":
+      "Cargando Qwen3-Embedding-0.6B y Qwen3.5-2B vía WebGPU...",
+    "modal.loading.description.wasm":
+      "WebGPU no disponible — cargando Qwen3-Embedding-0.6B y Qwen3-0.6B-Instruct vía WASM (más lento)",
     "modal.loading.done": "listo",
     "modal.loading.ready": "listo",
     "modal.loading.initializing": "inicializando",
@@ -1123,6 +1147,12 @@ const translations = {
       "Téléchargement et initialisation des modèles d'IA...",
     "modal.loading.step.embedding": "Modèle d'Embedding (Qwen3-Embedding-0.6B)",
     "modal.loading.step.llm": "Modèle de Langage (Qwen3.5-2B)",
+    "modal.loading.step.llm.webgpu": "Modèle de Langage (Qwen3.5-2B)",
+    "modal.loading.step.llm.wasm": "Modèle de Langage (Qwen3-0.6B-Instruct)",
+    "modal.loading.description.webgpu":
+      "Chargement de Qwen3-Embedding-0.6B et Qwen3.5-2B via WebGPU...",
+    "modal.loading.description.wasm":
+      "WebGPU indisponible — chargement de Qwen3-Embedding-0.6B et Qwen3-0.6B-Instruct via WASM (plus lent)",
     "modal.loading.done": "fait",
     "modal.loading.ready": "prêt",
     "modal.loading.initializing": "initialisation",

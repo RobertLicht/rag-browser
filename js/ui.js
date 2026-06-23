@@ -610,8 +610,22 @@ export function showLoadingModal() {
   document.getElementById("modal-progress-fill").style.width = "0%";
   document.getElementById("modal-total-progress").textContent = "";
   document.getElementById("modal-title").textContent = t("modal.loading.title");
+
+  // Dynamic description and device badge
+  const device = getState().hardware.device; // 'webgpu' | 'wasm'
   document.getElementById("modal-description").textContent = t(
-    "modal.loading.description",
+    `modal.loading.description.${device}`,
+  );
+  const badge = document.getElementById("modal-device-badge");
+  badge.className = device === "webgpu" ? "gpu" : "wasm";
+  badge.textContent =
+    device === "webgpu"
+      ? "\u26A1 WebGPU Accelerated"
+      : "\uD83D\uDEE0\uFE0F WASM (CPU Fallback)";
+
+  // Dynamic LLM step label
+  document.querySelector("#step-llm .step-label").textContent = t(
+    `modal.loading.step.llm.${device}`,
   );
 }
 
