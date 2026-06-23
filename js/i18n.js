@@ -148,6 +148,9 @@ const translations = {
 
     // LLM settings
     "settings.llm.title": "LLM Settings",
+    "settings.llm.model": "Model:",
+    "settings.llm.model.webgpu": "Qwen3.5-2B",
+    "settings.llm.model.wasm": "Qwen3-0.6B-Instruct",
     "settings.llm.thinking": "Enable Thinking",
     "settings.llm.thinkingDesc":
       "Model reasons through its response before answering. Useful for complex problems but slower and uses more tokens.",
@@ -424,6 +427,9 @@ const translations = {
     "settings.btn.resetDefaults": "Auf Standard zurücksetzen",
 
     "settings.llm.title": "LLM-Einstellungen",
+    "settings.llm.model": "Modell:",
+    "settings.llm.model.webgpu": "Qwen3.5-2B",
+    "settings.llm.model.wasm": "Qwen3-0.6B-Instruct",
     "settings.llm.thinking": "Denken aktivieren",
     "settings.llm.thinkingDesc":
       "Das Modell denkt vor der Beantwortung nach. Nützlich für komplexe Probleme, aber langsamer und verbraucht mehr Tokens.",
@@ -697,6 +703,9 @@ const translations = {
     "settings.btn.resetDefaults": "Ripristina Predefiniti",
 
     "settings.llm.title": "Impostazioni LLM",
+    "settings.llm.model": "Modello:",
+    "settings.llm.model.webgpu": "Qwen3.5-2B",
+    "settings.llm.model.wasm": "Qwen3-0.6B-Instruct",
     "settings.llm.thinking": "Abilita Ragionamento",
     "settings.llm.thinkingDesc":
       "Il modello ragiona prima di rispondere. Utile per problemi complessi ma più lento e consuma più token.",
@@ -971,6 +980,9 @@ const translations = {
     "settings.btn.resetDefaults": "Restablecer Predeterminados",
 
     "settings.llm.title": "Configuración LLM",
+    "settings.llm.model": "Modelo:",
+    "settings.llm.model.webgpu": "Qwen3.5-2B",
+    "settings.llm.model.wasm": "Qwen3-0.6B-Instruct",
     "settings.llm.thinking": "Habilitar Razonamiento",
     "settings.llm.thinkingDesc":
       "El modelo razona antes de responder. Útil para problemas complejos pero más lento y consume más tokens.",
@@ -1246,6 +1258,9 @@ const translations = {
     "settings.btn.resetDefaults": "Réinitialiser par Défaut",
 
     "settings.llm.title": "Paramètres LLM",
+    "settings.llm.model": "Modèle:",
+    "settings.llm.model.webgpu": "Qwen3.5-2B",
+    "settings.llm.model.wasm": "Qwen3-0.6B-Instruct",
     "settings.llm.thinking": "Activer la Réflexion",
     "settings.llm.thinkingDesc":
       "Le modèle réfléchit avant de répondre. Utile pour les problèmes complexes mais plus lent et consomme plus de tokens.",

@@ -1043,7 +1043,15 @@ export function initLlmSettings({ onReset }) {
  * Sync LLM settings UI controls to match current state.
  */
 export function syncLlmSettingsUI() {
-  const { llmConfig } = getState();
+  const { llmConfig, hardware } = getState();
+
+  // Update model indicator based on device
+  const indicator = document.getElementById("llm-model-indicator");
+  if (indicator) {
+    const device = hardware.device; // 'webgpu' | 'wasm'
+    const modelName = t(`settings.llm.model.${device}`);
+    indicator.innerHTML = `${t("settings.llm.model")} <span class="model-name">${modelName}</span>`;
+  }
 
   // Thinking toggle
   const toggle = document.getElementById("thinking-toggle");
