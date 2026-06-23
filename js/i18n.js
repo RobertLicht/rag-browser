@@ -280,7 +280,7 @@ const translations = {
     "help.webgpu.tableStatus": "Status",
     "help.webgpu.tableEnable": "How to Enable",
     "help.webgpu.tips":
-      "<strong>Tips:</strong> Ensure Hardware Acceleration is enabled in your browser settings. Keep your GPU drivers updated for best performance.",
+      "<strong>Tips:</strong> Ensure Hardware Acceleration is enabled in your browser settings. Keep your GPU drivers updated for best performance. If your GPU is not being utilized, also enable <strong>Override software rendering list</strong> at <code>chrome://flags</code>.",
     "help.license.title": "License",
     "help.license.desc":
       "This project is provided as-is for personal and research use.",
@@ -559,7 +559,7 @@ const translations = {
     "help.webgpu.tableStatus": "Status",
     "help.webgpu.tableEnable": "Aktivieren",
     "help.webgpu.tips":
-      "<strong>Tipp:</strong> Stellen Sie sicher, dass Hardwarebeschleunigung in Ihren Browser-Einstellungen aktiviert ist. Halten Sie Ihre Grafiktreiber auf dem neuesten Stand.",
+      "<strong>Tipp:</strong> Stellen Sie sicher, dass Hardwarebeschleunigung in Ihren Browser-Einstellungen aktiviert ist. Halten Sie Ihre Grafiktreiber auf dem neuesten Stand. Falls Ihre GPU nicht genutzt wird, aktivieren Sie zudem <strong>Override software rendering list</strong> (Software-Rendering-Liste überschreiben) unter <code>chrome://flags</code>.",
     "help.license.title": "Lizenz",
     "help.license.desc":
       "Dieses Projekt wird für persönliche und Forschungszwecke bereitgestellt.",
@@ -835,7 +835,7 @@ const translations = {
     "help.webgpu.tableStatus": "Stato",
     "help.webgpu.tableEnable": "Come Abilitare",
     "help.webgpu.tips":
-      "<strong>Suggerimenti:</strong> Assicurati che l'accelerazione hardware sia abilitata nelle impostazioni del browser. Tieni aggiornati i driver GPU per le migliori prestazioni.",
+      "<strong>Suggerimenti:</strong> Assicurati che l'accelerazione hardware sia abilitata nelle impostazioni del browser. Tieni aggiornati i driver GPU per le migliori prestazioni. Se la tua GPU non viene utilizzata, abilita anche <strong>Override software rendering list</strong> (Ignora elenco rendering software) in <code>chrome://flags</code>.",
     "help.license.title": "Licenza",
     "help.license.desc":
       "Questo progetto è fornito così com'è per uso personale e di ricerca.",
@@ -1113,7 +1113,7 @@ const translations = {
     "help.webgpu.tableStatus": "Estado",
     "help.webgpu.tableEnable": "Cómo Habilitar",
     "help.webgpu.tips":
-      "<strong>Consejos:</strong> Asegúrese de que la Aceleración por Hardware esté habilitada en la configuración del navegador. Mantenga sus controladores GPU actualizados para el mejor rendimiento.",
+      "<strong>Consejos:</strong> Asegúrese de que la Aceleración por Hardware esté habilitada en la configuración del navegador. Mantenga sus controladores GPU actualizados para el mejor rendimiento. Si su GPU no está siendo utilizada, habilite también <strong>Override software rendering list</strong> (Anular lista de renderizado por software) en <code>chrome://flags</code>.",
     "help.license.title": "Licencia",
     "help.license.desc":
       "Este proyecto se proporciona tal cual para uso personal e investigativo.",
@@ -1393,7 +1393,7 @@ const translations = {
     "help.webgpu.tableStatus": "Statut",
     "help.webgpu.tableEnable": "Comment Activer",
     "help.webgpu.tips":
-      "<strong>Conseils :</strong> Assurez-vous que l'Accélération Matérielle est activée dans les paramètres du navigateur. Gardez vos pilotes GPU à jour pour de meilleures performances.",
+      "<strong>Conseils :</strong> Assurez-vous que l'Accélération Matérielle est activée dans les paramètres du navigateur. Gardez vos pilotes GPU à jour pour de meilleures performances. Si votre GPU n'est pas utilisé, activez également <strong>Override software rendering list</strong> (Ignorer la liste de rendu logiciel) dans <code>chrome://flags</code>.",
     "help.license.title": "Licence",
     "help.license.desc":
       "Ce projet est fourni en l'état pour un usage personnel et de recherche.",
