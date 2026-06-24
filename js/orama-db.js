@@ -239,6 +239,43 @@ export async function restoreIndex() {
   }
 }
 
+// ─── Default database ──────────────────────────────────────────────
+
+/**
+ * Path to the bundled default database. Loaded on first run so the user
+ * has an initial starting point without uploading files manually.
+ */
+const DEFAULT_DB_PATH = "examples/rag-browser-db-20260624-023133-1chunks.json";
+
+/**
+ * Load the default database from the server.
+ * Returns a fully functional Orama database, or `null` if loading fails
+ * (e.g., offline, file not found, validation error).
+ */
+export async function loadDefaultDatabase() {
+  try {
+    const response = await fetch(DEFAULT_DB_PATH);
+    if (!response.ok) {
+      console.warn(
+        `Default database fetch failed (${response.status}), skipping.`,
+      );
+      return null;
+    }
+
+    const parsed = await response.json();
+    const result = validateImport(parsed);
+    if (!result.valid) {
+      console.warn("Default database validation failed:", result.error);
+      return null;
+    }
+
+    return await restoreFromData(result.rawData);
+  } catch (error) {
+    console.warn("Failed to load default database:", error.message);
+    return null;
+  }
+}
+
 // ─── Export / Import helpers ────────────────────────────────────────
 
 const EXPORT_FORMAT = "rag-browser-orama";

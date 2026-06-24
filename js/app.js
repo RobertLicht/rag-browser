@@ -27,6 +27,7 @@ import {
   getDocumentCount,
   persistIndex,
   restoreIndex,
+  loadDefaultDatabase,
   serializeDB,
   restoreFromData,
   validateImport,
@@ -83,6 +84,18 @@ export async function init() {
   db = await restoreIndex();
   console.log(`Index loaded: ${getDocumentCount(db)} documents`);
 
+  // If the restored index is empty, try to load the bundled default database
+  let isDefaultDb = false;
+  if (getDocumentCount(db) === 0) {
+    const defaultDb = await loadDefaultDatabase();
+    if (defaultDb) {
+      db = defaultDb;
+      await persistIndex(db);
+      isDefaultDb = true;
+      console.log(`Default database loaded: ${getDocumentCount(db)} documents`);
+    }
+  }
+
   // Update index stats in state
   setState({
     index: {
@@ -92,11 +105,13 @@ export async function init() {
     },
   });
 
-  // Restore document list if we have a persisted index
+  // Update document list for restored/default data
   if (getDocumentCount(db) > 0) {
     updateDocumentList([
       {
-        name: "Restored from IndexedDB",
+        name: isDefaultDb
+          ? "Default Database (pre-loaded)"
+          : "Restored from IndexedDB",
         chunks: getDocumentCount(db),
         size: 0,
       },
