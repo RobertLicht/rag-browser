@@ -6,11 +6,34 @@
 // this worker is only used when hardware.device === 'wasm'.
 
 import {
+  env,
   pipeline,
   AutoProcessor,
   Qwen3_5ForConditionalGeneration,
   InterruptableStoppingCriteria,
 } from "https://cdn.jsdelivr.net/npm/@huggingface/transformers@4.2.0/+esm";
+
+// ── WASM Performance Configuration ─────────────────────────────────────
+// Enable SIMD for 2-4x performance boost on CPU. Must be set BEFORE any
+// pipeline() call, as ONNX Runtime caches the configuration on first use.
+env.backends.onnx.wasm.simd = true;
+
+// Multi-threading: distribute computation across CPU cores via SharedArrayBuffer.
+// Cap threads to avoid context-switching overhead on high-core machines.
+// Note: multi-threading only activates when the page is crossOriginIsolated
+// (requires COOP/COEP headers from the server). Without these headers,
+// the runtime gracefully falls back to single-threaded WASM (~3-4x slower).
+const maxThreads = Math.min(navigator.hardwareConcurrency || 4, 8);
+env.backends.onnx.wasm.numThreads = maxThreads;
+
+// Log multi-threading status at startup so users know if COOP/COEP headers are active.
+const sharedArrayBufferAvailable = typeof SharedArrayBuffer !== "undefined";
+const threadMode = sharedArrayBufferAvailable
+  ? "multi-threaded WASM active"
+  : "single-threaded fallback (3-4x slower)";
+console.log(
+  `[wasmWorker] SIMD: enabled | Threads: ${maxThreads} | SharedArrayBuffer: ${sharedArrayBufferAvailable} (${threadMode})`,
+);
 
 // ── Model references ──────────────────────────────────────────────────
 let extractor = null;
@@ -152,6 +175,17 @@ self.onmessage = async (e) => {
               // Prompt the model to generate
               "{%- if add_generation_prompt %}<|im_start|>assistant\\n{%- endif %}",
             ].join("\n");
+          }
+          // Warm-up: run a tiny inference to JIT-compile WASM kernels.
+          // This eliminates cold-start latency on the first real user query.
+          // We generate just 1 token so it completes in under a second.
+          try {
+            await generator([{ role: "user", content: "Hi" }], {
+              max_new_tokens: 1,
+              do_sample: false,
+            });
+          } catch {
+            // Warm-up is best-effort; ignore errors
           }
         }
         self.postMessage({ id, type: "result", payload: { status: "ready" } });

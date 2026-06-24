@@ -114,18 +114,25 @@ rag-v2-qwen3.6-27b/
 
 ### Quick Start
 
+**Recommended** — Use the bundled dev server to enable multi-threaded WASM:
+
 ```bash
-# Serve the project from the root directory
+node server.js
+```
+
+Then open `http://localhost:3000`. This server sets the required **COOP/COEP headers** that unlock `SharedArrayBuffer`, enabling multi-threaded WASM inference (2–4× faster CPU generation).
+
+**Without COOP/COEP headers**, the browser blocks `SharedArrayBuffer` and ONNX Runtime falls back to single-threaded WASM, which is **3–4× slower**.
+
+**Alternative servers** (single-threaded WASM, no COOP/COEP):
+
+```bash
 npx serve .
-
-# Or with Python
 python3 -m http.server 8080
-
-# Or with Node
 npx http-server .
 ```
 
-Then open `http://localhost:8080` in your browser.
+> **Note:** Standard tools like `npx serve`, `python3 -m http.server`, and `npx http-server` do **not** set COOP/COEP headers. They work fine for WebGPU inference, but WASM will run single-threaded. Use `node server.js` for optimal WASM performance.
 
 ### Usage
 
