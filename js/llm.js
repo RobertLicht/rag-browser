@@ -8,6 +8,7 @@ import {
 } from "https://cdn.jsdelivr.net/npm/@huggingface/transformers@4.2.0/+esm";
 
 import { getState } from "./state.js";
+import { ensureThinkTags } from "./utils.js";
 
 // ─── Model-specific constants ──────────────────────────────────────────
 
@@ -210,30 +211,10 @@ async function generateQwen3_5(
 
     const outputTokenCount = generatedTokenIds.length;
 
-    // When thinking mode is enabled, the chat template places the opening
-    // think tag in the prompt (input tokens), so the decoded generated
-    // text starts directly with the thinking content and only contains the
-    // closing /think> tag.  Wrap the thinking portion in proper tags
-    // so that renderer.preprocessThinking() can convert it into a collapsible
-    // <details> element.
-    if (llmConfig.enableThinking) {
-      var closeThinkTag = "<" + "/think>";
-      var closeIndex = fullText.indexOf(closeThinkTag);
-      if (closeIndex !== -1) {
-        var thinkingContent = fullText.substring(0, closeIndex).trim();
-        var answerContent = fullText.substring(
-          closeIndex + closeThinkTag.length,
-        );
-        var openThinkTag = "<" + "think>";
-        fullText =
-          openThinkTag +
-          "\n" +
-          thinkingContent +
-          "\n" +
-          closeThinkTag +
-          answerContent;
-      }
-    }
+    // Ensure thinking content is wrapped in proper &lt;think&gt; tags.
+    // The chat template places the opening tag in the prompt, so the model
+    // generates only &lt;/think&gt;. ensureThinkTags wraps the content properly.
+    fullText = ensureThinkTags(fullText, llmConfig.enableThinking);
 
     if (onToken) onToken(fullText);
     if (onComplete) onComplete(fullText, { outputTokenCount });
@@ -256,6 +237,9 @@ async function generatePipeline(
   onPhase,
   generation,
 ) {
+  // Read config early for phase tracking and post-processing
+  const { llmConfig: pipelineLlmConfig } = getState();
+
   // Convert nested content messages to flat format for pipeline
   const flatMessages = messages.map((msg) => ({
     role: msg.role,
@@ -268,7 +252,11 @@ async function generatePipeline(
   }));
 
   // Phase tracking
-  if (onPhase) onPhase("generating");
+  if (onPhase) {
+    onPhase(
+      pipelineLlmConfig.enableThinking ? "generating_thinking" : "generating",
+    );
+  }
 
   // Generate via pipeline (no streaming — full output at once)
   const cappedTokens = Math.min(generation.max_new_tokens, WASM_MAX_NEW_TOKENS);
@@ -295,11 +283,17 @@ async function generatePipeline(
   // Estimate output tokens from text length (~4 chars per token)
   const outputTokenCount = Math.ceil(fullText.length / 4);
 
-  if (onToken) onToken(fullText);
-  if (onComplete) onComplete(fullText, { outputTokenCount });
+  // Ensure thinking content is wrapped in proper think tags
+  const processedText = ensureThinkTags(
+    fullText,
+    pipelineLlmConfig.enableThinking,
+  );
+
+  if (onToken) onToken(processedText);
+  if (onComplete) onComplete(processedText, { outputTokenCount });
 
   currentStoppingCriteria = null;
-  return { text: fullText, outputTokenCount };
+  return { text: processedText, outputTokenCount };
 }
 
 /**

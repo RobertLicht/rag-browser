@@ -97,3 +97,32 @@ export function getWarningLevel(remaining, contextWindow) {
   if (usage > 0.75) return "caution";
   return "ok";
 }
+
+// ─── Thinking Tag Utilities ───────────────────────────────────────────
+
+/**
+ * Ensure thinking content is properly wrapped in `` tags.
+ *
+ * When a chat template places the opening `` tag in the prompt
+ * (input tokens), the model generates only the closing `` tag.
+ * This function detects that case and wraps the pre-close-tag content
+ * with the opening tag so that renderer.preprocessThinking() can
+ * convert it into a collapsible `<details>` element.
+ *
+ * @param {string} content - Raw model output
+ * @param {boolean} enableThinking - Whether thinking mode is active
+ * @returns {string} Content with proper think tags
+ */
+export function ensureThinkTags(content, enableThinking) {
+  if (!enableThinking || !content) return content;
+  const openTag = "<" + "think>";
+  const closeTag = "<" + "/think>";
+  const closeIndex = content.indexOf(closeTag);
+  // Only fix if closing tag exists but opening tag is missing
+  if (closeIndex !== -1 && !content.startsWith(openTag)) {
+    const thinkingContent = content.substring(0, closeIndex).trim();
+    const answerContent = content.substring(closeIndex + closeTag.length);
+    return openTag + "\n" + thinkingContent + "\n" + closeTag + answerContent;
+  }
+  return content;
+}

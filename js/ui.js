@@ -1064,10 +1064,14 @@ export function syncLlmSettingsUI() {
     toggle.checked = llmConfig.enableThinking;
   }
 
-  // Max thinking tokens control — visibility and slider value
+  // Max thinking tokens control — visible only when thinking is enabled
+  // AND device is WebGPU. WASM uses /think suffix (no max_thinking_tokens),
+  // so this slider has no effect for WASM and should be hidden.
   const thinkingControl = document.getElementById("thinking-tokens-control");
   if (thinkingControl) {
-    thinkingControl.style.display = llmConfig.enableThinking ? "block" : "none";
+    const isWasm = hardware.device === "wasm";
+    thinkingControl.style.display =
+      llmConfig.enableThinking && !isWasm ? "block" : "none";
   }
   const maxThinkingSlider = document.getElementById(
     "max-thinking-tokens-slider",

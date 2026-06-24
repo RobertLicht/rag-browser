@@ -228,7 +228,13 @@ export async function loadLLM(config, onProgress) {
  * @returns {Promise<{ text: string, outputTokenCount: number }>}
  */
 export async function generateResponse(messages, onToken, onComplete, onPhase) {
-  if (onPhase) onPhase("generating");
+  // Read config early for phase tracking and post-processing
+  const { llmConfig } = getState();
+
+  // Set correct initial phase based on thinking mode
+  if (onPhase) {
+    onPhase(llmConfig.enableThinking ? "generating_thinking" : "generating");
+  }
 
   // Flatten nested content for the worker
   const flatMessages = messages.map((msg) => ({
@@ -241,19 +247,22 @@ export async function generateResponse(messages, onToken, onComplete, onPhase) {
           : "",
   }));
 
-  // Read generation params from app state
-  const { llmConfig } = getState();
-
   const result = await sendMessage("generate", {
     messages: flatMessages,
     generation: llmConfig.generation,
   });
 
-  if (onToken) onToken(result.text);
-  if (onComplete)
-    onComplete(result.text, { outputTokenCount: result.outputTokenCount });
+  // Post-process: ensure thinking content is wrapped in proper &lt;think&gt; tags.
+  // The Qwen3-0.6B model with /think suffix may output only &lt;/think&gt; without
+  // the opening tag, so we fix that here before passing to callbacks.
+  const { ensureThinkTags } = await import("./utils.js");
+  const processedText = ensureThinkTags(result.text, llmConfig.enableThinking);
 
-  return { text: result.text, outputTokenCount: result.outputTokenCount };
+  if (onToken) onToken(processedText);
+  if (onComplete)
+    onComplete(processedText, { outputTokenCount: result.outputTokenCount });
+
+  return { text: processedText, outputTokenCount: result.outputTokenCount };
 }
 
 /**
@@ -290,8 +299,8 @@ export function getContextWindow() {
 }
 
 /**
- * WASM model does not support thinking mode.
+ * WASM model supports thinking mode via /think and /no_think prompt suffixes.
  */
 export function supportsThinking() {
-  return false;
+  return true;
 }

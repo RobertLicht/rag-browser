@@ -223,9 +223,12 @@ export function getContextWindow() {
 
 /**
  * Check if the currently loaded model supports thinking mode.
+ * Both WebGPU (Qwen3.5) and WASM (Qwen3-0.6B) support thinking.
+ * WebGPU uses chat template options; WASM uses /think and /no_think suffixes.
  */
 export function supportsThinking() {
   if (_webgpuLlm) return _webgpuLlm.supportsThinking();
-  // WASM model (Qwen3-0.6B-Instruct) does not support thinking
-  return false;
+  if (_wasmProxy) return _wasmProxy.supportsThinking();
+  // Default: both models support thinking until proven otherwise
+  return true;
 }
