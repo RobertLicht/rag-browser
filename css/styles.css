@@ -121,7 +121,7 @@ body {
     background: var(--bg-secondary);
     border-bottom: 1px solid var(--border-color);
     font-size: 0.8rem;
-    color: var(--text-secondary);
+    color: var(--text-tertiary);
     flex-wrap: wrap;
 }
 

@@ -561,29 +561,103 @@ export function updateDocumentList(documents) {
  * @param {string} message
  * @param {'info'|'warning'|'error'} type
  */
+// Track active error notifications for stacking
+let _errorNotificationCount = 0;
+
 export function showNotification(message, type = "info") {
   const el = document.createElement("div");
-  el.style.cssText = `
-    position: fixed;
-    bottom: 1rem;
-    right: 1rem;
-    padding: 0.75rem 1rem;
-    background: ${type === "error" ? "var(--error)" : type === "warning" ? "var(--warning)" : "var(--accent)"};
-    color: white;
-    border-radius: 8px;
-    font-size: 0.85rem;
-    z-index: 1000;
-    max-width: 300px;
-    animation: slideIn 0.3s ease;
-  `;
-  el.textContent = message;
-  document.body.appendChild(el);
+  el.classList.add("notification-toast");
 
-  setTimeout(() => {
-    el.style.opacity = "0";
-    el.style.transition = "opacity 0.3s";
-    setTimeout(() => el.remove(), 300);
-  }, 3000);
+  if (type === "error") {
+    // Error notifications: persistent, stacked, with close button
+    _errorNotificationCount++;
+    const offset = 1 + (_errorNotificationCount - 1) * 64; // 1rem base + 64px per stack
+    el.style.cssText = `
+      position: fixed;
+      bottom: ${offset}px;
+      right: 16px;
+      padding: 10px 36px 10px 14px;
+      background: var(--error);
+      color: white;
+      border-radius: 8px;
+      font-size: 0.85rem;
+      z-index: 1000;
+      max-width: 320px;
+      min-width: 200px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+      animation: slideIn 0.3s ease;
+      transition: bottom 0.25s ease, opacity 0.25s ease;
+    `;
+    el.textContent = message;
+
+    // Close button
+    const closeBtn = document.createElement("button");
+    closeBtn.textContent = "\u2715"; // ×
+    closeBtn.style.cssText = `
+      position: absolute;
+      top: 50%;
+      right: 6px;
+      transform: translateY(-50%);
+      background: none;
+      border: none;
+      color: white;
+      font-size: 1.1rem;
+      cursor: pointer;
+      padding: 0;
+      line-height: 1;
+      opacity: 0.7;
+    `;
+    closeBtn.addEventListener(
+      "mouseenter",
+      () => (closeBtn.style.opacity = "1"),
+    );
+    closeBtn.addEventListener(
+      "mouseleave",
+      () => (closeBtn.style.opacity = "0.7"),
+    );
+    closeBtn.addEventListener("click", () => {
+      el.style.opacity = "0";
+      setTimeout(() => {
+        el.remove();
+        _errorNotificationCount--;
+        // Reposition remaining error notifications
+        repositionErrorNotifications();
+      }, 250);
+    });
+    el.appendChild(closeBtn);
+  } else {
+    // Non-error notifications: auto-dismiss, no stacking offset
+    el.style.cssText = `
+      position: fixed;
+      bottom: 1rem;
+      right: 1rem;
+      padding: 0.75rem 1rem;
+      background: ${type === "warning" ? "var(--warning)" : "var(--accent)"};
+      color: white;
+      border-radius: 8px;
+      font-size: 0.85rem;
+      z-index: 1000;
+      max-width: 300px;
+      animation: slideIn 0.3s ease;
+    `;
+    el.textContent = message;
+
+    setTimeout(() => {
+      el.style.opacity = "0";
+      el.style.transition = "opacity 0.3s";
+      setTimeout(() => el.remove(), 300);
+    }, 3000);
+  }
+
+  document.body.appendChild(el);
+}
+
+function repositionErrorNotifications() {
+  const notifications = document.querySelectorAll(".notification-toast");
+  notifications.forEach((n, i) => {
+    const offset = 16 + i * 64;
+    n.style.bottom = `${offset}px`;
+  });
 }
 
 /**
