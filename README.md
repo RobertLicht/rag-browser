@@ -226,6 +226,7 @@ npx http-server .
 
 ### Documentation
 
+- **`docs/DEVELOPER.md`** — Comprehensive developer guide: architecture deep-dive, module API reference, data flow diagrams, configuration, debugging, extension points, and testing
 - **`PRD.md`** — Full product requirements, data models, and acceptance criteria
 - **`IMPLEMENTATION_PLAN.md`** — Detailed 5-phase implementation plan with API patterns and validation criteria
 
