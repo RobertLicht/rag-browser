@@ -2,7 +2,7 @@
 
 A fully client-side, browser-based **Retrieval-Augmented Generation (RAG)** agent. Upload documents (`.txt`, `.md`, `.csv`, `.xls`, `.xlsx`, `.docx`, `.pptx`, `.odt`, `.ods`, `.odp`, `.pdf`), embed them locally, and query them conversationally — all without a server, API keys, or cloud infrastructure.
 
-![Failed to show image](./images/rag-browser-example-01.png "Usage example of the RAG-Browser application")
+![RAG-Browser Example](./images/rag-browser-example-01.png "Usage example of the RAG-Browser application")
 
 ---
 
@@ -119,8 +119,15 @@ rag-v2-qwen3.6-27b/
 │   ├── renderer.js      # Markdown + LaTeX rendering for chat messages
 │   ├── ui.js            # DOM rendering & general UI updates
 │   └── utils.js         # Helpers (UUID, token estimation, formatting)
-├── examples/                    # Minimal test pages for individual models
-├── debug_data/                  # Debug screenshots and diagnostics
+├── docs/
+│   └── DEVELOPER.md     # Comprehensive developer guide
+├── examples/
+│   ├── minimal-qwen3.5-2b.html          # Standalone Qwen3.5-2B test page
+│   ├── minimal-qwen3-0.6b.html          # Standalone Qwen3-0.6B test page
+│   ├── minimal-qwen3-0.6b-wasm-q4-no_think.html  # WASM q4 no-thinking test
+│   ├── minimal-qwen3-embedding-0.6b.html # Embedding model test page
+│   └── ...                            # Additional examples and test data
+├── images/                          # Application screenshots
 ├── PRD.md                       # Product Requirements Document
 └── IMPLEMENTATION_PLAN.md       # Detailed implementation plan
 ```
@@ -248,7 +255,7 @@ Generation parameters follow official Qwen3.5 recommendations:
 | repetition_penalty | 1.0 | 1.0 |
 | max_new_tokens | 8192 | 8192 |
 
-The preset is auto-applied when toggling thinking mode. For WASM, `max_new_tokens` is capped at 2048, and `min_p` / `presence_penalty` are not supported (pipeline API limitation).
+The preset is auto-applied when toggling thinking mode. For WASM, `max_new_tokens` is capped at 4096, and `min_p` / `presence_penalty` are not supported (pipeline API limitation).
 
 ### Embedding Strategy
 
@@ -311,7 +318,7 @@ following constraints:
 - **Performance** — Inference speed depends on your device and browser. Without WebGPU acceleration, generation can be 10–50× slower. Even with WebGPU, throughput is lower than a dedicated server or native application.
 - **Memory constraints** — The browser sandbox limits available memory. Models and document embeddings reside in-process and may be evicted or cause tab instability under heavy load.
 - **No long-running background tasks** — Closing or refreshing the tab interrupts any in-progress generation or ingestion.
-- **WASM output cap** — The WASM backend caps generation at 2048 tokens to prevent excessively long waits (at 2–5 tok/s, 2048 tokens ≈ 7–18 minutes worst-case).
+- **WASM output cap** — The WASM backend caps generation at 4096 tokens to prevent excessively long waits (at 2–5 tok/s, 4096 tokens ≈ 13–33 minutes worst-case).
 - **WASM generation parameters** — The WASM pipeline doesn't support `min_p` and `presence_penalty`. Only `temperature`, `top_p`, `top_k`, and `repetition_penalty` are available on the WASM backend.
 - **No streaming** — Both backends generate the full response then return it at once (WebGPU uses batch decode to avoid incremental BPE decoding bugs). The response is not token-streamed.
 

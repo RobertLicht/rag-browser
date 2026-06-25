@@ -160,11 +160,17 @@ The `inference.js` facade transparently routes all calls to the correct backend.
 The application uses a centralized publish/subscribe pattern (`state.js`). The state is a single flat object that is shallow-merged on updates. All subscribers receive the full state on every change.
 
 ```javascript
-const state = {
-  hardware: { webgpuAvailable, device, llmModelId, dtype, deviceMemoryGB },
-  models: { embedding: "unloaded" | "ready", llm: "unloaded" | "ready" },
-  index: { totalChunks, totalDocuments, embeddingDimension },
-  conversation: [/* message objects */],
+let state = {
+  hardware: {
+    webgpuAvailable: false,
+    device: "wasm",               // 'webgpu' | 'wasm'
+    llmModelId: "",                // HuggingFace model ID
+    dtype: "",                     // Legacy placeholder (unused)
+    deviceMemoryGB: undefined,
+  },
+  models: { embedding: "unloaded", llm: "unloaded" },  // 'unloaded' | 'loading' | 'ready'
+  index: { totalChunks: 0, totalDocuments: 0, embeddingDimension: 1024 },
+  conversation: [],
   searchConfig: { mode, hybridWeights, thresholds, topN },
   llmConfig: { enableThinking, maxThinkingTokens, generation: { ... } },
   tokenTracking: { contextWindow, inputTokens, outputTokens, totalTokens, remainingTokens, warningLevel },
@@ -357,8 +363,10 @@ env.backends.onnx.wasm.numThreads = Math.min(navigator.hardwareConcurrency || 4,
 
 Promise-based proxy wrapping `wasmWorker.js`. Exposes the same API as `embedding.js` + `llm.js`.
 
-**Timeout handling:**
+**Timeout handling:** Defined inside `sendMessage()` with per-operation overrides:
 ```javascript
+// Default timeout: 120s
+// Per-operation overrides:
 const TIMEOUTS = {
   "load-llm": 300_000,    // 5 min — q4 model downloads ~0.6GB
   "generate": 2400_000,   // 40 min — WASM q4 does ~2-5 tok/s
@@ -379,6 +387,7 @@ const chunks = chunkText(text, {
 });
 
 // Returns: Array of { id, content, metadata: { sourceFile, chunkIndex, charOffset, charLength } }
+// Each chunk gets a unique id (UUID) for tracking and citation linking
 ```
 
 **Strategy:**
@@ -434,6 +443,16 @@ import {
 
 **IndexedDB format:** Uses `save()` from Orama to produce proper serializable state. Backward-compatible with old raw DB format.
 
+**Key constants:**
+```javascript
+const DB_NAME = "rag-browser-db";
+const DB_VERSION = 2;
+const STORE_NAME = "documents";
+const EXPORT_FORMAT = "rag-browser-orama";
+const EXPORT_VERSION = 2;
+const EXPECTED_DIMENSION = 1024;
+```
+
 ### 3.11 rag-pipeline.js
 
 RAG pipeline orchestration.
@@ -488,22 +507,33 @@ DOM rendering, event handling, and UI state synchronization.
 
 ```javascript
 import {
-  initUI,                  // Wire all DOM event handlers
-  updateStatusBar,         // Update status indicators
-  renderUserMessage,       // Add user message to chat
-  renderAssistantMessage,  // Add assistant message + citations
-  renderStreamingMessage,  // Render message with markdown/latex
-  updateProgress,          // Update ingestion progress bar
-  updateDocumentList,      // Update sidebar document list
-  showNotification,        // Show toast notification
-  showLoadingModal,        // Show model loading modal
-  hideLoadingModal,        // Hide loading modal
-  updateLoadingModal,      // Update loading progress
-  setFileInputEnabled,     // Enable/disable file upload
-  setSendButtonEnabled,    // Enable/disable send button
-  setUnloadButtonStates,   // Update unload button states
-  syncSettingsUI,          // Sync search settings to UI controls
-  syncLlmSettingsUI,       // Sync LLM settings to UI controls
+  initUI,                    // Wire all DOM event handlers
+  updateStatusBar,           // Update status indicators
+  updateWebGpuBanner,        // Show/hide WebGPU unavailable banner
+  updateTokenStatus,         // Update token usage display
+  updateTokenWarningBanner,  // Show/hide context window warning
+  renderUserMessage,         // Add user message to chat
+  renderAssistantMessage,    // Add assistant message + citations
+  renderStreamingMessage,    // Render message with markdown/latex, thinking blocks, and phase updates
+  updateProgress,            // Update ingestion progress bar
+  updateDocumentList,        // Update sidebar document list
+  showNotification,          // Show toast notification
+  repositionErrorNotifications, // Reposition notifications after layout changes
+  scrollConversation,        // Auto-scroll chat to bottom
+  showLoadingModal,          // Show model loading modal
+  hideLoadingModal,          // Hide loading modal
+  updateLoadingModal,        // Update loading progress
+  setFileInputEnabled,       // Enable/disable file upload
+  setSendButtonEnabled,      // Enable/disable send button
+  setUnloadButtonStates,     // Update unload button states
+  syncSettingsUI,            // Sync search settings to UI controls
+  syncLlmSettingsUI,         // Sync LLM settings to UI controls
+  initSearchSettings,        // Initialize search settings panel (mode, thresholds, weights)
+  initLlmSettings,           // Initialize LLM settings panel (thinking, gen params)
+  initHelpModal,             // Initialize help modal with walkthrough
+  initThemeToggle,           // Initialize dark/light theme toggle
+  initLanguageSelector,      // Initialize language dropdown
+  applyThemeEmoji,           // Apply emoji indicator for current theme
 } from "./ui.js";
 ```
 
@@ -531,6 +561,29 @@ init(); // Called from index.html <script type="module">
 let db = null;                    // Orama database instance
 const ingestedDocuments = [];     // Track ingested documents for sidebar
 let isGenerating = false;         // Guard against concurrent generation
+```
+
+**Helper function:**
+```javascript
+getSelectedChunkSize()  // Read chunk size from UI dropdown (256/512/1024 tokens)
+```
+
+**Event handlers (wired via initUI callbacks):**
+```javascript
+handleFileUpload(files)            // Ingest uploaded files through RAG pipeline
+handleQuery(query)                 // Run retrieval + generation pipeline
+handleStop()                       // Stop current generation
+handleLoadModels()                 // Load embedding → load LLM → enable UI
+handleUnloadEmbedding()            // Unload embedding model
+handleUnloadLLM()                  // Unload LLM model
+handleClearChat()                  // Clear conversation + reset token tracking
+handleClearDB()                    // Clear Orama DB + IndexedDB (with confirmation)
+handleExportDB()                   // Export database to JSON file
+handleImportDB(file)               // Import database from JSON (with validation)
+handleResetSettings()              // Reset all settings to defaults
+handleResetLlmSettings()           // Reset only LLM settings to defaults
+getUIButtons()                     // Return references to send/stop/query elements
+resetUIButtons()                   // Reset button states after generation
 ```
 
 **Model lifecycle:**
@@ -594,6 +647,7 @@ import {
 sequenceDiagram
     participant User
     participant app as app.js
+    participant rag as rag-pipeline.js
     participant fp as fileParser.js
     participant chunk as chunker.js
     participant inf as inference.js
@@ -601,18 +655,20 @@ sequenceDiagram
     participant idb as IndexedDB
 
     User->>app: Upload file(s)
-    app->>fp: parseFile(file)
+    app->>rag: ingestDocument(file, db, progressCallback)
+    rag->>fp: parseFile(file)
     fp->>fp: Load CDN parser if needed
-    fp-->>app: Plain text
-    app->>chunk: chunkText(text, options)
-    chunk-->>app: Array of chunk objects
+    fp-->>rag: Plain text
+    rag->>chunk: chunkText(text, options)
+    chunk-->>rag: Array of chunk objects
     loop Batch of 32 chunks
-        app->>inf: embedDocuments(batch)
-        inf-->>app: Flat embedding data
-        app->>app: getEmbeddingArrays(reshape)
+        rag->>inf: embedDocuments(batch)
+        inf-->>rag: Flat embedding data
+        rag->>rag: getEmbeddingArrays(reshape)
     end
-    app->>db: insertChunks(chunks + embeddings)
+    rag->>db: insertChunks(chunks + embeddings)
     db->>idb: persistIndex()
+    rag-->>app: { chunks, fileSize }
     app-->>User: Indexed N chunks
 ```
 
@@ -643,9 +699,9 @@ sequenceDiagram
     rag->>state: getRecentHistory(MAX_HISTORY=10)
     rag->>inf: generateResponse(messages, onToken, onComplete, onPhase)
     inf-->>rag: Generated text + token count
-    rag->>state: addMessage(role, content, contextChunks)
-    rag->>state: updateTokenTracking(inputTokens, outputTokens)
     rag-->>app: { sourceChunks, similarity }
+    app->>state: addMessage(role, content, contextChunks)
+    app->>state: updateTokenTracking(inputTokens, outputTokens)
     app->>ui: renderAssistantMessage(text, citations)
     ui-->>User: Rendered response with citations
 ```
@@ -673,8 +729,10 @@ sequenceDiagram
     backend-->>app: (onProgress callbacks)
     backend-->>app: Ready
     app->>state: setState({ models: { llm: "ready" } })
+    app->>app: updateModelState()       // Sync model states to UI (local fn)
     app->>state: setContextWindow(getContextWindow())
     app->>state: setLlmConfig({ enableThinking: supportsThinking() })
+    app->>ui: updateLoadingModal()      // Show completion status
     app->>ui: setFileInputEnabled(true)
     app->>ui: setSendButtonEnabled(true)
     app->>ui: hideLoadingModal()
@@ -1006,33 +1064,39 @@ const translations = {
 
 ### 7.6 Adding Custom Generation Parameters
 
+**Current preset parameters:** `temperature`, `top_p`, `top_k`, `min_p`, `presence_penalty`, `repetition_penalty`, `max_new_tokens`.
+
+To add a new parameter (e.g., a hypothetical `min_tokens`):
+
 1. Add to presets in `state.js`:
 ```javascript
 const NON_THINKING_PRESET = {
   // ...
-  frequency_penalty: 0.0,
+  min_tokens: 64,
 };
 ```
 
 2. Add to the UI in `index.html`:
 ```html
-<label data-i18n="settings.llm.frequencyPenalty">Frequency Penalty</label>
+<label data-i18n="settings.llm.minTokens">Min Output Tokens</label>
 ```
 
-3. Wire in `ui.js`:
+3. Wire in `ui.js` (`initLlmSettings`):
 ```javascript
-frequencyPenaltyInput.addEventListener("input", (e) => {
-  setLlmConfig({ generation: { frequency_penalty: parseFloat(e.target.value) } });
+minTokensSlider.addEventListener("input", (e) => {
+  setLlmConfig({ generation: { min_tokens: parseInt(e.target.value) } });
 });
 ```
 
-4. Pass to generation in `llm.js` and `wasmWorker.js`:
+4. Pass to generation in `llm.js` (`generateQwen3_5`) and `wasmWorker.js` (`generate` handler):
 ```javascript
 const output = await model.generate({
   // ...
-  frequency_penalty: generation.frequency_penalty,
+  min_tokens: generation.min_tokens,
 });
 ```
+
+**Note:** The WebGPU path (Qwen3.5) passes all parameters to `model.generate()`. The WASM pipeline path (Qwen3-0.6B) only passes a subset: `max_new_tokens`, `do_sample`, `temperature`, `top_p`, `top_k`, `repetition_penalty`. Ensure any new parameter is supported by both backends.
 
 ---
 
