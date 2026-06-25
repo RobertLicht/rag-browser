@@ -127,10 +127,19 @@
                     ></path>
                 </svg>
                 <span class="webgpu-warning-text">
-                    <strong>WebGPU is not available.</strong> Analysis will run
-                    slower without GPU acceleration.
+                    <strong data-i18n="banner.webgpu.unavailable"
+                        >WebGPU is not available.</strong
+                    >
+                    <span data-i18n="banner.webgpu.slower"
+                        >Analysis will run slower without GPU
+                        acceleration.</span
+                    >
                 </span>
-                <button id="webgpu-help-btn" class="webgpu-help-btn">
+                <button
+                    id="webgpu-help-btn"
+                    class="webgpu-help-btn"
+                    data-i18n="banner.webgpu.enable"
+                >
                     Enable WebGPU
                 </button>
             </div>

@@ -40,6 +40,12 @@ const translations = {
       "Context full ({percent}%). Clear chat immediately.",
     "status.token.warning.clearChat": "Clear Chat",
 
+    // WebGPU warning banner
+    "banner.webgpu.unavailable": "WebGPU is not available.",
+    "banner.webgpu.slower":
+      "Analysis will run slower without GPU acceleration.",
+    "banner.webgpu.enable": "Enable WebGPU",
+
     // Model loading modal
     "modal.loading.title": "Loading Models",
     "modal.loading.description": "Downloading and initializing AI models...",
@@ -335,6 +341,12 @@ const translations = {
       "Kontext voll ({percent}%). Chat sofort löschen.",
     "status.token.warning.clearChat": "Chat löschen",
 
+    // WebGPU warning banner
+    "banner.webgpu.unavailable": "WebGPU ist nicht verfügbar.",
+    "banner.webgpu.slower":
+      "Die Analyse läuft ohne GPU-Beschleunigung langsamer.",
+    "banner.webgpu.enable": "WebGPU aktivieren",
+
     "modal.loading.title": "Modelle werden geladen",
     "modal.loading.description":
       "KI-Modelle werden heruntergeladen und initialisiert...",
@@ -627,6 +639,11 @@ const translations = {
       "Contesto pieno ({percent}%). Cancella subito la chat.",
     "status.token.warning.clearChat": "Cancella Chat",
 
+    // WebGPU warning banner
+    "banner.webgpu.unavailable": "WebGPU non è disponibile.",
+    "banner.webgpu.slower": "L'analisi sarà più lenta senza accelerazione GPU.",
+    "banner.webgpu.enable": "Abilita WebGPU",
+
     "modal.loading.title": "Caricamento Modelli",
     "modal.loading.description":
       "Download e inizializzazione dei modelli AI...",
@@ -915,6 +932,12 @@ const translations = {
     "status.token.warning.critical":
       "Contexto lleno ({percent}%). Borre el chat inmediatamente.",
     "status.token.warning.clearChat": "Borrar Chat",
+
+    // WebGPU warning banner
+    "banner.webgpu.unavailable": "WebGPU no está disponible.",
+    "banner.webgpu.slower":
+      "El análisis será más lento sin aceleración por GPU.",
+    "banner.webgpu.enable": "Habilitar WebGPU",
 
     "modal.loading.title": "Cargando Modelos",
     "modal.loading.description": "Descargando e inicializando modelos de IA...",
@@ -1206,6 +1229,11 @@ const translations = {
     "status.token.warning.critical":
       "Contexte plein ({percent}%). Videz le chat immédiatement.",
     "status.token.warning.clearChat": "Vider le Chat",
+
+    // WebGPU warning banner
+    "banner.webgpu.unavailable": "WebGPU n'est pas disponible.",
+    "banner.webgpu.slower": "L'analyse sera plus lente sans accélération GPU.",
+    "banner.webgpu.enable": "Activer WebGPU",
 
     "modal.loading.title": "Chargement des Modèles",
     "modal.loading.description":
