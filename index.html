@@ -626,6 +626,31 @@
                 </section>
 
                 <section class="help-section">
+                    <h3>File Processing Limitations</h3>
+                    <div class="help-warning">
+                        <p>
+                            <strong>Browser Limitations:</strong> Because all
+                            processing runs entirely in your browser, there are
+                            inherent memory constraints. Only a limited number
+                            of <em>small documents</em> can be properly embedded
+                            and indexed. Large files or many documents may fail
+                            to process or cause the browser to become
+                            unresponsive.
+                        </p>
+                        <p>
+                            <strong>WASM Fallback:</strong> When WebGPU is not
+                            available, the application falls back to a
+                            WebAssembly (WASM) runtime. This further reduces the
+                            number of files that can be processed and
+                            significantly increases processing time. For the
+                            best experience, ensure
+                            <strong>WebGPU is enabled</strong> in your browser
+                            and use small, focused documents.
+                        </p>
+                    </div>
+                </section>
+
+                <section class="help-section">
                     <h3>Architecture</h3>
                     <pre class="ascii-diagram">
 ┌─────────────────────────────────────────────────────────────────┐

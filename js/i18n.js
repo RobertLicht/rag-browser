@@ -210,6 +210,11 @@ const translations = {
       "A fully client-side, browser-based <strong>Retrieval-Augmented Generation (RAG)</strong> agent. Upload documents (<code>.txt</code>, <code>.md</code>, <code>.csv</code>, <code>.xls</code>, <code>.xlsx</code>, <code>.docx</code>, <code>.pptx</code>, <code>.odt</code>, <code>.ods</code>, <code>.odp</code>, <code>.pdf</code>), embed them locally, and query them conversationally &mdash; all without a server, API keys, or cloud infrastructure.",
     "help.overview.privacy":
       "<strong>No user data ever leaves your device.</strong> All inference runs locally in your browser.",
+    "help.limits.title": "File Processing Limitations",
+    "help.limits.browserWarning":
+      "<strong>Browser Limitations:</strong> Because all processing runs entirely in your browser, there are inherent memory constraints. Only a limited number of <em>small documents</em> can be properly embedded and indexed. Large files or many documents may fail to process or cause the browser to become unresponsive.",
+    "help.limits.wasmWarning":
+      "<strong>WASM Fallback:</strong> When WebGPU is not available, the application falls back to a WebAssembly (WASM) runtime. This further reduces the number of files that can be processed and significantly increases processing time. For the best experience, ensure <strong>WebGPU is enabled</strong> in your browser and use small, focused documents.",
     "help.architecture.title": "Architecture",
     "help.storage.title": "Model Storage &amp; Cache",
     "help.storage.whereTitle": "Where is the model stored?",
@@ -484,6 +489,11 @@ const translations = {
       "Eine vollständig clientseitige, browserbasierte <strong>Retrieval-Augmented Generation (RAG)</strong>-Agentur. Lade Dokumente hoch (<code>.txt</code>, <code>.md</code>, <code>.csv</code>, <code>.xls</code>, <code>.xlsx</code>, <code>.docx</code>, <code>.pptx</code>, <code>.odt</code>, <code>.ods</code>, <code>.odp</code>, <code>.pdf</code>), erstelle lokale Embeddings und stelle Fragen – alles ohne Server, API-Keys oder Cloud-Infrastruktur.",
     "help.overview.privacy":
       "<strong>Keine Benutzerdaten verlassen jemals Ihr Gerät.</strong> Die Inferenz läuft lokal in Ihrem Browser.",
+    "help.limits.title": "Dateiverarbeitungsbeschränkungen",
+    "help.limits.browserWarning":
+      "<strong>Browser-Beschränkungen:</strong> Da die gesamte Verarbeitung vollständig in Ihrem Browser läuft, gibt es inhärente Speicherbeschränkungen. Nur eine begrenzte Anzahl von <em>kleinen Dokumenten</em> kann korrekt eingebettet und indiziert werden. Große Dateien oder viele Dokumente können die Verarbeitung scheitern lassen oder den Browser unbrauchbar machen.",
+    "help.limits.wasmWarning":
+      "<strong>WASM-Fallback:</strong> Wenn WebGPU nicht verfügbar ist, fällt die Anwendung auf eine WebAssembly (WASM)-Laufzeit zurück. Dies reduziert weiter die Anzahl der verarbeitbaren Dateien und erhöht die Verarbeitungszeit erheblich. Für die beste Erfahrung stellen Sie sicher, dass <strong>WebGPU aktiviert</strong> ist und verwenden Sie kleine, fokussierte Dokumente.",
     "help.architecture.title": "Architektur",
     "help.storage.title": "Modellspeicher &amp; Cache",
     "help.storage.whereTitle": "Wo wird das Modell gespeichert?",
@@ -761,6 +771,11 @@ const translations = {
       "Un agente <strong>Retrieval-Augmented Generation (RAG)</strong> completamente lato client nel browser. Carica documenti (<code>.txt</code>, <code>.md</code>, <code>.csv</code>, <code>.xls</code>, <code>.xlsx</code>, <code>.docx</code>, <code>.pptx</code>, <code>.odt</code>, <code>.ods</code>, <code>.odp</code>, <code>.pdf</code>), crea embedding locali e consulta conversazionalmente &mdash; tutto senza server, chiavi API o infrastrutture cloud.",
     "help.overview.privacy":
       "<strong>Nessun dato utente lascia mai il tuo dispositivo.</strong> Tutta l'inferenza viene eseguita localmente nel browser.",
+    "help.limits.title": "Limitazioni Elaborazione File",
+    "help.limits.browserWarning":
+      "<strong>Limitazioni del Browser:</strong> Poiché tutta l'elaborazione avviene interamente nel browser, ci sono vincoli di memoria intrinseci. Solo un numero limitato di <em>documenti piccoli</em> può essere correttamente incorporato e indicizzato. File grandi o molti documenti potrebbero non essere elaborati o causare il blocco del browser.",
+    "help.limits.wasmWarning":
+      "<strong>Rientro su WASM:</strong> Quando WebGPU non è disponibile, l'applicazione ricade su un runtime WebAssembly (WASM). Questo riduce ulteriormente il numero di file che possono essere elaborati e aumenta significativamente i tempi di elaborazione. Per la migliore esperienza, assicurati che <strong>WebGPU sia abilitato</strong> nel browser e utilizza documenti piccoli e mirati.",
     "help.architecture.title": "Architettura",
     "help.storage.title": "Archiviazione e Cache dei Modelli",
     "help.storage.whereTitle": "Dove viene memorizzato il modello?",
@@ -1038,6 +1053,11 @@ const translations = {
       "Un agente de <strong>Generación Aumentada por Recuperación (RAG)</strong> completamente del lado del cliente en el navegador. Suba documentos (<code>.txt</code>, <code>.md</code>, <code>.csv</code>, <code>.xls</code>, <code>.xlsx</code>, <code>.docx</code>, <code>.pptx</code>, <code>.odt</code>, <code>.ods</code>, <code>.odp</code>, <code>.pdf</code>), cree embeddings localmente y consúltelos de forma conversacional &mdash; todo sin servidor, claves API o infraestructura cloud.",
     "help.overview.privacy":
       "<strong>Ningún dato de usuario abandona nunca su dispositivo.</strong> Toda la inferencia se ejecuta localmente en su navegador.",
+    "help.limits.title": "Limitaciones de Procesamiento de Archivos",
+    "help.limits.browserWarning":
+      "<strong>Limitaciones del Navegador:</strong> Dado que todo el procesamiento se ejecuta completamente en su navegador, existen restricciones de memoria inherentes. Solo un número limitado de <em>documentos pequeños</em> puede ser incrustado e indexado correctamente. Archivos grandes o muchos documentos pueden fallar en el procesamiento o causar que el navegador se vuelva irresponsable.",
+    "help.limits.wasmWarning":
+      "<strong>Respaldo WASM:</strong> Cuando WebGPU no está disponible, la aplicación vuelve a un entorno WebAssembly (WASM). Esto reduce aún más la cantidad de archivos que pueden ser procesados e incrementa significativamente el tiempo de procesamiento. Para la mejor experiencia, asegúrese de que <strong>WebGPU esté habilitado</strong> en su navegador y use documentos pequeños y enfocados.",
     "help.architecture.title": "Arquitectura",
     "help.storage.title": "Almacenamiento y Caché de Modelos",
     "help.storage.whereTitle": "¿Dónde se almacena el modelo?",
@@ -1316,6 +1336,11 @@ const translations = {
       "Un agent <strong>Retrieval-Augmented Generation (RAG)</strong> entièrement côté client dans le navigateur. Téléchargez des documents (<code>.txt</code>, <code>.md</code>, <code>.csv</code>, <code>.xls</code>, <code>.xlsx</code>, <code>.docx</code>, <code>.pptx</code>, <code>.odt</code>, <code>.ods</code>, <code>.odp</code>, <code>.pdf</code>), créez des embeddings locaux et interrogez de manière conversationnelle &mdash; tout cela sans serveur, clés API ou infrastructure cloud.",
     "help.overview.privacy":
       "<strong>Aucune donnée utilisateur ne quitte jamais votre appareil.</strong> Toute l'inférence s'exécute localement dans votre navigateur.",
+    "help.limits.title": "Limites de Traitement des Fichiers",
+    "help.limits.browserWarning":
+      "<strong>Limitations du Navigateur :</strong> Comme tout le traitement s'exécute entièrement dans votre navigateur, des contraintes de mémoire inhérentes existent. Seule un nombre limité de <em>petits documents</em> peut être correctement intégré et indexé. De gros fichiers ou de nombreux documents peuvent échouer au traitement ou rendre le navigateur irresponsable.",
+    "help.limits.wasmWarning":
+      "<strong>Recul WASM :</strong> Lorsque WebGPU n'est pas disponible, l'application bascule sur un environnement WebAssembly (WASM). Cela réduit davantage le nombre de fichiers pouvant être traités et augmente considérablement le temps de traitement. Pour une meilleure expérience, assurez-vous que <strong>WebGPU est activé</strong> dans votre navigateur et utilisez de petits documents ciblés.",
     "help.architecture.title": "Architecture",
     "help.storage.title": "Stockage et Cache des Modèles",
     "help.storage.whereTitle": "Où le modèle est-il stocké ?",
