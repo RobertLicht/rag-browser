@@ -2,6 +2,10 @@
 
 A fully client-side, browser-based **Retrieval-Augmented Generation (RAG)** agent. Upload documents (`.txt`, `.md`, `.csv`, `.xls`, `.xlsx`, `.docx`, `.pptx`, `.odt`, `.ods`, `.odp`, `.pdf`), embed them locally, and query them conversationally — all without a server, API keys, or cloud infrastructure.
 
+![Failed to show image](./images/rag-browser-example-01.png "Usage example of the RAG-Browser application")
+
+---
+
 ## Overview
 
 RAG-Browser runs the entire AI pipeline inside your browser. Automatic hardware detection selects the optimal inference backend and model for your device:
