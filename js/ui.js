@@ -10,6 +10,7 @@ import {
   resetLlmConfig,
   resetGenerationToPreset,
 } from "./state.js";
+import { WASM_MAX_NEW_TOKENS, WASM_MAX_THINKING_TOKENS } from "./llm.js";
 import {
   t,
   setLanguage,
@@ -1064,22 +1065,31 @@ export function syncLlmSettingsUI() {
     toggle.checked = llmConfig.enableThinking;
   }
 
-  // Max thinking tokens control — visible only when thinking is enabled
-  // AND device is WebGPU. WASM uses /think suffix (no max_thinking_tokens),
-  // so this slider has no effect for WASM and should be hidden.
+  // Max thinking tokens control — visible only when thinking is enabled.
+  // WebGPU: slider adjustable. WASM: slider frozen at WASM_MAX_THINKING_TOKENS
+  // because the pipeline API does not support max_thinking_tokens.
   const thinkingControl = document.getElementById("thinking-tokens-control");
   if (thinkingControl) {
-    const isWasm = hardware.device === "wasm";
-    thinkingControl.style.display =
-      llmConfig.enableThinking && !isWasm ? "block" : "none";
+    thinkingControl.style.display = llmConfig.enableThinking ? "block" : "none";
   }
+  const isWasm = hardware.device === "wasm";
   const maxThinkingSlider = document.getElementById(
     "max-thinking-tokens-slider",
   );
   const maxThinkingValue = document.getElementById("max-thinking-tokens-value");
   if (maxThinkingSlider && maxThinkingValue) {
-    maxThinkingSlider.value = llmConfig.maxThinkingTokens;
-    maxThinkingValue.textContent = String(llmConfig.maxThinkingTokens);
+    if (isWasm && llmConfig.enableThinking) {
+      // WASM: freeze thinking budget at fixed limit
+      maxThinkingSlider.value = WASM_MAX_THINKING_TOKENS;
+      maxThinkingSlider.max = String(WASM_MAX_THINKING_TOKENS);
+      maxThinkingSlider.disabled = true;
+      maxThinkingValue.textContent = String(WASM_MAX_THINKING_TOKENS);
+    } else {
+      maxThinkingSlider.disabled = false;
+      maxThinkingSlider.max = "8192";
+      maxThinkingSlider.value = llmConfig.maxThinkingTokens;
+      maxThinkingValue.textContent = String(llmConfig.maxThinkingTokens);
+    }
   }
 
   // Generation parameter sliders
@@ -1137,6 +1147,18 @@ export function syncLlmSettingsUI() {
       v.textContent = String(gen[key]);
     }
   });
+
+  // WASM-specific slider constraints.
+  if (isWasm) {
+    const maxTokensSlider = document.getElementById("max-new-tokens-slider");
+    const maxTokensValue = document.getElementById("max-new-tokens-value");
+    if (maxTokensSlider && maxTokensValue) {
+      maxTokensSlider.disabled = true;
+      maxTokensSlider.max = String(WASM_MAX_NEW_TOKENS);
+      maxTokensSlider.value = WASM_MAX_NEW_TOKENS;
+      maxTokensValue.textContent = String(WASM_MAX_NEW_TOKENS);
+    }
+  }
 }
 
 /**

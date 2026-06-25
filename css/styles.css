@@ -585,6 +585,22 @@ body {
     background: var(--accent-hover);
 }
 
+/* Disabled sliders (WASM hard limits) */
+.settings-panel input[type="range"]:disabled {
+    opacity: 0.45;
+    cursor: not-allowed;
+}
+
+.settings-panel input[type="range"]:disabled::-webkit-slider-thumb {
+    background: var(--text-muted);
+    cursor: not-allowed;
+}
+
+.settings-panel input[type="range"]:disabled::-moz-range-thumb {
+    background: var(--text-muted);
+    cursor: not-allowed;
+}
+
 #reset-settings-btn {
     margin-top: 0.75rem;
     padding: 0.4rem 0.6rem;

@@ -20,9 +20,14 @@ const CONTEXT_WINDOW_WEBGPU = 32768;
 const CONTEXT_WINDOW_WASM = 4096;
 
 // WASM pipeline (Qwen3-0.6B-Instruct) token cap.
-// q4 WASM does ~2-5 tok/s; 1024 tokens ≈ 3-9 min worst-case.
+// q4 WASM does ~2-5 tok/s; 2048 tokens ≈ 7-18 min worst-case.
 // WebGPU is uncapped (8192) since it's GPU-accelerated.
-const WASM_MAX_NEW_TOKENS = 1024;
+const WASM_MAX_NEW_TOKENS = 2048;
+
+// Maximum thinking tokens allowed for WASM inference.
+// The pipeline API does not support max_thinking_tokens, so this
+// value is fixed and the corresponding UI slider is frozen.
+const WASM_MAX_THINKING_TOKENS = 1024;
 
 // ─── Module state ──────────────────────────────────────────────────────
 
@@ -39,6 +44,9 @@ export function getContextWindow() {
   if (modelType === "qwen3_5") return CONTEXT_WINDOW_WEBGPU;
   return CONTEXT_WINDOW_WASM;
 }
+
+// Export WASM limits so the UI can enforce them on sliders.
+export { WASM_MAX_NEW_TOKENS, WASM_MAX_THINKING_TOKENS };
 
 /**
  * Check if the currently loaded model supports thinking mode.

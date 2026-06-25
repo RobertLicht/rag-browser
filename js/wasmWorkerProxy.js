@@ -75,7 +75,7 @@ function sendMessage(type, payload, timeoutMs = 120_000) {
   // Give it a generous timeout so the user sees results instead of an error.
   const TIMEOUTS = {
     "load-llm": 300_000, // q4 model still downloads ~0.6GB
-    generate: 2400_000, // 40 min — WASM q4 does ~2-5 tok/s, 1024 tok cap = ~35 min worst-case
+    generate: 2400_000, // 40 min — WASM q4 does ~2-5 tok/s, 2048 tok cap = ~70 min worst-case
   };
   const effectiveTimeout = TIMEOUTS[type] ?? timeoutMs;
   const w = getWorker();
