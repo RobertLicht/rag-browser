@@ -1905,3 +1905,61 @@ body {
     font-size: 0.75rem;
     color: var(--text-muted);
 }
+
+/* ── Chunking Settings: Radio Buttons ─────────────────────────── */
+
+.radio-group {
+    display: flex;
+    flex-direction: column;
+    gap: 0.4rem;
+    margin-top: 0.5rem;
+}
+
+.radio-option {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    cursor: pointer;
+    padding: 0.45rem 0.6rem;
+    border-radius: 6px;
+    border: 1px solid var(--border-color);
+    background: var(--bg-secondary);
+    transition:
+        background 0.15s,
+        border-color 0.15s;
+    user-select: none;
+}
+
+.radio-option:hover {
+    background: var(--bg-tertiary);
+    border-color: var(--accent);
+}
+
+.radio-option input[type="radio"] {
+    display: none;
+}
+
+.radio-option input[type="radio"]:checked + .radio-label {
+    color: var(--accent);
+}
+
+.radio-option:has(input[type="radio"]:checked) {
+    border-color: var(--accent);
+    background: color-mix(in srgb, var(--accent) 8%, var(--bg-secondary));
+}
+
+.radio-label {
+    display: flex;
+    flex-direction: column;
+    gap: 0.1rem;
+}
+
+.radio-name {
+    font-weight: 600;
+    font-size: 0.82rem;
+}
+
+.radio-detail {
+    font-size: 0.72rem;
+    color: var(--text-muted);
+}

@@ -21,9 +21,12 @@ import { estimateInputTokens } from "./utils.js";
  * @param {File} file - The uploaded file
  * @param {Object} db - Orama database instance
  * @param {Function} progressCallback - Called with { step, progress, message } at each stage
+ * @param {Object} options - Optional ingestion options
+ * @param {number} options.maxTokens - Max tokens per chunk (default 512)
  * @returns {Promise<{ chunks: number, fileSize: number }>}
  */
-export async function ingestDocument(file, db, progressCallback) {
+export async function ingestDocument(file, db, progressCallback, options = {}) {
+  const { maxTokens = 512 } = options;
   // Step 1: Read/parse file
   progressCallback({
     step: "reading",
@@ -58,7 +61,7 @@ export async function ingestDocument(file, db, progressCallback) {
     progress: 25,
     message: "Chunking document...",
   });
-  const chunks = chunkText(text, { sourceFile: file.name });
+  const chunks = chunkText(text, { sourceFile: file.name, maxTokens });
 
   // Step 3: Generate embeddings (in batches)
   progressCallback({

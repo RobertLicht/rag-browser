@@ -66,6 +66,15 @@ const ingestedDocuments = [];
 let isGenerating = false;
 
 /**
+ * Get the currently selected chunk size from the radio buttons.
+ * @returns {number} Max tokens per chunk (256, 512, or 1024)
+ */
+function getSelectedChunkSize() {
+  const selected = document.querySelector('input[name="chunk-size"]:checked');
+  return selected ? parseInt(selected.value, 10) : 512;
+}
+
+/**
  * Bootstrap the application.
  * 1. Detect hardware capabilities
  * 2. Restore persisted index (if any)
@@ -202,9 +211,14 @@ async function handleFileUpload(files) {
 
     // Ingest document
     try {
-      const result = await ingestDocument(file, db, (progress) => {
-        updateProgress(progress);
-      });
+      const result = await ingestDocument(
+        file,
+        db,
+        (progress) => {
+          updateProgress(progress);
+        },
+        { maxTokens: getSelectedChunkSize() },
+      );
 
       // Update state and UI
       ingestedDocuments.push({

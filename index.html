@@ -561,6 +561,79 @@
                         Reset to Defaults
                     </button>
                 </details>
+
+                <!-- Chunking Settings Panel -->
+                <details id="chunking-settings" class="settings-panel">
+                    <summary data-i18n="settings.chunking.title">
+                        Chunking Settings
+                    </summary>
+
+                    <fieldset class="setting-group">
+                        <label data-i18n="settings.chunking.sizeLabel"
+                            >Chunk Size</label
+                        >
+                        <p
+                            class="setting-description"
+                            data-i18n="settings.chunking.sizeDesc"
+                        >
+                            Controls the maximum token size per chunk during
+                            document ingestion. Smaller chunks provide finer
+                            retrieval granularity, while larger chunks preserve
+                            more context.
+                        </p>
+
+                        <div class="radio-group">
+                            <label class="radio-option">
+                                <input
+                                    type="radio"
+                                    name="chunk-size"
+                                    value="256"
+                                />
+                                <span class="radio-label">
+                                    <span
+                                        class="radio-name"
+                                        data-i18n="settings.chunking.small"
+                                        >Small</span
+                                    >
+                                    <span class="radio-detail">256 tokens</span>
+                                </span>
+                            </label>
+                            <label class="radio-option">
+                                <input
+                                    type="radio"
+                                    name="chunk-size"
+                                    value="512"
+                                    checked
+                                />
+                                <span class="radio-label">
+                                    <span
+                                        class="radio-name"
+                                        data-i18n="settings.chunking.medium"
+                                        >Medium</span
+                                    >
+                                    <span class="radio-detail">512 tokens</span>
+                                </span>
+                            </label>
+                            <label class="radio-option">
+                                <input
+                                    type="radio"
+                                    name="chunk-size"
+                                    value="1024"
+                                />
+                                <span class="radio-label">
+                                    <span
+                                        class="radio-name"
+                                        data-i18n="settings.chunking.large"
+                                        >Large</span
+                                    >
+                                    <span class="radio-detail"
+                                        >1024 tokens</span
+                                    >
+                                </span>
+                            </label>
+                        </div>
+                    </fieldset>
+                </details>
             </aside>
 
             <!-- Chat Panel -->

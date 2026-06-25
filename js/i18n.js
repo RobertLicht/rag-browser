@@ -146,6 +146,15 @@ const translations = {
     "settings.maxResults": "Max Results (Top-N)",
     "settings.btn.resetDefaults": "Reset to Defaults",
 
+    // Chunking settings
+    "settings.chunking.title": "Chunking Settings",
+    "settings.chunking.sizeLabel": "Chunk Size",
+    "settings.chunking.sizeDesc":
+      "Controls the maximum token size per chunk during document ingestion. Smaller chunks provide finer retrieval granularity, while larger chunks preserve more context.",
+    "settings.chunking.small": "Small",
+    "settings.chunking.medium": "Medium",
+    "settings.chunking.large": "Large",
+
     // LLM settings
     "settings.llm.title": "LLM Settings",
     "settings.llm.model": "Model:",
@@ -431,6 +440,14 @@ const translations = {
     "settings.maxResults": "Max. Ergebnisse (Top-N)",
     "settings.btn.resetDefaults": "Auf Standard zurücksetzen",
 
+    "settings.chunking.title": "Chunk-Einstellungen",
+    "settings.chunking.sizeLabel": "Chunk-Größe",
+    "settings.chunking.sizeDesc":
+      "Steuert die maximale Token-Anzahl pro Chunk beim Dokumentenimport. Kleinere Chunks bieten eine feinere Retrieval-Granularität, während größere Chunks mehr Kontext erhalten.",
+    "settings.chunking.small": "Klein",
+    "settings.chunking.medium": "Mittel",
+    "settings.chunking.large": "Groß",
+
     "settings.llm.title": "LLM-Einstellungen",
     "settings.llm.model": "Modell:",
     "settings.llm.model.webgpu": "Qwen3.5-2B",
@@ -711,6 +728,14 @@ const translations = {
     "settings.vectorSimilarity": "Similarità Vettoriale",
     "settings.maxResults": "Risultati Max (Top-N)",
     "settings.btn.resetDefaults": "Ripristina Predefiniti",
+
+    "settings.chunking.title": "Impostazioni Chunking",
+    "settings.chunking.sizeLabel": "Dimensione Chunk",
+    "settings.chunking.sizeDesc":
+      "Controlla la dimensione massima dei token per chunk durante l'ingestione dei documenti. Chunk più piccoli offrono una granularità di recupero più fine, mentre chunk più grandi preservano più contesto.",
+    "settings.chunking.small": "Piccolo",
+    "settings.chunking.medium": "Medio",
+    "settings.chunking.large": "Grande",
 
     "settings.llm.title": "Impostazioni LLM",
     "settings.llm.model": "Modello:",
@@ -994,6 +1019,14 @@ const translations = {
     "settings.maxResults": "Resultados Máximos (Top-N)",
     "settings.btn.resetDefaults": "Restablecer Predeterminados",
 
+    "settings.chunking.title": "Configuración de Fragmentación",
+    "settings.chunking.sizeLabel": "Tamaño de Fragmento",
+    "settings.chunking.sizeDesc":
+      "Controla el tamaño máximo de tokens por fragmento durante la ingestión de documentos. Fragmentos más pequeños ofrecen una granularidad de recuperación más fina, mientras que fragmentos más grandes preservan más contexto.",
+    "settings.chunking.small": "Pequeño",
+    "settings.chunking.medium": "Mediano",
+    "settings.chunking.large": "Grande",
+
     "settings.llm.title": "Configuración LLM",
     "settings.llm.model": "Modelo:",
     "settings.llm.model.webgpu": "Qwen3.5-2B",
@@ -1276,6 +1309,14 @@ const translations = {
     "settings.vectorSimilarity": "Similarité Vectorielle",
     "settings.maxResults": "Résultats Max (Top-N)",
     "settings.btn.resetDefaults": "Réinitialiser par Défaut",
+
+    "settings.chunking.title": "Paramètres de Découpage",
+    "settings.chunking.sizeLabel": "Taille de Bloc",
+    "settings.chunking.sizeDesc":
+      "Contrôle la taille maximale de tokens par bloc lors de l'ingestion de documents. Des blocs plus petits offrent une granularité de récupération plus fine, tandis que des blocs plus grands conservent plus de contexte.",
+    "settings.chunking.small": "Petit",
+    "settings.chunking.medium": "Moyen",
+    "settings.chunking.large": "Grand",
 
     "settings.llm.title": "Paramètres LLM",
     "settings.llm.model": "Modèle:",
