@@ -633,7 +633,7 @@ export function showNotification(message, type = "info") {
       right: 1rem;
       padding: 0.75rem 1rem;
       background: ${type === "warning" ? "var(--warning)" : "var(--accent)"};
-      color: var(--text-secondary);
+      color: var(--text-tertiary);
       border-radius: 8px;
       font-size: 0.85rem;
       z-index: 1000;
