@@ -578,7 +578,7 @@ export function showNotification(message, type = "info") {
       right: 16px;
       padding: 10px 36px 10px 14px;
       background: var(--error);
-      color: white;
+      color: var(--text-tertiary);
       border-radius: 8px;
       font-size: 0.85rem;
       z-index: 1000;
@@ -633,7 +633,7 @@ export function showNotification(message, type = "info") {
       right: 1rem;
       padding: 0.75rem 1rem;
       background: ${type === "warning" ? "var(--warning)" : "var(--accent)"};
-      color: white;
+      color: var(--text-secondary);
       border-radius: 8px;
       font-size: 0.85rem;
       z-index: 1000;
@@ -646,7 +646,7 @@ export function showNotification(message, type = "info") {
       el.style.opacity = "0";
       el.style.transition = "opacity 0.3s";
       setTimeout(() => el.remove(), 300);
-    }, 3000);
+    }, 10000);
   }
 
   document.body.appendChild(el);
