@@ -9,7 +9,7 @@ RAG-Browser runs the entire AI pipeline inside your browser. Automatic hardware 
 | Backend | Device | LLM Model | Context Window | Thinking Mode |
 |---------|--------|-----------|----------------|---------------|
 | **WebGPU** | GPU | `Qwen3.5-2B` (q4, ~2.5 GB) | 32,768 tokens | ✅ Native (chat template) |
-| **WASM** | CPU | `Qwen3-0.6B-Instruct` (q4, ~0.6 GB) | 4,096 tokens | ❌ Not supported |
+| **WASM** | CPU | `Qwen3-0.6B-Instruct` (q4, ~0.6 GB) | 4,096 tokens | ✅ Via prompt suffix (`/think`) |
 
 - **Embedding** — `Qwen3-Embedding-0.6B` with instruction-aware queries, `last_token` pooling, and L2 normalization (1024-dim vectors)
 - **Vector Search** — [Orama](https://orama.com) provides in-memory vector storage and retrieval, with configurable BM25/semantic hybrid search modes
@@ -58,7 +58,7 @@ All consumers import from this single module; the facade routes calls transparen
 - **Database Portability** — Export and import document indexes as versioned JSON files with backward-compatible import (v1 raw Orama, v2 save/load format)
 - **Hybrid Search (BM25 + Semantic)** — Configurable keyword vs. semantic balance (default 70/30) with separate similarity thresholds for hybrid and vector-only modes, plus a vector quality gate to filter low-relevance hits
 - **Search Mode Toggle** — Switch between Hybrid and Vector-only search modes
-- **Thinking Mode** — Enable reasoning mode on WebGPU (native chat template with `enable_thinking`). Thinking output renders as collapsible `<details>` blocks. Not available on WASM backend
+- **Thinking Mode** — Enable reasoning mode on both backends. WebGPU uses native chat template (`enable_thinking`); WASM uses `/think` prompt suffix. Thinking output renders as collapsible `<details>` blocks on both backends
 - **Adjustable Thinking Budget** — Control the maximum tokens allocated to the model's internal reasoning (1024–8192, default 4096) when thinking mode is active
 - **Markdown & LaTeX Rendering** — LLM responses render formatted markdown (via `marked`) and LaTeX math expressions (via KaTeX 0.17.0)
 - **Multi-turn Conversations** — Context-aware dialogue with up to 10 recent messages (5 exchanges) included in context
@@ -67,6 +67,8 @@ All consumers import from this single module; the facade routes calls transparen
 - **Generation Parameters** — Configurable temperature, top-p, top-k, min-p, presence penalty, and repetition penalty with auto-applied presets for thinking vs. non-thinking modes
 - **Internationalization (i18n)** — Full UI localization in English, German, Italian, Spanish, and French. Browser language auto-detected on first visit; language switcher persisted in `localStorage`
 - **Help & About Modal** — Click the "?" button in the status bar to open a help panel with architecture overview, model storage and cache management instructions, and step-by-step WebGPU enablement guides for all major browsers
+- **Dark Mode** — Toggle between light and dark themes via the theme button in the status bar. Theme preference is persisted in `localStorage`
+- **Memory Monitoring** — Real-time memory usage displayed in the status bar, showing consumed memory and total device memory when available
 
 ## Technology Stack
 
@@ -185,7 +187,7 @@ npx http-server .
 1. **Load Models** — Click "Load Models" to download and initialize the embedding model and LLM. The app auto-selects Qwen3.5-2B (WebGPU) or Qwen3-0.6B-Instruct (WASM) based on hardware detection
 2. **Upload Documents** — Select files (`.txt`, `.md`, `.csv`, `.xls`, `.xlsx`, `.docx`, `.pptx`, `.odt`, `.ods`, `.odp`, `.pdf`) via the file input (supports multiple uploads)
 3. **Configure Search** — Use the Search Settings panel in the sidebar to adjust BM25/semantic weights, similarity thresholds, and top-N results
-4. **Toggle Thinking Mode** — Use the LLM Settings panel to enable reasoning mode (WebGPU only). When on, the model outputs a collapsible thinking block before its answer. Use the "Max Thinking Tokens" slider to control the reasoning budget (1024–8192 tokens, default 4096)
+4. **Toggle Thinking Mode** — Use the LLM Settings panel to enable reasoning mode. When on, the model outputs a collapsible thinking block before its answer. Use the "Max Thinking Tokens" slider to control the reasoning budget (1024–8192 tokens, default 4096)
 5. **Adjust Generation** — Fine-tune temperature, top-p, top-k, min-p, presence penalty, and repetition penalty. Click "Reset to Preset" to restore the recommended settings for your current thinking mode
 6. **Ask Questions** — Type a query in the chat panel and press Send
 7. **Monitor Token Usage** — The status bar shows real-time context window consumption. When tokens run low, a color-coded indicator warns you and a banner offers a one-click "Clear Chat" to reset the context
@@ -208,9 +210,9 @@ npx http-server .
 
 | Backend | Speed | Context | Notes |
 |---------|-------|---------|-------|
-| WebGPU (Qwen3.5-2B) | Fast | 32K tokens | GPU-accelerated; supports thinking mode |
-| WASM multi-threaded | Moderate | 4K tokens | Requires COOP/COEP headers; SIMD + up to 8 cores |
-| WASM single-threaded | Slow | 4K tokens | Fallback when SharedArrayBuffer unavailable; 3–4× slower |
+| WebGPU (Qwen3.5-2B) | Fast | 32K tokens | GPU-accelerated; native thinking mode |
+| WASM multi-threaded | Moderate | 4K tokens | Requires COOP/COEP headers; SIMD + up to 8 cores; supports thinking mode |
+| WASM single-threaded | Slow | 4K tokens | Fallback when SharedArrayBuffer unavailable; 3–4× slower; supports thinking mode |
 
 ## Privacy & Security
 
@@ -241,7 +243,7 @@ Generation parameters follow official Qwen3.5 recommendations:
 | repetition_penalty | 1.0 | 1.0 |
 | max_new_tokens | 8192 | 8192 |
 
-The preset is auto-applied when toggling thinking mode. For WASM, `max_new_tokens` is capped at 1024.
+The preset is auto-applied when toggling thinking mode. For WASM, `max_new_tokens` is capped at 1024, and `min_p` / `presence_penalty` are not supported (pipeline API limitation).
 
 ### Embedding Strategy
 
@@ -249,6 +251,7 @@ The preset is auto-applied when toggling thinking mode. For WASM, `max_new_token
 - **Document embeddings** are generated without instruction wrapping
 - Both use `last_token` pooling with L2 normalization (1024-dimensional vectors)
 - Documents are embedded in batches of 32 chunks for efficiency
+- **Embedding dtype** — WebGPU uses `fp16` for higher quality; WASM uses `q8` for compatibility and smaller model size
 
 ### Search Configuration Defaults
 
@@ -304,6 +307,7 @@ following constraints:
 - **Memory constraints** — The browser sandbox limits available memory. Models and document embeddings reside in-process and may be evicted or cause tab instability under heavy load.
 - **No long-running background tasks** — Closing or refreshing the tab interrupts any in-progress generation or ingestion.
 - **WASM output cap** — The WASM backend caps generation at 1024 tokens to prevent excessively long waits (at 2–5 tok/s, 1024 tokens ≈ 3–9 minutes worst-case).
+- **WASM generation parameters** — The WASM pipeline doesn't support `min_p` and `presence_penalty`. Only `temperature`, `top_p`, `top_k`, and `repetition_penalty` are available on the WASM backend.
 - **No streaming** — Both backends generate the full response then return it at once (WebGPU uses batch decode to avoid incremental BPE decoding bugs). The response is not token-streamed.
 
 RAG-Browser is **not intended** for enterprise-scale document retrieval, high-throughput production workloads, or scenarios where consistent response times are critical.
