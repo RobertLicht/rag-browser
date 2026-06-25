@@ -714,10 +714,10 @@ Managed via `state.js` → `setSearchConfig()`.
 | `mode` | `"hybrid"` | `"hybrid"`, `"vector"` | Search algorithm |
 | `hybridWeights.text` | `0.7` | `0.0–1.0` | BM25 keyword weight (hybrid only) |
 | `hybridWeights.vector` | `0.3` | `0.0–1.0` | Vector similarity weight (hybrid only) |
-| `thresholds.hybridSimilarity` | `0.65` | `0.0–1.0` | Minimum combined score (hybrid) |
-| `thresholds.minVectorSimilarity` | `0.55` | `0.0–1.0` | Vector quality gate (hybrid post-filter) |
+| `thresholds.hybridSimilarity` | `0.55` | `0.0–1.0` | Minimum combined score (hybrid) |
+| `thresholds.minVectorSimilarity` | `0.35` | `0.0–1.0` | Vector quality gate (hybrid post-filter) |
 | `thresholds.vectorSimilarity` | `0.7` | `0.0–1.0` | Minimum cosine similarity (vector mode) |
-| `topN` | `5` | `1–20` | Maximum chunks retrieved per query |
+| `topN` | `3` | `1–20` | Maximum chunks retrieved per query |
 
 ### 5.2 LLM Configuration
 

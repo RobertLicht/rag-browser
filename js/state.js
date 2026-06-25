@@ -91,11 +91,11 @@ export const DEFAULT_SEARCH_CONFIG = {
     vector: 0.3,
   },
   thresholds: {
-    hybridSimilarity: 0.65, // Minimum combined score
-    minVectorSimilarity: 0.55, // Vector quality gate in hybrid mode
+    hybridSimilarity: 0.55, // Minimum combined score
+    minVectorSimilarity: 0.35, // Vector quality gate in hybrid mode
     vectorSimilarity: 0.7, // Pure vector threshold
   },
-  topN: 5, // Max chunks retrieved per query (1-20)
+  topN: 3, // Max chunks retrieved per query (1-20)
 };
 
 let state = {

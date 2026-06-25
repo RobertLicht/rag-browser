@@ -265,10 +265,10 @@ The preset is auto-applied when toggling thinking mode. For WASM, `max_new_token
 | Mode | `hybrid` | Combines BM25 keyword matching with vector similarity |
 | BM25 weight | 0.7 | Keyword matching weight |
 | Vector weight | 0.3 | Semantic similarity weight |
-| Hybrid threshold | 0.65 | Minimum combined score |
-| Min vector gate | 0.55 | Vector quality gate in hybrid mode |
+| Hybrid threshold | 0.55 | Minimum combined score |
+| Min vector gate | 0.35 | Vector quality gate in hybrid mode |
 | Vector threshold | 0.7 | Pure vector similarity threshold |
-| Top-N | 5 | Max chunks retrieved per query (1–20) |
+| Top-N | 3 | Max chunks retrieved per query (1–20) |
 
 ### Token Tracking Levels
 
