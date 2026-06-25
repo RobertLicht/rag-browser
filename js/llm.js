@@ -20,9 +20,9 @@ const CONTEXT_WINDOW_WEBGPU = 32768;
 const CONTEXT_WINDOW_WASM = 4096;
 
 // WASM pipeline (Qwen3-0.6B-Instruct) token cap.
-// q4 WASM does ~2-5 tok/s; 2048 tokens ≈ 7-18 min worst-case.
+// q4 WASM does ~2-5 tok/s; 4096 tokens ≈ 14-36 min worst-case.
 // WebGPU is uncapped (8192) since it's GPU-accelerated.
-const WASM_MAX_NEW_TOKENS = 2048;
+const WASM_MAX_NEW_TOKENS = 4096;
 
 // Maximum thinking tokens allowed for WASM inference.
 // The pipeline API does not support max_thinking_tokens, so this

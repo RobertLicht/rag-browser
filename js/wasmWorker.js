@@ -45,8 +45,8 @@ let currentStoppingCriteria = null;
 const LLM_MODEL_WEBGPU = "huggingworld/Qwen3.5-2B-ONNX";
 
 // Cap output tokens for WASM pipeline mode.  q4 WASM does ~2-5 tok/s,
-// so 2048 tokens ≈ 7-18 min worst-case.  WebGPU is uncapped.
-const WASM_MAX_NEW_TOKENS = 2048;
+// so 4096 tokens ≈ 14-36 min worst-case.  WebGPU is uncapped.
+const WASM_MAX_NEW_TOKENS = 4096;
 
 // ── Helper: forward a progress callback ──────────────────────────────
 function forwardProgress(progressCallback, tag) {
