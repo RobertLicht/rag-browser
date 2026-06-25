@@ -16,7 +16,7 @@ RAG-Browser runs the entire AI pipeline inside your browser. Automatic hardware 
 | **WASM** | CPU | `Qwen3-0.6B-Instruct` (q4, ~0.6 GB) | 4,096 tokens | ✅ Via prompt suffix (`/think`) |
 
 - **Embedding** — `Qwen3-Embedding-0.6B` with instruction-aware queries, `last_token` pooling, and L2 normalization (1024-dim vectors)
-- **Vector Search** — [Orama](https://orama.com) provides in-memory vector storage and retrieval, with configurable BM25/semantic hybrid search modes
+- **Vector Search** — [Orama](https://www.jsdelivr.com/package/npm/@orama/orama) provides in-memory vector storage and retrieval, with configurable BM25/semantic hybrid search modes
 - **Inference Runtime** — [Transformers.js v4](https://huggingface.co/docs/transformers.js) (ONNX on WebGPU / WASM)
 - **WASM Worker** — CPU inference runs in a dedicated Web Worker to keep the UI responsive; SIMD and multi-threaded WASM (via `SharedArrayBuffer`) accelerate generation
 
@@ -321,6 +321,8 @@ RAG-Browser is **not intended** for enterprise-scale document retrieval, high-th
 
 This project is provided as-is for personal and research use.
 
+### Models
+
 This application incorporates the following models, licensed under the Apache License 2.0:
 
 - **Qwen3-Embedding-0.6B-ONNX** — [onnx-community/Qwen3-Embedding-0.6B-ONNX](https://huggingface.co/onnx-community/Qwen3-Embedding-0.6B-ONNX)
@@ -330,14 +332,8 @@ This application incorporates the following models, licensed under the Apache Li
 - **Qwen3-0.6B-Instruct-ONNX** — [onnx-community/Qwen3-0.6B-Instruct-ONNX](https://huggingface.co/onnx-community/Qwen3-0.6B-Instruct-ONNX)
   Licensed under the [Apache License 2.0](https://www.apache.org/licenses/LICENSE-2.0).
 
-### Model Citation
+### Search engine and RAG pipeline
 
-```bibtex
-@misc{qwen3.5,
-    title  = {{Qwen3.5}: Towards Native Multimodal Agents},
-    author = {{Qwen Team}},
-    month  = {February},
-    year   = {2026},
-    url    = {https://qwen.ai/blog?id=qwen3.5}
-}
-```
+This application incorporates the following search engine and RAG pipeline, licensed under the Apache License 2.0:
+
+- **Orama** — [https://github.com/oramasearch/orama](https://github.com/oramasearch/orama/) Licensed under the [Apache License 2.0](https://www.apache.org/licenses/LICENSE-2.0).
