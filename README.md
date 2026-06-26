@@ -344,3 +344,31 @@ This application incorporates the following models, licensed under the Apache Li
 This application incorporates the following search engine and RAG pipeline, licensed under the Apache License 2.0:
 
 - **Orama** — [https://github.com/oramasearch/orama](https://github.com/oramasearch/orama/) Licensed under the [Apache License 2.0](https://www.apache.org/licenses/LICENSE-2.0).
+
+## AI-Assisted Development
+
+The creation of this application was supported by locally self-hosted AI inference.
+No proprietary cloud APIs were used during development.
+
+### Tooling
+
+| Component | Tool |
+|-----------|------|
+| Inference backend | [LM Studio](https://lmstudio.ai/) |
+| Editor | [Zed](https://zed.dev/docs/getting-started) — Open-source code editor with built-in collaboration and AI tools |
+| Agent | [Zed Agent](https://zed.dev/docs/ai/zed-agent) |
+
+### Models
+
+| Model | Source |
+|-------|--------|
+| [MiniMax-M2.7](https://huggingface.co/unsloth/MiniMax-M2.7-GGUF) | unsloth/MiniMax-M2.7-GGUF |
+| [Qwen3.6-27B](https://huggingface.co/lmstudio-community/Qwen3.6-27B-GGUF) | lmstudio-community/Qwen3.6-27B-GGUF |
+
+### Hardware
+
+| Component | Specification |
+|-----------|---------------|
+| CPU | AMD Ryzen 9 9900X |
+| RAM | 186 GiB |
+| GPU | AMD Radeon Pro W7900 Dual Slot |
