@@ -1,3 +1,14 @@
 {
-  "type": "module"
+  "type": "module",
+  "name": "rag-browser",
+  "version": "1.0.0",
+  "description": "Browser-based RAG agent with client-side AI inference",
+  "scripts": {
+    "start": "node server.js",
+    "test:e2e": "cypress run --browser electron",
+    "test:e2e:open": "cypress open --E2E"
+  },
+  "devDependencies": {
+    "cypress": "^14.0.0"
+  }
 }
