@@ -9,9 +9,10 @@
     "test:e2e:open": "cypress open --E2E",
     "test:e2e:report": "cypress run --browser electron && npx cypress-mochawesome-reporter merge cypress/results/*.json -o cypress/results",
     "coverage:clean": "rm -rf cypress/coverage .nyc_output js-instrumented cypress/results/*.json",
-    "coverage:instrument": "nyc instrument --compact false js js-instrumented",
+    "coverage:instrument": "npx @babel/cli js --out-dir js-instrumented --source-maps inline",
     "test:coverage": "npm run coverage:clean && npm run coverage:instrument && cypress run --browser electron && nyc report --reporter=html --reporter=text-summary",
     "serve:coverage": "bash serve-coverage.sh",
+    "serve:coverage-report": "node server.js --coverage-report",
     "test:all": "bash run-tests.sh"
   },
   "devDependencies": {

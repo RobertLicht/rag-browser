@@ -49,8 +49,8 @@ ok "Cleaned."
 # ────────────────────────────────────────────────────────────────────
 #  2. Instrument application JS
 # ────────────────────────────────────────────────────────────────────
-info "Step 2/6 — Instrumenting js/ with Istanbul (nyc)..."
-npx nyc instrument --compact false js js-instrumented
+info "Step 2/6 — Instrumenting js/ with babel-plugin-istanbul…"
+npx @babel/cli js --out-dir js-instrumented --source-maps inline
 INSTRUMENTED=$(find js-instrumented -name '*.js' -type f | wc -l)
 ok "Instrumented ${INSTRUMENTED} files → js-instrumented/"
 
@@ -161,12 +161,26 @@ fi
 # ────────────────────────────────────────────────────────────────────
 #  Summary + open reports
 # ────────────────────────────────────────────────────────────────────
+
+# Start coverage report server so all assets (CSS/JS/images) load correctly.
+# Opening file:// URLs breaks Istanbul reports because browsers treat each
+# file:// as a unique security origin, blocking relative resource loading.
+COVERAGE_PORT="${COVERAGE_PORT:-3001}"
+COVERAGE_SERVER_PID=""
+
+if [ -f cypress/coverage/index.html ]; then
+    info "Starting coverage report server on port ${COVERAGE_PORT}..."
+    COVERAGE_REPORT=1 node server.js --coverage-report &
+    COVERAGE_SERVER_PID=$!
+    sleep 0.5
+fi
+
 echo ""
 echo " ════════════════════════════════════════════════════════"
 echo "  Test Run Summary"
 echo " ════════════════════════════════════════════════════════"
 [ -f cypress/results/mochawesome.html ] && echo "  Test Report :  cypress/results/mochawesome.html"
-[ -f cypress/coverage/index.html            ] && echo "  Coverage    :  cypress/coverage/index.html"
+[ -f cypress/coverage/index.html      ] && echo "  Coverage    :  http://localhost:${COVERAGE_PORT}"
 echo " ════════════════════════════════════════════════════════"
 echo ""
 
@@ -181,11 +195,11 @@ esac
 if command -v "${OPENER}" >/dev/null 2>&1; then
     info "Opening reports in your browser..."
     [ -f cypress/results/mochawesome.html ] && "${OPENER}" cypress/results/mochawesome.html &
-    [ -f cypress/coverage/index.html            ] && sleep 0.3 && "${OPENER}" cypress/coverage/index.html &
+    [ -f cypress/coverage/index.html      ] && sleep 0.3 && "${OPENER}" "http://localhost:${COVERAGE_PORT}" &
 else
     info "Reports ready — open them manually:"
     [ -f cypress/results/mochawesome.html ] && echo "  ${OPENER} cypress/results/mochawesome.html"
-    [ -f cypress/coverage/index.html            ] && echo "  ${OPENER} cypress/coverage/index.html"
+    [ -f cypress/coverage/index.html      ] && echo "  ${OPENER} http://localhost:${COVERAGE_PORT}"
 fi
 
 exit ${CYPRESS_RC}
