@@ -6,9 +6,20 @@
   "scripts": {
     "start": "node server.js",
     "test:e2e": "cypress run --browser electron",
-    "test:e2e:open": "cypress open --E2E"
+    "test:e2e:open": "cypress open --E2E",
+    "test:e2e:report": "cypress run --browser electron && npx cypress-mochawesome-reporter merge cypress/results/*.json -o cypress/results",
+    "coverage:clean": "rm -rf coverage .nyc_output js-instrumented cypress/results/*.json",
+    "coverage:instrument": "nyc instrument --compact false js js-instrumented",
+    "test:coverage": "npm run coverage:clean && npm run coverage:instrument && cypress run --browser electron && nyc report --reporter=html --reporter=text-summary",
+    "serve:coverage": "COVERAGE=1 node server.js"
   },
   "devDependencies": {
-    "cypress": "^14.0.0"
+    "@cypress/code-coverage": "^3.14.0",
+    "babel-plugin-istanbul": "^7.0.0",
+    "cypress": "^14.0.0",
+    "cypress-mochawesome-reporter": "^4.0.2",
+    "mochawesome-merge": "^4.3.0",
+    "mochawesome-report-generator": "^6.2.0",
+    "nyc": "^17.1.0"
   }
 }

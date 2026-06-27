@@ -130,7 +130,53 @@ In a second terminal, run all tests without opening a browser window:
 npm run test:e2e
 ```
 
-This runs all specs against the bundled Electron browser and prints results to the terminal.
+This runs all specs against the bundled Electron browser, prints results to the terminal, and **generates Mochawesome test reports** in `cypress/results/`.
+
+### Test Reports (Mochawesome)
+
+Every test run automatically generates individual JSON reports per spec. To merge them into a single beautiful HTML report:
+
+```bash
+npm run test:e2e:report
+```
+
+This:
+1. Runs all specs headlessly
+2. Merges individual JSON reports into one combined HTML report
+3. Saves the report to `cypress/results/`
+
+Open `cypress/results/mochawesome.html` in your browser to view:
+- Summary dashboard with pass/fail charts
+- Per-spec breakdowns
+- Embedded screenshots on failures
+- All test attempt history
+
+### Code Coverage
+
+To measure how much of your application code is exercised by Cypress tests:
+
+**Terminal 1** — Start the server in coverage mode (serves instrumented JS files):
+```bash
+npm run serve:coverage
+```
+
+**Terminal 2** — Run tests and generate coverage report:
+```bash
+npm run test:coverage
+```
+
+This:
+1. Cleans previous coverage artifacts
+2. Instruments `js/*.js` files into `js-instrumented/` (with Istanbul)
+3. Runs all Cypress tests against the instrumented code
+4. Generates an HTML coverage report in `coverage/`
+
+Open `coverage/index.html` in your browser to view:
+- Line, branch, and function coverage per file
+- Uncovered lines highlighted in red
+- Overall coverage summary
+
+**Note:** Coverage mode serves instrumented files from `js-instrumented/` via `server.js` with `COVERAGE=1`. The instrumentation adds overhead, so tests run slightly slower.
 
 ### Interactive Mode (GUI)
 
@@ -148,11 +194,36 @@ The Cypress Test Runner will open. From there:
 
 ### Running a Single Spec
 
-To run only one test file (useful when developing):
+To run only one test file in headless mode (useful when developing):
 
 ```bash
 npx cypress run --browser electron --spec "cypress/e2e/theme.spec.js"
 ```
+
+To run only one test file in headed mode (useful when developing):
+
+```bash
+npx cypress run --headed --browser electron --spec "cypress/e2e/theme.spec.js"
+```
+
+To run only one test file in headed mode, utilizing firefox (useful when developing):
+
+```bash
+npx cypress run --headed --browser firefox --spec "cypress/e2e/theme.spec.js"
+```
+
+## Available Scripts
+
+| Script | Description |
+|--------|-------------|
+| `npm start` | Start the dev server on port 3000 |
+| `npm run test:e2e` | Run tests headlessly (generates Mochawesome JSON reports) |
+| `npm run test:e2e:open` | Open Cypress Test Runner GUI |
+| `npm run test:e2e:report` | Run tests and merge into a single HTML report |
+| `npm run serve:coverage` | Start server in coverage mode (serves instrumented JS) |
+| `npm run test:coverage` | Full coverage pipeline: clean → instrument → test → report |
+| `npm run coverage:clean` | Remove all coverage artifacts |
+| `npm run coverage:instrument` | Pre-instrument JS files (used by test:coverage) |
 
 ---
 
@@ -253,9 +324,15 @@ npm run test:e2e        # Terminal 2 — headless tests
 npm run test:e2e:open   # Terminal 2 — interactive GUI
 ```
 
----
+## Report Artifacts
 
-## Custom Commands Reference
+| Directory/File | Contents |
+|----------------|----------|
+| `cypress/results/` | Mochawesome JSON reports (one per spec) + merged HTML report |
+| `cypress/screenshots/` | Failure screenshots from test runs |
+| `coverage/` | Istanbul HTML coverage report (requires `test:coverage`) |
+| `.nyc_output/` | Raw coverage data (hidden, used by Istanbul) |
+| `js-instrumented/` | Pre-instrumented JS files for coverage (hidden, gitignored) |
 
 Two custom commands are available in `support/commands.js`:
 
@@ -266,13 +343,22 @@ Two custom commands are available in `support/commands.js`:
 
 ---
 
+## Code Coverage Notes
+
+- Coverage requires the server to run with `COVERAGE=1` so that instrumented JS files are served from `js-instrumented/` instead of `js/`.
+- The instrumented files add Istanbul hooks that send coverage data back to the `@cypress/code-coverage` plugin.
+- Coverage reports use Istanbul's default thresholds. Adjust in `.nycrc` if needed.
+- WASM-heavy files (`wasmWorker.js`, `wasmWorkerProxy.js`, `embedding.js`, `inference.js`) typically show low coverage because Cypress's Electron does not support WebGPU, so those code paths are skipped by design.
+
+---
+
 ## File Structure
 
 ```
 cypress/
 ├── README.md                  # This file
 ├── support/
-│   ├── e2e.js                 # Global exception suppression
+│   ├── e2e.js                 # Global setup + code coverage support
 │   └── commands.js            # Custom commands
 ├── fixtures/                  # Test data files (for future use)
 └── e2e/                       # All spec files
@@ -283,4 +369,10 @@ cypress/
     ├── language-selector.spec.js
     ├── help-modal.spec.js
     └── settings.spec.js
+
+# Project root (related files)
+├── cypress.config.js          # Cypress config (reporter + coverage tasks)
+├── .babelrc                   # Babel plugin-istanbul for coverage
+├── .nycrc                     # NYC/Istanbul coverage configuration
+└── server.js                  # Dev server (supports COVERAGE=1 mode)
 ```

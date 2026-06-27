@@ -19,6 +19,7 @@ import { fileURLToPath } from "node:url";
 
 const PORT = parseInt(process.env.PORT || "3000", 10);
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
+const COVERAGE = process.env.COVERAGE === "1";
 
 // MIME types for common file extensions
 const MIME_TYPES = {
@@ -46,6 +47,11 @@ const server = http.createServer((req, res) => {
 
   // Resolve the requested file path
   let filePath = path.join(__dirname, req.url === "/" ? "index.html" : req.url);
+
+  // When COVERAGE=1, redirect /js/* requests to /js-instrumented/*
+  if (COVERAGE && req.url.startsWith("/js/")) {
+    filePath = path.join(__dirname, "js-instrumented" + req.url.slice(3));
+  }
   const ext = path.extname(filePath);
   const mimeType = MIME_TYPES[ext] || "application/octet-stream";
 

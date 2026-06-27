@@ -54,3 +54,6 @@ cypress/results/
 cypress/downloads/
 cypress/.http-mitm-proxy/
 cypress/fixtures/example.json
+
+# Code coverage
+js-instrumented/

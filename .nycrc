@@ -1,0 +1,23 @@
+{
+  "all": true,
+  "include": [
+    "js/**/*.js",
+    "server.js"
+  ],
+  "exclude": [
+    "cypress/**/*",
+    "node_modules/**/*",
+    "js-instrumented/**/*",
+    "examples/**/*",
+    "**/*.spec.js",
+    "**/*.cy.js"
+  ],
+  "report-dir": "./coverage",
+  "reporter": [
+    "html",
+    "text-summary",
+    "lcov"
+  ],
+  "sourceMap": false,
+  "instrument": false
+}
