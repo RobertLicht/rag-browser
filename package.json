@@ -11,7 +11,8 @@
     "coverage:clean": "rm -rf coverage .nyc_output js-instrumented cypress/results/*.json",
     "coverage:instrument": "nyc instrument --compact false js js-instrumented",
     "test:coverage": "npm run coverage:clean && npm run coverage:instrument && cypress run --browser electron && nyc report --reporter=html --reporter=text-summary",
-    "serve:coverage": "COVERAGE=1 node server.js"
+    "serve:coverage": "bash serve-coverage.sh",
+    "test:all": "bash run-tests.sh"
   },
   "devDependencies": {
     "@cypress/code-coverage": "^3.14.0",
