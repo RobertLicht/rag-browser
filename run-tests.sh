@@ -41,7 +41,7 @@ ok "Dependencies OK (node, npx, curl)."
 #  1. Clean previous artifacts
 # ────────────────────────────────────────────────────────────────────
 info "Step 1/6 — Cleaning previous artifacts..."
-rm -rf cypress/coverage .nyc_output js-instrumented
+rm -rf cypress/results/coverage .nyc_output js-instrumented
 rm -f cypress/results/*.json
 mkdir -p cypress/results
 ok "Cleaned."
@@ -151,8 +151,8 @@ if [ -d .nyc_output ] && [ "$(ls -A .nyc_output 2>/dev/null)" ]; then
 
     # Generate self-contained HTML report (viewable via file://)
     node scripts/generate-coverage-report.js || true
-    if [ -f cypress/coverage/index.html ]; then
-        ok "Coverage report   → cypress/coverage/index.html"
+    if [ -f cypress/results/coverage/index.html ]; then
+        ok "Coverage report   → cypress/results/coverage/index.html"
     else
         warn "Coverage report generation failed."
     fi
@@ -169,7 +169,7 @@ echo " ════════════════════════�
 echo "  Test Run Summary"
 echo " ════════════════════════════════════════════════════════"
 [ -f cypress/results/mochawesome.html ] && echo "  Test Report :  cypress/results/mochawesome.html"
-[ -f cypress/coverage/index.html      ] && echo "  Coverage    :  cypress/coverage/index.html"
+[ -f cypress/results/coverage/index.html ] && echo "  Coverage    :  cypress/results/coverage/index.html"
 echo " ════════════════════════════════════════════════════════"
 echo ""
 
@@ -184,11 +184,11 @@ esac
 if command -v "${OPENER}" >/dev/null 2>&1; then
     info "Opening reports in your browser..."
     [ -f cypress/results/mochawesome.html ] && "${OPENER}" cypress/results/mochawesome.html &
-    [ -f cypress/coverage/index.html      ] && sleep 0.3 && "${OPENER}" "file://$(pwd)/cypress/coverage/index.html" &
+    [ -f cypress/results/coverage/index.html ] && sleep 0.3 && "${OPENER}" "file://$(pwd)/cypress/results/coverage/index.html" &
 else
     info "Reports ready — open them manually:"
     [ -f cypress/results/mochawesome.html ] && echo "  ${OPENER} cypress/results/mochawesome.html"
-    [ -f cypress/coverage/index.html      ] && echo "  ${OPENER} cypress/coverage/index.html"
+    [ -f cypress/results/coverage/index.html ] && echo "  ${OPENER} cypress/results/coverage/index.html"
 fi
 
 exit ${CYPRESS_RC}

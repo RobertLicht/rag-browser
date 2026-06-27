@@ -82,8 +82,8 @@ const server = http.createServer((req, res) => {
   };
 
   if (COVERAGE_REPORT_MODE) {
-    // ── Coverage report mode: serve cypress/coverage/ ──────────────
-    const coverageDir = path.join(__dirname, "cypress", "coverage");
+    // ── Coverage report mode: serve cypress/results/coverage/ ──────
+    const coverageDir = path.join(__dirname, "cypress", "results", "coverage");
     const filePath = path.join(
       coverageDir,
       req.url === "/" ? "index.html" : req.url.slice(1),

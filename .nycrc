@@ -12,7 +12,7 @@
     "**/*.spec.js",
     "**/*.cy.js"
   ],
-  "report-dir": "./cypress/coverage",
+  "report-dir": "./cypress/results/coverage",
   "reporter": [
     "html",
     "json",

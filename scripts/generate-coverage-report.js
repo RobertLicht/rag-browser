@@ -9,7 +9,7 @@
 // Usage:
 //   node scripts/generate-coverage-report.js
 //   node scripts/generate-coverage-report.js --input .nyc_output/coverage-final.json
-//   node scripts/generate-coverage-report.js --output cypress/coverage/index.html
+//   node scripts/generate-coverage-report.js --output cypress/results/coverage/index.html
 //
 
 import fs from "node:fs";
@@ -50,7 +50,7 @@ function parseArgs() {
   );
   const config = {
     input: defaultInput,
-    output: path.join(PROJECT_ROOT, "cypress/coverage", "index.html"),
+    output: path.join(PROJECT_ROOT, "cypress/results/coverage", "index.html"),
   };
 
   for (let i = 0; i < args.length; i++) {
@@ -63,7 +63,7 @@ function parseArgs() {
 
 Options:
   --input <path>   Path to Istanbul coverage JSON (auto-detects coverage-final.json or out.json)
-  --output <path>  Output HTML path (default: cypress/coverage/index.html)
+  --output <path>  Output HTML path (default: cypress/results/coverage/index.html)
   --help           Show this help`);
       process.exit(0);
     }
