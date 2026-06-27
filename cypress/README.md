@@ -18,7 +18,7 @@ This all-in-one script:
 3. Starts the dev server in COVERAGE=1 mode
 4. Runs all Cypress tests headlessly
 5. Generates a merged Mochawesome HTML report → `cypress/results/mochawesome.html`
-6. Generates an Istanbul coverage HTML report → `coverage/index.html`
+6. Generates an Istanbul coverage HTML report → `cypress/coverage/index.html`
 7. Opens both reports in your browser
 8. Automatically stops the server when done
 
@@ -215,7 +215,7 @@ Open `cypress/results/mochawesome.html` in your browser to view:
 npm run test:all
 ```
 
-This handles everything automatically: instrumentation, server lifecycle, tests, and report generation. Coverage report → `coverage/index.html`.
+This handles everything automatically: instrumentation, server lifecycle, tests, and report generation. Coverage report → `cypress/coverage/index.html`.
 
 #### Option B: Manual two-terminal workflow
 
@@ -235,9 +235,9 @@ This:
 1. Cleans previous coverage artifacts
 2. Instruments `js/*.js` files into `js-instrumented/` (with Istanbul)
 3. Runs all Cypress tests against the instrumented code
-4. Generates an HTML coverage report in `coverage/`
+4. Generates an HTML coverage report in `cypress/coverage/`
 
-Open `coverage/index.html` in your browser to view:
+Open `cypress/coverage/index.html` in your browser to view:
 - Line, branch, and function coverage per file
 - Uncovered lines highlighted in red
 - Overall coverage summary
@@ -419,8 +419,8 @@ npm run test:e2e:open         # Terminal 2 — interactive GUI
 | `cypress/results/` | Mochawesome JSON reports (one per spec) + merged HTML report |
 | `cypress/results/mochawesome.html` | Merged test report (open in browser) |
 | `cypress/screenshots/` | Failure screenshots from test runs |
-| `coverage/` | Istanbul HTML coverage report (requires `test:coverage` or `test:all`) |
-| `coverage/index.html` | Coverage report (open in browser) |
+| `cypress/coverage/` | Istanbul HTML coverage report (requires `test:coverage` or `test:all`) |
+| `cypress/coverage/index.html` | Coverage report (open in browser) |
 | `.nyc_output/` | Raw coverage data (hidden, used by Istanbul) |
 | `js-instrumented/` | Pre-instrumented JS files for coverage (hidden, gitignored) |
 

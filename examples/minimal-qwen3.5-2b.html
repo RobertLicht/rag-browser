@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Qwen3.5 2B Transformers.js Demo</title>
+  <script type="module">
+    import { 
+      AutoProcessor,
+      Qwen3_5ForConditionalGeneration,
+      RawImage,
+      TextStreamer,
+    } from 'https://cdn.jsdelivr.net/npm/@huggingface/transformers@4.2.0';
+    
+    
+    // Get a rough estemate of the whole system RAM
+    const ramGB = navigator.deviceMemory;
+    if (typeof ramGB !== "undefined") {
+        // Variable exists
+        console.log("Device has approximately " + ramGB + " GiB of RAM.");
+    } else {
+        // Variable does not exist or is undefined
+        console.log("This browser does not support the API call 'navigator.deviceMemory'")
+    } 
+           
+    
+    // Check if page was refreshed
+    window.addEventListener('load', () => {
+        // Modern browsers: Check performance entries
+        const navigationEntries = performance.getEntriesByType('navigation');
+        if (navigationEntries.length > 0 && navigationEntries[0].type === 'reload') {
+          console.log("Page was refreshed (F5 or Reload button)");
+        }
+        // Legacy fallback (deprecated but widely supported)
+        // if (performance.navigation.type === 1) { console.log('Page was refreshed'); }
+      });
+    
+    // Function to verify that suitable GPU adapter can be requested
+    async function isWebGPUSupported() {
+      if (!navigator.gpu) {
+        return false;
+      }
+      try {
+        const adapter = await navigator.gpu.requestAdapter();
+        return !!adapter;
+      } catch (error) {
+        return false;
+      }
+    }
+    
+    // Function to check if WebGPU is available
+    async function checkGPUselectConfig() {
+    
+      if (navigator.gpu) {
+        // Verify GPU adapter
+        const adapterGpu = await isWebGPUSupported();
+        if (adapterGpu) {
+          console.log("GPU adapter verification: " + adapterGpu + " - WebGPU is supported!");
+          // Return WebGPU configuration in an Object (Default for WebGPU is half-precision)
+          return {embed_tokens: "q4", vision_encoder: "q4", decoder_model_merged: "q4", device: "webgpu"}
+        } else {
+          console.log("GPU adapter verification: " + adapterGpu +  " - WebGPU is not supported!");
+          // Return WASM configuration in an Object (Default for WASM is 8-bit quantization)
+          return {embed_tokens: "q4fp16", vision_encoder: "q4fp16", decoder_model_merged: "q4fp16", device: "wasm"}
+        }
+      } else {
+        console.log('Basic Check - WebGPU is not supported');
+      }
+    }
+
+    // Load and configure the model which matches the available hardware
+    const llmcfg = await checkGPUselectConfig();
+    const model_id = "huggingworld/Qwen3.5-2B-ONNX";
+    const processor = await AutoProcessor.from_pretrained(model_id);
+    const model = await Qwen3_5ForConditionalGeneration.from_pretrained(model_id, {
+      dtype: {
+        embed_tokens: llmcfg.embed_tokens,  // Options: "fp16", "q4f16", "q4" 
+        vision_encoder: llmcfg.vision_encoder,  // Options: "fp16", "q4f16", "q4"
+        decoder_model_merged: llmcfg.decoder_model_merged,  // Options: "fp16", "q4f16", "q4"
+      },
+      device: llmcfg.device,
+    });
+
+    // Prepare inputs
+    // const url = "https://huggingface.co/huggingworld/Qwen3.5-0.8B-ONNX/resolve/main/images/demo.jpeg";
+    // const image = await (await RawImage.read(url)).resize(448, 448);
+    const conversation = [
+      {
+        role: "system", 
+        content: [ 
+          { type: "text", text: "You are a helpful assistant./think" },
+        ],
+        role: "user",
+        content: [
+          { type: "text", text: "Write me a poem about Machine Learning in less than 6 lines." },
+        ],
+      },
+    ];
+    const text = processor.apply_chat_template(conversation, {
+      add_generation_prompt: true,
+    });
+    // const inputs = await processor(text, image);
+    const inputs = await processor(text);
+
+    const outputs = await model.generate({
+      ...inputs,
+      max_new_tokens: 512,
+      streamer: new TextStreamer(processor.tokenizer, {
+        skip_prompt: true,
+        skip_special_tokens: false,
+      }),
+    });
+
+    // Decode output
+    const decoded = processor.batch_decode(
+      outputs.slice(null, [inputs.input_ids.dims.at(-1), null]),
+      {
+        skip_special_tokens: true,
+      },
+    );
+    console.log(decoded[0]);
+    
+    // Unload the model after utilization, to free memory
+    if (model) {
+      await model.dispose();
+    }
+  </script>
+</head>
+<body>
+  <p>Wird geladen...</p>
+</body>
+</html>   

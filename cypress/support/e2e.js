@@ -3,6 +3,7 @@
 
 import "cypress-mochawesome-reporter/register.js";
 import "@cypress/code-coverage/support.js";
+import "./index.js";
 import "./commands.js";
 
 Cypress.on("uncaught:exception", (err, runnable) => {
