@@ -15,6 +15,7 @@
   "report-dir": "./cypress/coverage",
   "reporter": [
     "html",
+    "json",
     "text-summary",
     "lcov"
   ],

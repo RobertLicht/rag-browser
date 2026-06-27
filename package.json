@@ -8,11 +8,11 @@
     "test:e2e": "cypress run --browser electron",
     "test:e2e:open": "cypress open --E2E",
     "test:e2e:report": "cypress run --browser electron && npx cypress-mochawesome-reporter merge cypress/results/*.json -o cypress/results",
-    "coverage:clean": "rm -rf cypress/coverage .nyc_output js-instrumented cypress/results/*.json",
+    "coverage:clean": "rm -rf cypress/coverage/* .nyc_output js-instrumented cypress/results/*.json",
     "coverage:instrument": "npx @babel/cli js --out-dir js-instrumented --source-maps inline",
-    "test:coverage": "npm run coverage:clean && npm run coverage:instrument && cypress run --browser electron && nyc report --reporter=html --reporter=text-summary",
+    "coverage:report": "nyc report --reporter=text-summary && node scripts/generate-coverage-report.js",
+    "test:coverage": "npm run coverage:clean && npm run coverage:instrument && cypress run --browser electron && npm run coverage:report",
     "serve:coverage": "bash serve-coverage.sh",
-    "serve:coverage-report": "node server.js --coverage-report",
     "test:all": "bash run-tests.sh"
   },
   "devDependencies": {

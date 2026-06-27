@@ -36,7 +36,8 @@ yarn-debug.log*
 yarn-error.log*
 
 # Testing
-cypress/coverage/
+cypress/coverage/**
+!cypress/coverage/index.html
 .nyc_output/
 
 # Temporary files
