@@ -349,10 +349,10 @@ function generateReport(coverageFiles, stats) {
       if (line.hasCoverage) {
         if (line.isCovered) {
           cls = "line line-covered";
-          countHtml = `<span class="count">${line.count}</span>`;
+          countHtml = `<span class="count" title="Executed ${line.count} time${line.count === 1 ? "" : "s"} during tests">${line.count}</span>`;
         } else {
           cls = "line line-missed";
-          countHtml = `<span class="count">&mdash;</span>`;
+          countHtml = `<span class="count" title="This line was never executed (not covered by tests)">&mdash;</span>`;
         }
       } else {
         countHtml = `<span class="count"></span>`;
@@ -387,13 +387,20 @@ function generateReport(coverageFiles, stats) {
     <summary>
       <span class="file-path">${escapeHtml(displayPath)}</span>
       <span class="file-stats">
-        <span class="pct statements" title="${fStmtPct}% statements">${fStmtPct}%</span>
-        <span class="pct branches" title="${fBranchPct}% branches">${fBranchPct}%</span>
-        <span class="pct functions" title="${fFuncPct}% functions">${fFuncPct}%</span>
-        <span class="pct lines" title="${fLinePct}% lines">${fLinePct}%</span>
+        <span class="pct statements" title="Statements: % of executable code statements that were run during tests">${fStmtPct}%</span>
+        <span class="pct branches" title="Branches: % of conditional branches (if/else paths) that were exercised">${fBranchPct}%</span>
+        <span class="pct functions" title="Functions: % of declared functions that were called at least once">${fFuncPct}%</span>
+        <span class="pct lines" title="Lines: % of lines with executable code that were executed">${fLinePct}%</span>
       </span>
     </summary>
     <table class="source-table">
+      <thead>
+        <tr>
+          <th class="ln" title="Source code line number">Line</th>
+          <th class="cnt" title="How many times this line was executed during tests. &mdash; means the line was never executed.">Hits</th>
+          <th class="code">Source</th>
+        </tr>
+      </thead>
       <tbody>${linesHtml}
       </tbody>
     </table>
@@ -599,11 +606,115 @@ function generateReport(coverageFiles, stats) {
   .file-stats .pct.functions { color: #64b5f6; }
   .file-stats .pct.lines { color: #ce93d8; }
 
+  /* ── Tooltip system ─────────────────────────────────── */
+  .pct[title] {
+    cursor: help;
+    position: relative;
+  }
+  .pct[title]:hover::after {
+    content: attr(title);
+    position: absolute;
+    bottom: calc(100% + 6px);
+    left: 50%;
+    transform: translateX(-50%);
+    background: #2a2a4a;
+    color: #e0e0e0;
+    padding: 6px 10px;
+    border-radius: 6px;
+    font-size: 12px;
+    white-space: nowrap;
+    z-index: 100;
+    pointer-events: none;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.4);
+    border: 1px solid #4a4a6a;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    line-height: 1.4;
+  }
+  .pct[title]:hover::before {
+    content: "";
+    position: absolute;
+    bottom: calc(100% + 2px);
+    left: 50%;
+    transform: translateX(-50%);
+    border: 5px solid transparent;
+    border-top-color: #2a2a4a;
+    z-index: 100;
+    pointer-events: none;
+  }
+
+  /* ── Legend section ─────────────────────────────────── */
+  .legend {
+    margin: 0 32px 20px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 16px 20px;
+  }
+  .legend h3 {
+    font-size: 14px;
+    font-weight: 600;
+    margin-bottom: 10px;
+    color: var(--text);
+  }
+  .legend-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 8px 24px;
+  }
+  .legend-item {
+    display: flex;
+    align-items: baseline;
+    gap: 8px;
+    font-size: 13px;
+    line-height: 1.4;
+  }
+  .legend-swatch {
+    flex-shrink: 0;
+    width: 14px;
+    height: 14px;
+    border-radius: 3px;
+  }
+  .legend-label {
+    font-weight: 600;
+    color: var(--text);
+  }
+  .legend-desc {
+    color: var(--text-muted);
+  }
+
   /* ── Source table ───────────────────────────────────── */
   .source-table {
     width: 100%;
     border-collapse: collapse;
     font-size: 13px;
+  }
+  .source-table thead th {
+    padding: 6px 0;
+    text-align: left;
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    color: var(--text-muted);
+    background: var(--surface2);
+    border-bottom: 1px solid var(--border);
+    font-weight: 600;
+  }
+  .source-table thead th[title] {
+    cursor: help;
+  }
+  .source-table thead th.ln {
+    width: 50px;
+    text-align: right;
+    padding: 6px 12px;
+  }
+  .source-table thead th.cnt {
+    width: 60px;
+    text-align: center;
+    padding: 6px 8px;
+  }
+  .source-table thead th.code {
+    text-align: left;
+    padding: 6px 16px;
   }
   .source-table td {
     padding: 0;
@@ -683,6 +794,42 @@ function generateReport(coverageFiles, stats) {
       <div class="count">${formatPct(stats.lines)}%</div>
       <div class="detail">${lineCount}</div>
       ${summaryBar(stats.lines)}
+    </div>
+  </div>
+
+  <div class="legend">
+    <h3>How to Read This Report</h3>
+    <div class="legend-grid">
+      <div class="legend-item">
+        <span class="legend-swatch" style="background:#81c784"></span>
+        <span class="legend-label">Statements</span>
+        <span class="legend-desc">— % of executable code statements that were run during tests</span>
+      </div>
+      <div class="legend-item">
+        <span class="legend-swatch" style="background:#ffb74d"></span>
+        <span class="legend-label">Branches</span>
+        <span class="legend-desc">— % of conditional branches (if/else paths) that were exercised</span>
+      </div>
+      <div class="legend-item">
+        <span class="legend-swatch" style="background:#64b5f6"></span>
+        <span class="legend-label">Functions</span>
+        <span class="legend-desc">— % of declared functions that were called at least once</span>
+      </div>
+      <div class="legend-item">
+        <span class="legend-swatch" style="background:#ce93d8"></span>
+        <span class="legend-label">Lines</span>
+        <span class="legend-desc">— % of lines with executable code that were executed</span>
+      </div>
+      <div class="legend-item">
+        <span class="legend-swatch" style="background:var(--covered);border:1px solid #4caf50"></span>
+        <span class="legend-label">Hit Count (e.g. 50)</span>
+        <span class="legend-desc">— how many times that line was executed; green = covered</span>
+      </div>
+      <div class="legend-item">
+        <span class="legend-swatch" style="background:var(--missed);border:1px solid #f44336"></span>
+        <span class="legend-label">Missed (—)</span>
+        <span class="legend-desc">— line was never executed; red = not covered by tests</span>
+      </div>
     </div>
   </div>
 
