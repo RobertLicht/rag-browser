@@ -1880,6 +1880,26 @@ body {
     transform: translateX(-75%);
 }
 
+.info-bar-github {
+    display: flex;
+    align-items: center;
+    margin-left: 0.5rem;
+    padding-left: 0.5rem;
+    border-left: 1px solid var(--border-color);
+    color: var(--text-muted);
+    transition: color 0.15s;
+}
+
+.info-bar-github:hover {
+    color: var(--text-primary);
+}
+
+.info-bar-github-icon {
+    flex-shrink: 0;
+    width: 28px;
+    height: 28px;
+}
+
 #info-bar a {
     color: var(--accent);
     text-decoration: none;
