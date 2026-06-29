@@ -190,6 +190,37 @@ const translations = {
     // Help button / theme toggle tooltips
     "tooltip.theme": "Toggle theme",
     "tooltip.help": "About this app",
+    "tooltip.tour": "Start guided tour",
+
+    // Guided tour
+    "tour.step1.title": "Welcome to RAG-Browser!",
+    "tour.step1.description":
+      "A fully client-side Retrieval-Augmented Generation agent. Your documents stay private — all processing happens locally in your browser. Let's walk you through the key features.",
+    "tour.step2.title": "Status Bar",
+    "tour.step2.description":
+      "Here you can monitor hardware detection, model loading status, indexed documents, token usage, and memory consumption.",
+    "tour.step3.title": "Load Models",
+    "tour.step3.description":
+      "Click here to load the Embedding and Language models. The Embedding model is needed to index documents, and the LLM is needed to answer your questions.",
+    "tour.step4.title": "Upload Documents",
+    "tour.step4.description":
+      "Upload your documents (.txt, .md, .csv, .xls, .xlsx, .docx, .pptx, .odt, .ods, .odp, .pdf). The embedding model will be loaded automatically if needed.",
+    "tour.step5.title": "Document List",
+    "tour.step5.description":
+      "Indexed documents appear here with their chunk count. You can also import/export the database using the buttons below.",
+    "tour.step6.title": "Database Actions",
+    "tour.step6.description":
+      "Export your indexed database, import a previously exported one, or clear the database completely.",
+    "tour.step7.title": "Ask Questions",
+    "tour.step7.description":
+      "Type your question here and press Send (or Enter). The LLM will be loaded automatically if needed. The agent will search your documents and generate a contextual answer.",
+    "tour.step8.title": "Search Settings",
+    "tour.step8.description":
+      "Fine-tune search behavior here. Adjust the balance between keyword (BM25) and semantic (vector) search, set similarity thresholds, and control the number of results.",
+    "tour.btn.next": "Next",
+    "tour.btn.prev": "Previous",
+    "tour.btn.done": "Done",
+    "tour.btn.close": "Close",
 
     // Citations
     "citation.similarity": "Similarity: {percent}%",
@@ -493,6 +524,37 @@ const translations = {
 
     "tooltip.theme": "Design wechseln",
     "tooltip.help": "Über diese App",
+    "tooltip.tour": "Führung starten",
+
+    // Führung
+    "tour.step1.title": "Willkommen bei RAG-Browser!",
+    "tour.step1.description":
+      "Eine vollständig clientseitige RAG-Anwendung. Ihre Dokumente bleiben privat — die gesamte Verarbeitung erfolgt lokal in Ihrem Browser. Wir zeigen Ihnen die wichtigsten Funktionen.",
+    "tour.step2.title": "Statusleiste",
+    "tour.step2.description":
+      "Hier können Sie die Hardware-Erkennung, Modellstatus, indizierte Dokumente, Token-Nutzung und Speicherverbrauch überwachen.",
+    "tour.step3.title": "Modelle laden",
+    "tour.step3.description":
+      "Klicken Sie hier, um das Embedding- und Sprachmodell zu laden. Das Embedding-Modell ist zum Indizieren von Dokumenten erforderlich, und das LLM beantwortet Ihre Fragen.",
+    "tour.step4.title": "Dokumente hochladen",
+    "tour.step4.description":
+      "Laden Sie Ihre Dokumente hoch (.txt, .md, .csv, .xls, .xlsx, .docx, .pptx, .odt, .ods, .odp, .pdf). Das Embedding-Modell wird automatisch geladen.",
+    "tour.step5.title": "Dokumentenliste",
+    "tour.step5.description":
+      "Indizierte Dokumente erscheinen hier mit ihrer Chunk-Anzahl. Sie können auch die Datenbank importieren/exportieren.",
+    "tour.step6.title": "Datenbankaktionen",
+    "tour.step6.description":
+      "Exportieren Sie Ihre Datenbank, importieren Sie eine zuvor exportierte oder löschen Sie die Datenbank vollständig.",
+    "tour.step7.title": "Fragen stellen",
+    "tour.step7.description":
+      "Geben Sie hier Ihre Frage ein und drücken Sie Senden (oder Enter). Das LLM wird automatisch geladen. Der Agent durchsucht Ihre Dokumente und erstellt eine kontextbezogene Antwort.",
+    "tour.step8.title": "Sucheinstellungen",
+    "tour.step8.description":
+      "Passen Sie hier das Suchverhalten an. Stellen Sie das Gleichgewicht zwischen Schlüsselwörtern (BM25) und semantischer Suche ein, legen Sie Ähnlichkeitsschwellen fest und steuern Sie die Anzahl der Ergebnisse.",
+    "tour.btn.next": "Weiter",
+    "tour.btn.prev": "Zurück",
+    "tour.btn.done": "Fertig",
+    "tour.btn.close": "Schließen",
 
     "lang.tooltip": "Sprache auswählen",
 
@@ -787,6 +849,37 @@ const translations = {
 
     "tooltip.theme": "Cambia tema",
     "tooltip.help": "Info su questa app",
+    "tooltip.tour": "Avvia il tour guidato",
+
+    // Tour guidata
+    "tour.step1.title": "Benvenuto in RAG-Browser!",
+    "tour.step1.description":
+      "Un agente RAG completamente lato client. I tuoi documenti rimangono privati — tutto l'elaborazione avviene localmente nel tuo browser. Ti guidiamo attraverso le funzionalità principali.",
+    "tour.step2.title": "Barra di stato",
+    "tour.step2.description":
+      "Qui puoi monitorare il rilevamento hardware, lo stato dei modelli, i documenti indicizzati, l'utilizzo dei token e il consumo di memoria.",
+    "tour.step3.title": "Carica Modelli",
+    "tour.step3.description":
+      "Clicca qui per caricare i modelli Embedding e Language. Il modello Embedding è necessario per indicizzare i documenti, e il LLM per rispondere alle tue domande.",
+    "tour.step4.title": "Carica Documenti",
+    "tour.step4.description":
+      "Carica i tuoi documenti (.txt, .md, .csv, .xls, .xlsx, .docx, .pptx, .odt, .ods, .odp, .pdf). Il modello embedding verrà caricato automaticamente.",
+    "tour.step5.title": "Lista Documenti",
+    "tour.step5.description":
+      "I documenti indicizzati appaiono qui con il conteggio dei chunk. Puoi anche importare/esportare il database.",
+    "tour.step6.title": "Azioni Database",
+    "tour.step6.description":
+      "Esporta il database, importa uno precedentemente esportato o cancella completamente il database.",
+    "tour.step7.title": "Fai Domande",
+    "tour.step7.description":
+      "Digita la tua domanda qui e premi Invia (o Invio). Il LLM verrà caricato automaticamente. L'agent cercherà nei tuoi documenti e genererà una risposta contestuale.",
+    "tour.step8.title": "Impostazioni Ricerca",
+    "tour.step8.description":
+      "Regola qui il comportamento della ricerca. Bilancia tra ricerca per parole chiave (BM25) e semantica (vettoriale), imposta soglie di somiglianza e controlla il numero di risultati.",
+    "tour.btn.next": "Avanti",
+    "tour.btn.prev": "Indietro",
+    "tour.btn.done": "Fine",
+    "tour.btn.close": "Chiudi",
 
     "lang.tooltip": "Seleziona lingua",
 
@@ -1083,6 +1176,37 @@ const translations = {
 
     "tooltip.theme": "Cambiar tema",
     "tooltip.help": "Acerca de esta app",
+    "tooltip.tour": "Iniciar recorrido guiado",
+
+    // Recorrido guiado
+    "tour.step1.title": "¡Bienvenido a RAG-Browser!",
+    "tour.step1.description":
+      "Un agente RAG completamente del lado del cliente. Sus documentos se mantienen privados: todo el procesamiento se realiza localmente en su navegador. Le mostraremos las funciones principales.",
+    "tour.step2.title": "Barra de estado",
+    "tour.step2.description":
+      "Aquí puede monitorear la detección de hardware, el estado de los modelos, documentos indexados, uso de tokens y consumo de memoria.",
+    "tour.step3.title": "Cargar Modelos",
+    "tour.step3.description":
+      "Haga clic aquí para cargar los modelos de Embedding y Lenguaje. El modelo de Embedding es necesario para indexar documentos, y el LLM para responder sus preguntas.",
+    "tour.step4.title": "Subir Documentos",
+    "tour.step4.description":
+      "Suba sus documentos (.txt, .md, .csv, .xls, .xlsx, .docx, .pptx, .odt, .ods, .odp, .pdf). El modelo de embedding se cargará automáticamente.",
+    "tour.step5.title": "Lista de Documentos",
+    "tour.step5.description":
+      "Los documentos indexados aparecen aquí con su conteo de fragmentos. También puede importar/exportar la base de datos.",
+    "tour.step6.title": "Acciones de Base de Datos",
+    "tour.step6.description":
+      "Exporte su base de datos, importe una exportada anteriormente o borre completamente la base de datos.",
+    "tour.step7.title": "Hacer Preguntas",
+    "tour.step7.description":
+      "Escriba su pregunta aquí y presione Enviar (o Enter). El LLM se cargará automáticamente. El agente buscará en sus documentos y generará una respuesta contextual.",
+    "tour.step8.title": "Configuración de Búsqueda",
+    "tour.step8.description":
+      "Ajuste aquí el comportamiento de búsqueda. Equilibre entre búsqueda por palabras clave (BM25) y semántica (vectorial), establezca umbrales de similitud y controle el número de resultados.",
+    "tour.btn.next": "Siguiente",
+    "tour.btn.prev": "Anterior",
+    "tour.btn.done": "Listo",
+    "tour.btn.close": "Cerrar",
 
     "lang.tooltip": "Seleccionar idioma",
 
@@ -1379,6 +1503,37 @@ const translations = {
 
     "tooltip.theme": "Changer de thème",
     "tooltip.help": "À propos de cette app",
+    "tooltip.tour": "Démarrer la visite guidée",
+
+    // Visite guidée
+    "tour.step1.title": "Bienvenue dans RAG-Browser !",
+    "tour.step1.description":
+      "Un agent RAG entièrement côté client. Vos documents restent privés — tout le traitement s'effectue localement dans votre navigateur. Découvrez les fonctionnalités principales.",
+    "tour.step2.title": "Barre d'état",
+    "tour.step2.description":
+      "Ici, vous pouvez surveiller la détection du matériel, l'état des modèles, les documents indexés, l'utilisation des jetons et la consommation de mémoire.",
+    "tour.step3.title": "Charger les Modèles",
+    "tour.step3.description":
+      "Cliquez ici pour charger les modèles d'Embedding et de Langage. Le modèle d'Embedding est nécessaire pour indexer les documents, et le LLM pour répondre à vos questions.",
+    "tour.step4.title": "Télécharger des Documents",
+    "tour.step4.description":
+      "Téléchargez vos documents (.txt, .md, .csv, .xls, .xlsx, .docx, .pptx, .odt, .ods, .odp, .pdf). Le modèle d'embedding sera chargé automatiquement.",
+    "tour.step5.title": "Liste de Documents",
+    "tour.step5.description":
+      "Les documents indexés apparaissent ici avec leur nombre de blocs. Vous pouvez également importer/exporter la base de données.",
+    "tour.step6.title": "Actions de Base de Données",
+    "tour.step6.description":
+      "Exportez votre base de données, importez une précédente ou effacez complètement la base de données.",
+    "tour.step7.title": "Poser des Questions",
+    "tour.step7.description":
+      "Tapez votre question ici et appuyez sur Envoyer (ou Entrée). Le LLM sera chargé automatiquement. L'agent cherchera dans vos documents et générera une réponse contextuelle.",
+    "tour.step8.title": "Paramètres de Recherche",
+    "tour.step8.description":
+      "Ajustez ici le comportement de recherche. Équilibrez entre la recherche par mots-clés (BM25) et sémantique (vectorielle), définissez des seuils de similarité et contrôlez le nombre de résultats.",
+    "tour.btn.next": "Suivant",
+    "tour.btn.prev": "Précédent",
+    "tour.btn.done": "Terminé",
+    "tour.btn.close": "Fermer",
 
     "lang.tooltip": "Sélectionner la langue",
 

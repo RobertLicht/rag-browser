@@ -55,6 +55,7 @@ import {
 } from "./ui.js";
 import { formatBytes } from "./utils.js";
 import { initI18n, t } from "./i18n.js";
+import { initTour, startTour, hasCompletedTour } from "./tour.js";
 
 // Orama database instance (shared across ingestion and retrieval)
 let db = null;
@@ -163,6 +164,16 @@ export async function init() {
     navigator.serviceWorker.register("/sw.js").catch(() => {
       // Silently fail — SW is optional for offline support
     });
+  }
+
+  // Initialize tour
+  initTour();
+
+  // Auto-start tour on first visit (with a small delay to let UI settle)
+  if (!hasCompletedTour()) {
+    setTimeout(() => {
+      startTour();
+    }, 1000);
   }
 
   console.log("RAG-Browser initialized.");

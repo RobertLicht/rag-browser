@@ -1546,6 +1546,51 @@ body {
     border-color: var(--accent);
 }
 
+/* ─── Tour Button ──────────────────────────────────────────── */
+
+.tour-btn {
+    width: 28px;
+    height: 28px;
+    min-width: 28px;
+    margin-left: 0.5rem;
+    padding: 0;
+    font-size: 1rem;
+    line-height: 1;
+    color: var(--text-secondary);
+    background: var(--bg-tertiary);
+    border: 1px solid var(--border-color);
+    border-radius: 50%;
+    cursor: pointer;
+    transition:
+        background 0.15s,
+        color 0.15s;
+}
+
+.tour-btn:hover {
+    background: var(--accent);
+    color: #fff;
+    border-color: var(--accent);
+}
+
+/* ─── Driver.js Tour Overrides ─────────────────────────────── */
+
+.driver-popover {
+    border-radius: 10px !important;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4) !important;
+}
+
+.driver-popover .driver-popover-title {
+    font-family: var(--font-sans) !important;
+}
+
+.driver-popover .driver-popover-description {
+    font-family: var(--font-sans) !important;
+}
+
+.driver-popover button {
+    font-family: var(--font-sans) !important;
+}
+
 /* ─── Help Modal ───────────────────────────────────────────── */
 
 .modal-help .modal-help-content {
