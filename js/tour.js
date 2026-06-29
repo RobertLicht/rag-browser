@@ -3,81 +3,84 @@
 import { t } from "./i18n.js";
 import { driver } from "https://cdn.jsdelivr.net/npm/driver.js@1.6.0/dist/driver.js.mjs";
 
-// Tour steps covering the main workflow
-const steps = [
-  {
-    element: "#app-container",
-    popover: {
-      title: t("tour.step1.title"),
-      description: t("tour.step1.description"),
-      side: "bottom",
-      align: "center",
+// Tour steps covering the main workflow — generated dynamically so translations
+// always reflect the currently selected language.
+function getSteps() {
+  return [
+    {
+      element: "#app-container",
+      popover: {
+        title: t("tour.step1.title"),
+        description: t("tour.step1.description"),
+        side: "bottom",
+        align: "center",
+      },
     },
-  },
-  {
-    element: "#status-bar",
-    popover: {
-      title: t("tour.step2.title"),
-      description: t("tour.step2.description"),
-      side: "bottom",
-      align: "center",
+    {
+      element: "#status-bar",
+      popover: {
+        title: t("tour.step2.title"),
+        description: t("tour.step2.description"),
+        side: "bottom",
+        align: "center",
+      },
     },
-  },
-  {
-    element: "#load-models-btn",
-    popover: {
-      title: t("tour.step3.title"),
-      description: t("tour.step3.description"),
-      side: "right",
-      align: "center",
+    {
+      element: "#load-models-btn",
+      popover: {
+        title: t("tour.step3.title"),
+        description: t("tour.step3.description"),
+        side: "right",
+        align: "center",
+      },
     },
-  },
-  {
-    element: "#file-input-wrapper",
-    popover: {
-      title: t("tour.step4.title"),
-      description: t("tour.step4.description"),
-      side: "right",
-      align: "start",
+    {
+      element: "#file-input-wrapper",
+      popover: {
+        title: t("tour.step4.title"),
+        description: t("tour.step4.description"),
+        side: "right",
+        align: "start",
+      },
     },
-  },
-  {
-    element: "#document-list",
-    popover: {
-      title: t("tour.step5.title"),
-      description: t("tour.step5.description"),
-      side: "right",
-      align: "start",
+    {
+      element: "#document-list",
+      popover: {
+        title: t("tour.step5.title"),
+        description: t("tour.step5.description"),
+        side: "right",
+        align: "start",
+      },
     },
-  },
-  {
-    element: "#db-actions",
-    popover: {
-      title: t("tour.step6.title"),
-      description: t("tour.step6.description"),
-      side: "right",
-      align: "center",
+    {
+      element: "#db-actions",
+      popover: {
+        title: t("tour.step6.title"),
+        description: t("tour.step6.description"),
+        side: "right",
+        align: "center",
+      },
     },
-  },
-  {
-    element: "#input-area",
-    popover: {
-      title: t("tour.step7.title"),
-      description: t("tour.step7.description"),
-      side: "left",
-      align: "center",
+    {
+      element: "#input-area",
+      popover: {
+        title: t("tour.step7.title"),
+        description: t("tour.step7.description"),
+        side: "left",
+        align: "center",
+      },
     },
-  },
-  {
-    element: "#search-settings",
-    popover: {
-      title: t("tour.step8.title"),
-      description: t("tour.step8.description"),
-      side: "right",
-      align: "start",
+    {
+      element: "#search-settings",
+      popover: {
+        title: t("tour.step8.title"),
+        description: t("tour.step8.description"),
+        side: "right",
+        align: "start",
+      },
     },
-  },
-];
+  ];
+}
 
 /**
  * Initialize the tour button click handler.
@@ -123,7 +126,7 @@ export function startTour() {
     onDestroyed: () => {
       markTourCompleted();
     },
-    steps,
+    steps: getSteps(),
   });
 
   driverObj.drive();
