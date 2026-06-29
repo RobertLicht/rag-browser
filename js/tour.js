@@ -101,10 +101,10 @@ export function startTour() {
   const driverObj = driver({
     showProgress: true,
     showButtons: ["next", "previous"],
-    nextLabel: t("tour.btn.next"),
-    prevLabel: t("tour.btn.prev"),
-    doneLabel: t("tour.btn.done"),
-    closeLabel: t("tour.btn.close"),
+    nextBtnText: t("tour.btn.next"),
+    prevBtnText: t("tour.btn.prev"),
+    doneBtnText: t("tour.btn.done"),
+    closeBtnText: t("tour.btn.close"),
     onHighlighted: (step) => {
       // Ensure the target element is visible in its parent scroll container
       const el = document.querySelector(step.element);
