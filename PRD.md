@@ -3,16 +3,16 @@
 | Field          | Value                                                    |
 |----------------|----------------------------------------------------------|
 | **Project**    | RAG-Browser — Client-Side RAG Agent                      |
-| **Version**    | 1.0                                                      |
-| **Date**       | 2026-06-13                                               |
-| **Status**     | Draft                                                    |
+| **Version**    | 2.0                                                      |
+| **Date**       | 2026-06-29                                               |
+| **Status**     | Implemented                                              |
 | **Author**     | Product Engineering                                      |
 
 ---
 
 ## 1. Executive Summary
 
-**RAG-Browser** is a fully client-side, browser-based Retrieval-Augmented Generation (RAG) agent that enables users to upload `.txt` documents, embed them locally, and query them conversationally — without any server-side computation, API calls, or cloud infrastructure.
+**RAG-Browser** is a fully client-side, browser-based Retrieval-Augmented Generation (RAG) agent that enables users to upload documents (`.txt`, `.md`, `.csv`, `.xls`, `.xlsx`, `.docx`, `.pptx`, `.odt`, `.ods`, `.odp`, `.pdf`), embed them locally, and query them conversationally — without any server-side computation, API calls, or cloud infrastructure.
 
 All AI inference, vector storage, search, and language generation runs entirely within the user's browser using:
 - **Transformers.js v4** for model inference (ONNX runtime on WebGPU / WASM)
@@ -74,9 +74,11 @@ sequenceDiagram
 | Component           | Technology                        | Responsibility                                          |
 |---------------------|-----------------------------------|---------------------------------------------------------|
 | Embedding Model     | Qwen3-Embedding-0.6B (ONNX)      | Generate 1024-dimensional embedding vectors for text   |
-| Language Model      | Qwen3.5-2B (ONNX)                | Conversational response generation with RAG context    |
+| Language Model      | Qwen3.5-2B (ONNX, WebGPU)        | Conversational response generation with RAG context    |
+| Language Model (WASM) | Qwen3-0.6B-Instruct (ONNX, WASM) | CPU fallback LLM with thinking mode via /think suffix |
 | Vector Database     | Orama (in-memory)                 | Store, index, and search embeddings + full-text index  |
 | Inference Runtime   | Transformers.js v4                | ONNX model execution via WebGPU (primary) or WASM (fallback) |
+| Worker (WASM)       | Web Worker + SharedArrayBuffer    | Offload WASM inference to background thread (SIMD, multi-threaded) |
 | Delivery            | Static HTML/CSS/JS + CDN          | Zero-server architecture                                |
 
 ### 3.3 Model Specifications
@@ -140,7 +142,7 @@ sequenceDiagram
 
 | ID   | Requirement                                                  | Priority |
 |------|--------------------------------------------------------------|----------|
-| FR-1 | User can upload one or more `.txt` files via file picker     | P0       |
+| FR-1 | User can upload one or more documents (`.txt`, `.md`, `.csv`, `.xls`, `.xlsx`, `.docx`, `.pptx`, `.odt`, `.ods`, `.odp`, `.pdf`) via file picker | P0 |
 | FR-2 | System parses uploaded text and splits it into chunks         | P0       |
 | FR-3 | Chunk size is configurable (default: 512 tokens, ± overlap)  | P1       |
 | FR-4 | System generates embeddings for each chunk using Qwen3-Embedding-0.6B | P0 |
@@ -160,8 +162,8 @@ sequenceDiagram
 |------|--------------------------------------------------------------|----------|
 | FR-8 | User query is embedded using the same embedding model        | P0       |
 | FR-9 | Orama performs vector search (cosine similarity)             | P0       |
-| FR-10| System returns top-K relevant chunks (configurable, default: 5) | P1    |
-| FR-11| Hybrid search (vector + full-text) is available as an option | P2       |
+| FR-10| System returns top-K relevant chunks (configurable, default: 3) | P1    |
+| FR-11| Hybrid search (BM25 + vector) is the default, with configurable weights (default 70/30) | P0 |
 | FR-12| Retrieved chunks are included as context in the LLM prompt   | P0       |
 
 ### 4.3 Conversational Interface
@@ -170,8 +172,8 @@ sequenceDiagram
 |------|--------------------------------------------------------------|----------|
 | FR-13| User can type questions in a chat-style interface            | P0       |
 | FR-14| Qwen3.5-2B generates responses with RAG context injected    | P0       |
-| FR-15| Response is streamed token-by-token to the UI                 | P0       |
-| FR-16| Conversation history is maintained for multi-turn dialogue   | P1       |
+| FR-15| Response is rendered with markdown (via marked) and LaTeX math (via KaTeX 0.17.0) | P0 |
+| FR-16| Conversation history is maintained for multi-turn dialogue (up to 10 recent messages) | P1 |
 | FR-17| User can stop generation mid-stream                          | P1       |
 | FR-18| Retrieved source chunks are cited in the response            | P1       |
 | FR-19| User can clear conversation history                          | P1       |
@@ -195,6 +197,48 @@ sequenceDiagram
 | FR-27| User can unload models to free memory                        | P1       |
 | FR-28| System warns user if document load may exceed memory capacity | P1       |
 | FR-29| Embedding model can be unloaded after ingestion, freeing memory for the LLM | P1 |
+
+### 4.6 Generation Parameters
+
+| ID   | Requirement                                                  | Priority |
+|------|--------------------------------------------------------------|----------|
+| FR-30| Temperature, top_p, top_k, min_p, presence_penalty, and repetition_penalty are configurable | P1 |
+| FR-31| Auto-applied generation presets for thinking vs. non-thinking modes | P1 |
+| FR-32| Adjustable thinking budget (max_new_tokens for reasoning, 1024–8192, default 4096) | P1 |
+
+### 4.7 Thinking Mode
+
+| ID   | Requirement                                                  | Priority |
+|------|--------------------------------------------------------------|----------|
+| FR-33| User can toggle thinking/reasoning mode                      | P1       |
+| FR-34| WebGPU: native chat template `enable_thinking`               | P1       |
+| FR-35| WASM: `/think` prompt suffix fallback                        | P1       |
+| FR-36| Thinking output renders as collapsible `<details>` blocks    | P1       |
+
+### 4.8 Internationalization
+
+| ID   | Requirement                                                  | Priority |
+|------|--------------------------------------------------------------|----------|
+| FR-37| Full UI localization in English, German, Italian, Spanish, and French | P1 |
+| FR-38| Browser language auto-detected on first visit                | P1       |
+| FR-39| Language switcher persisted in `localStorage`                | P1       |
+
+### 4.9 UX Features
+
+| ID   | Requirement                                                  | Priority |
+|------|--------------------------------------------------------------|----------|
+| FR-40| Onboarding tour (driver.js, 8 steps, localized) with completion persistence | P1 |
+| FR-41| Dark/light mode toggle with `localStorage` persistence       | P1       |
+| FR-42| Real-time token usage tracking with 5 warning levels (OK/Caution/Warning/Critical/Exceeded) | P1 |
+| FR-43| Color-coded token indicator with warning banner and one-click "Clear Chat" | P1 |
+| FR-44| Real-time memory usage display in status bar                 | P1       |
+| FR-45| Help & About modal with architecture overview, cache management, WebGPU enablement guides | P1 |
+| FR-46| Info bar with privacy reminder, "Powered by Transformers.js" link, and GitHub repository link | P2 |
+| FR-47| Search mode toggle (Hybrid vs. Vector-only)                  | P1       |
+| FR-48| Database export/import as versioned JSON (v1/v2 backward compatible) | P1 |
+| FR-49| IndexedDB persistence for document index                     | P0       |
+| FR-50| Service worker for offline caching of static assets          | P1       |
+| FR-51| WASM warm-up pass to JIT-compile kernels on model load       | P1       |
 
 ---
 

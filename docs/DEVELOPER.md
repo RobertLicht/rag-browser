@@ -56,8 +56,11 @@ rag-v2-qwen3.6-27b/
 ├── server.js               # Dev server with COOP/COEP headers
 ├── sw.js                   # Service worker (offline caching)
 ├── favicon.svg             # Favicon
-├── package.json            # ES module flag
+├── package.json            # ES module flag, npm scripts
 ├── .gitignore              # Git exclusions
+├── run-tests.sh            # All-in-one test runner (coverage + reports)
+├── serve-coverage.sh       # Coverage server launcher with port checking
+├── cypress.config.js       # Cypress configuration
 ├── docs/                   # Developer documentation
 │   └── DEVELOPER.md        # This file
 ├── css/
@@ -78,8 +81,16 @@ rag-v2-qwen3.6-27b/
 │   ├── rag-pipeline.js     # Ingestion, retrieval & generation
 │   ├── renderer.js         # Markdown + LaTeX rendering
 │   ├── ui.js               # DOM rendering & UI updates
+│   ├── tour.js             # Onboarding tour (driver.js)
 │   └── utils.js            # Shared utilities
-└── examples/               # Minimal test pages for models
+├── cypress/                # E2E test suite
+│   ├── README.md           # E2E test user guide
+│   ├── e2e/                # Spec files (45 tests)
+│   ├── support/            # Custom commands and global setup
+│   └── fixtures/           # Test data files
+├── examples/               # Minimal test pages for models
+└── implementation/         # Implementation plan
+    └── IMPLEMENTATION_PLAN.md
 ```
 
 ---
@@ -637,6 +648,35 @@ import {
 
 **Chat template overhead:** The `1.15` multiplier in `estimateInputTokens()` accounts for formatting tokens (role markers, separators, special tokens) added by `processor.apply_chat_template()`.
 
+### 3.17 tour.js
+
+Interactive onboarding tour using [driver.js](https://github.com/kamranahmedse/driver.js) (CDN, ES module import).
+
+```javascript
+import {
+  initTour,                    // Initialize tour button click handler
+  startTour,                   // Launch the guided tour
+  hasCompletedTour,            // Check if user has completed the tour
+  markTourCompleted,           // Mark tour as completed (persisted to localStorage)
+} from "./tour.js";
+```
+
+**Tour steps (8 total):**
+1. App container — Welcome message and privacy overview
+2. Status bar — Hardware detection, model status, token usage, memory
+3. Load Models — Embedding and LLM model loading
+4. Upload Documents — Multi-format file upload
+5. Document List — Indexed documents with chunk counts
+6. Database Actions — Export, import, and clear database
+7. Ask Questions — Query input and chat interface
+8. Search Settings — BM25/semantic weights, thresholds, top-N
+
+**Localization:** All step titles and descriptions are fully localized via `i18n.js` using `tour.step{N}.title` and `tour.step{N}.description` keys. Tour buttons (next, previous, done, close) are also localized.
+
+**Persistence:** Completion is stored in `localStorage` (`rag-tour-completed: "1"`). The tour button (compass icon 🧭) is always available, but the tour remembers if the user has already completed it.
+
+**Scroll behavior:** The tour auto-scrolls target elements into view and resets sidebar scroll position after each step to ensure elements are visible.
+
 ---
 
 ## 4. Data Flow
@@ -1135,6 +1175,53 @@ The `examples/` directory contains minimal test pages for isolating model-level 
 | `minimal-qwen3-0.6b-wasm-q4-no_think.html` | WASM-specific test (no thinking mode) |
 
 These pages load only the model and a minimal UI, making it easy to isolate model-level bugs from application-level issues.
+
+### 8.3 Cypress E2E Tests
+
+The application includes a comprehensive Cypress E2E test suite that validates UI structure and interactions. These tests do **not** require AI models or WebGPU — they run in seconds and are fully deterministic.
+
+**Test Suite Overview:**
+
+| Spec | What It Tests | Tests |
+|------|--------------|-------|
+| `app-loading.spec.js` | Page title, DOM containers, status indicators | 5 |
+| `sidebar.spec.js` | Upload area, model buttons (disabled state), DB actions | 5 |
+| `chat-interface.spec.js` | Query input, send button, stop button hidden | 5 |
+| `theme.spec.js` | Dark/light toggle, persistence across reloads | 4 |
+| `language-selector.spec.js` | Dropdown visibility, all 5 languages present | 5 |
+| `help-modal.spec.js` | Modal open/close, content verification | 4 |
+| `settings.spec.js` | Chunking sizes, LLM sliders, Search mode selector | 17 |
+| **Total** | | **45** |
+
+**Available npm scripts:**
+
+| Script | Description |
+|--------|-------------|
+| `npm run test:all` | **All-in-one:** clean → instrument → serve → test → HTML reports (auto-opens in browser) |
+| `npm run test:all <spec>` | Run a single spec with full workflow |
+| `npm run test:e2e` | Run tests headlessly (generates Mochawesome JSON reports) |
+| `npm run test:e2e:open` | Open Cypress Test Runner GUI |
+| `npm run test:e2e:report` | Run tests and merge into a single HTML report |
+| `npm run serve:coverage` | Start server in coverage mode (serves instrumented JS) |
+| `npm run test:coverage` | Full coverage pipeline: clean → instrument → test → report |
+
+**Report artifacts:**
+- `cypress/results/mochawesome.html` — Merged test report (open in browser)
+- `cypress/coverage/index.html` — Istanbul HTML coverage report
+- `cypress/screenshots/` — Failure screenshots from test runs
+
+**Custom Cypress commands** (`support/commands.js`):
+- `cy.waitForAppReady()` — Waits until `#status-bar`, `#sidebar`, and `#chat-panel` are visible
+- `cy.toggleTheme()` — Clicks `#theme-toggle-btn` and waits 300 ms for CSS transition
+
+**Coverage notes:** Coverage requires the server to run with `COVERAGE=1` so instrumented JS files are served from `js-instrumented/`. WASM-heavy files (`wasmWorker.js`, `wasmWorkerProxy.js`, `embedding.js`, `inference.js`) typically show low coverage because Cypress's Electron does not support WebGPU, so those code paths are skipped by design.
+
+**Known limitations:**
+- WebGPU not available in Cypress's bundled Electron — tests skip all AI paths intentionally
+- CDN resources (KaTeX, Mermaid) load from jsDelivr — if the network is down, these may fail but errors are suppressed
+- Flatpak sandboxes — Cypress/Electron cannot run from within a Flatpak terminal (e.g., Zed installed via Flatpak). Use a native terminal instead.
+
+For full documentation see [`cypress/README.md`](../cypress/README.md).
 
 ---
 

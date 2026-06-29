@@ -3,9 +3,9 @@
 | Field          | Value                                                    |
 |----------------|----------------------------------------------------------|
 | **Project**    | RAG-Browser — Client-Side RAG Agent                      |
-| **Version**    | 1.1 (refined with additional verification)               |
-| **Date**       | 2026-06-13                                               |
-| **Status**     | Refined (verified against primary sources + docs)        |
+| **Version**    | 2.0 (fully implemented)                                  |
+| **Date**       | 2026-06-29                                               |
+| **Status**     | Implemented — all phases complete                        |
 
 ### Refinement Notes (v1.1)
 
@@ -30,6 +30,24 @@ Additional corrections applied after comparing with a working minimal implementa
 | 8 | Qwen3.5-0.8B-ONNX is a valid, lighter alternative model for low-memory devices | Medium — expands model options | §1.3 |
 | 9 | Pipeline returns `generated_text` as full conversation array; response is last element's `content` field | Medium — changes output parsing | §3.4, §5.1 |
 | 10 | `pipe.dispose()` is the correct disposal method for pipeline instances | Low — clarifies cleanup | §3.4 |
+
+### Refinement Notes (v2.0 — Implementation Complete)
+
+| # | Finding | Impact | Section Updated |
+|---|---------|--------|-----------------|
+| 11 | All 5 phases are **implemented and complete** as of 2026-06-29 | High — changes document from plan to reference | All |
+| 12 | No streaming — batch decode used instead of TextStreamer to avoid incremental BPE bugs | High — changes generation pipeline | §5.1, §6.3 |
+| 13 | WASM backend added: Qwen3-0.6B-Instruct in dedicated Web Worker with SIMD + multi-threaded WASM | High — new runtime path | §3.4, §1.1 |
+| 14 | Inference facade (`inference.js`) routes transparently between WebGPU and WASM backends | High — new architecture pattern | §2 |
+| 15 | Multi-format ingestion: `.txt`, `.md`, `.csv`, `.xls`, `.xlsx`, `.docx`, `.pptx`, `.odt`, `.ods`, `.odp`, `.pdf` | High — expanded from `.txt` only | §4.1 |
+| 16 | Hybrid search (BM25 + semantic) is default, not optional | Medium — changes search config | §4.2 |
+| 17 | Thinking mode: native chat template (WebGPU) and `/think` suffix (WASM) | Medium — new feature | §3.4 |
+| 18 | Internationalization (i18n): 5 languages, auto-detection, localStorage persistence | Medium — new module | §2 |
+| 19 | Onboarding tour: driver.js, 8 steps, fully localized | Medium — new module | §2 |
+| 20 | Markdown + LaTeX rendering: `marked` + KaTeX 0.17.0 | Medium — new module | §2 |
+| 21 | Dark mode, token tracking, generation presets, info bar | Medium — new UX features | §6.1 |
+| 22 | Cypress E2E test suite: 45 tests across 7 specs | Medium — new infrastructure | §2 |
+| 23 | COOP/COEP headers required for SharedArrayBuffer (multi-threaded WASM) | Medium — server config | §7.3 |
 
 ---
 
@@ -92,10 +110,10 @@ All facts below were verified against primary sources (Hugging Face model cards,
 | dtype Options | Per-component: `embed_tokens: "q4"`, `vision_encoder: "fp16"`, `decoder_model_merged: "q4"` | Model card |
 | Text-only Mode | Omit image from processor call; use `processor(text)` instead of `processor(text, image)` | Model card code example |
 | Chat Template | `processor.apply_chat_template(conversation, { add_generation_prompt: true })` | Model card |
-| Streaming | `TextStreamer(processor.tokenizer, { skip_prompt: true })` — `skip_special_tokens` defaults to `true` | [Streamers docs](https://huggingface.co/docs/transformers.js/en/api/generation/streamers) |
-| Generation | `model.generate({ ...inputs, max_new_tokens: 512, streamer })` | Model card |
+| Streaming | **Not used** — batch decode preferred to avoid incremental BPE decoding bugs | Implemented |
+| Generation | `model.generate()` with batch decode (no streaming — avoids incremental BPE decoding bugs) | Implemented |
 | Decode | `processor.batch_decode(outputs.slice(...), { skip_special_tokens: true })` | Model card |
-| Thinking Mode | Non-thinking by default. Soft `/think` switch NOT officially supported | Model card |
+| Thinking Mode | Native via chat template (`enable_thinking: true`). Soft `/think` suffix also works | Implemented |
 | Recommended Params (non-thinking text) | `temperature=1.0, top_p=1.0, top_k=20, presence_penalty=2.0` | Model card |
 | License | Apache 2.0 | Model card |
 
@@ -112,6 +130,22 @@ All facts below were verified against primary sources (Hugging Face model cards,
 | Target Use | Low-memory devices, faster inference | Model card |
 
 **NOTE on Pipeline Support:** In v4.0.0-next.5, `pipeline("text-generation")` threw `Error: Unsupported model type: qwen3_5`. This was resolved by v4.2.0. The pipeline approach is now the recommended path for Qwen3.5 models.
+
+### 1.4 Qwen3-0.6B-Instruct-ONNX (WASM Fallback)
+
+| Property | Verified Value | Source |
+|----------|---------------|--------|
+| Model ID | `onnx-community/Qwen3-0.6B-Instruct-ONNX` | Hugging Face |
+| Parameters | 0.6B | Model card |
+| Architecture | Qwen3 decoder-only | Model card |
+| dtype Options | `q4` (WASM), `q8` (WASM) | Model card |
+| Context Length | 4,096 tokens | Implemented |
+| Quantization | q4 (~0.6 GB) | Model card |
+| Thinking Mode | Via `/think` prompt suffix (WASM) | Implemented |
+| License | Apache 2.0 | Model card |
+| Target Use | WASM CPU fallback when WebGPU unavailable | Implemented |
+
+**NOTE on WASM Backend:** Runs in a dedicated Web Worker with SIMD enabled and multi-threaded WASM (up to 8 cores via `SharedArrayBuffer`). Requires COOP/COEP headers for multi-threading. Warm-up pass JIT-compiles WASM kernels on model load to eliminate first-query latency.
 
 ### 1.5 Orama v3.1.x
 
@@ -240,39 +274,71 @@ const results = await search(db, {
 ```
 rag-v2-qwen3.6-27b/
 ├── index.html                    # Main application HTML
+├── server.js                     # Dev server with COOP/COEP headers for SharedArrayBuffer
+├── sw.js                         # Service worker (offline caching)
+├── favicon.svg                   # Application favicon
+├── package.json                  # ES module flag, npm scripts
+├── run-tests.sh                  # All-in-one test runner (coverage + reports)
+├── serve-coverage.sh             # Coverage server launcher with port checking
+├── cypress.config.js             # Cypress configuration
 ├── css/
-│   └── styles.css                # All application styling
+│   └── styles.css                # All application styling (dark/light themes)
 ├── js/
 │   ├── app.js                    # Main application entry point
-│   ├── state.js                  # Application state management
-│   ├── hardware.js               # Hardware detection (WebGPU, device memory)
-│   ├── embedding.js              # Embedding model loader + inference
-│   ├── llm.js                    # LLM model loader + generation
-│   ├── chunker.js                # Text chunking engine
-│   ├── orama-db.js               # Orama database operations
-│   ├── rag-pipeline.js           # RAG pipeline orchestration
-│   ├── ui.js                     # UI rendering and interaction
-│   └── utils.js                  # Utility functions (UUID, progress, etc.)
-├── data/
-│   ├── minimal-qwen3-embedding-0.6b.html   # Reference implementation
-│   └── minimal-qwen3.5-2b.html            # Reference implementation
+│   ├── hardware.js               # Hardware detection (WebGPU, device memory, SIMD)
+│   ├── state.js                  # Centralized state (pub/sub, token tracking, config)
+│   ├── i18n.js                   # Internationalization (en, de, it, es, fr)
+│   ├── inference.js              # Unified inference facade (WebGPU ↔ WASM routing)
+│   ├── embedding.js              # Embedding model loader + inference (WebGPU)
+│   ├── llm.js                    # LLM model loader + generation (WebGPU, batch decode)
+│   ├── wasmWorker.js             # Web Worker for WASM inference (embedding + LLM)
+│   ├── wasmWorkerProxy.js        # Promise-based proxy wrapping wasmWorker.js
+│   ├── fileParser.js             # Multi-format file parsing (officeParser + PDF.js)
+│   ├── chunker.js                # Paragraph-aware chunking with sentence fallback
+│   ├── orama-db.js               # Orama vector DB + IndexedDB persistence + export/import
+│   ├── rag-pipeline.js           # RAG pipeline orchestration (ingestion + retrieval)
+│   ├── renderer.js               # Markdown + LaTeX rendering (marked + KaTeX)
+│   ├── ui.js                     # DOM rendering and interaction
+│   ├── tour.js                   # Onboarding tour (driver.js, 8 localized steps)
+│   └── utils.js                  # Utilities (UUID, token estimation, formatting)
+├── cypress/
+│   ├── README.md                 # E2E test user guide (setup, coverage, reports)
+│   ├── e2e/                      # Cypress spec files (45 tests, 7 specs)
+│   ├── support/                  # Custom commands and global setup
+│   └── fixtures/                 # Test data files
+├── docs/
+│   └── DEVELOPER.md              # Comprehensive developer guide
+├── examples/
+│   ├── minimal-qwen3.5-2b.html   # Standalone Qwen3.5-2B test page
+│   ├── minimal-qwen3-0.6b.html   # Standalone Qwen3-0.6B test page
+│   └── ...                       # Additional examples and test data
+├── images/                       # Application screenshots
 ├── PRD.md                        # Product Requirements Document
-└── IMPLEMENTATION_PLAN.md        # This file
+└── implementation/
+    └── IMPLEMENTATION_PLAN.md    # This file
 ```
 
 ### Module Responsibilities
 
 | Module | Responsibility | Key Exports |
 |--------|---------------|-------------|
-| `hardware.js` | Detect WebGPU, device memory, select runtime config | `detectHardware()`, `getConfig()` |
-| `state.js` | Central application state (models, index, conversation) | `getState()`, `setState()`, `subscribe()` |
-| `embedding.js` | Load/dispose embedding model, generate embeddings | `loadEmbeddingModel()`, `embedText()`, `embedQuery()`, `unloadEmbeddingModel()` |
-| `llm.js` | Load/dispose LLM, generate responses with streaming | `loadLLM()`, `generateResponse()`, `unloadLLM()` |
-| `chunker.js` | Split text into overlapping chunks | `chunkText()`, `countTokens()` |
-| `orama-db.js` | Create, insert, search, persist Orama database | `createDB()`, `insertChunks()`, `searchVector()`, `saveToIndexedDB()`, `loadFromIndexedDB()` |
-| `rag-pipeline.js` | Orchestrate ingestion and retrieval pipelines | `ingestDocument()`, `retrieveAndGenerate()` |
-| `ui.js` | DOM manipulation, event handling, rendering | `initUI()`, `renderMessage()`, `updateProgress()` |
-| `app.js` | Bootstrap, coordinate modules, handle lifecycle | `init()` |
+| `hardware.js` | Detect WebGPU, device memory, SIMD support, select backend and model | `detectHardware()`, `getConfig()` |
+| `state.js` | Central state (pub/sub); token tracking; search/LLM config with generation presets | `getState()`, `setState()`, `subscribe()` |
+| `i18n.js` | Internationalization (en, de, it, es, fr); browser lang detection, localStorage persistence | `t()`, `setLanguage()` |
+| `inference.js` | Unified facade routing embedding/LLM calls to WASM (Web Worker) or WebGPU (main thread) | `embedQuery()`, `embedDocuments()`, `generateResponse()`, `loadModel()`, `unloadModel()` |
+| `embedding.js` | Load/unload embedding model, generate embeddings (WebGPU, fp16) | `loadEmbeddingModel()`, `embedQuery()`, `embedDocuments()`, `unloadEmbeddingModel()` |
+| `llm.js` | Load/unload LLM, batch-decode generation (WebGPU); reports exact output token count | `loadLLM()`, `generateResponse()`, `unloadLLM()` |
+| `wasmWorker.js` | Web Worker running Transformers.js pipelines; SIMD + multi-threaded WASM; warm-up on load | `loadEmbeddingModel()`, `embedQuery()`, `embedDocuments()`, `loadLLM()`, `generateResponse()` |
+| `wasmWorkerProxy.js` | Promise-based proxy wrapping wasmWorker.js; exposes same API as embedding.js + llm.js | `embedQuery()`, `embedDocuments()`, `generateResponse()` |
+| `fileParser.js` | Parse multi-format docs (.txt, .md, .csv, .xls, .xlsx, .docx, .pptx, .odt, .ods, .odp, .pdf); lazy-load officeParser + PDF.js; strip markdown from .md | `parseFile()` |
+| `chunker.js` | Paragraph-aware chunking with sentence-level fallback; configurable size/overlap | `chunkText()` |
+| `orama-db.js` | Create DB, insert chunks, vector/hybrid search, IndexedDB persistence, versioned export/import | `createDB()`, `insertChunks()`, `searchVector()`, `saveToIndexedDB()`, `loadFromIndexedDB()`, `exportDB()`, `importDB()` |
+| `rag-pipeline.js` | Orchestrate ingestion → embedding → retrieval; estimates input tokens and updates tracking | `ingestDocument()`, `retrieveAndGenerate()` |
+| `renderer.js` | Markdown rendering (marked), LaTeX rendering (KaTeX), collapsible thinking blocks | `renderMessage()` |
+| `ui.js` | DOM rendering & general UI updates | `initUI()`, `updateStatus()` |
+| `tour.js` | Interactive onboarding tour (driver.js); 8 localized steps; completion persisted in localStorage | `initTour()`, `startTour()`, `hasCompletedTour()` |
+| `app.js` | Wire everything together; event handlers | `init()` |
+| `utils.js` | Shared utilities; token estimation with chat template overhead; warning level logic | `generateUUID()`, `estimateTokens()`, `getWarningLevel()` |
 
 ---
 
@@ -484,20 +550,22 @@ export function getNewText(fullText, previousText) {
 }
 ```
 
-### 3.6 Validation Criteria (Phase 1)
+### 3.6 Validation Criteria (Phase 1) ✅ IMPLEMENTED
 
-- [ ] Hardware detection returns correct config on WebGPU browser
-- [ ] Hardware detection falls back to WASM on non-WebGPU browser
-- [ ] Embedding model loads and generates 1024-dim vectors
-- [ ] `embedQuery()` produces different results with/without instruction (verify instruction awareness)
-- [ ] LLM model loads and generates text in text-only mode
-- [ ] Model disposal frees memory (verify via browser DevTools)
+- [x] Hardware detection returns correct config on WebGPU browser
+- [x] Hardware detection falls back to WASM on non-WebGPU browser
+- [x] Embedding model loads and generates 1024-dim vectors (fp16 WebGPU, q8 WASM)
+- [x] `embedQuery()` produces different results with/without instruction (verify instruction awareness)
+- [x] LLM model loads and generates text in text-only mode
+- [x] WASM backend: Qwen3-0.6B-Instruct loads in Web Worker with SIMD + multi-threaded WASM
+- [x] Inference facade routes transparently between WebGPU and WASM backends
+- [x] Model disposal frees memory (verify via browser DevTools)
 
 ---
 
 ## 4. Phase 2: Document Ingestion Pipeline
 
-**Goal:** Users can upload `.txt` files, have them chunked, embedded, and indexed in Orama.
+**Goal (Implemented):** Users can upload `.txt`, `.md`, `.csv`, `.xls`, `.xlsx`, `.docx`, `.pptx`, `.odt`, `.ods`, `.odp`, `.pdf` files, have them parsed, chunked, embedded, and indexed in Orama with hybrid search (BM25 + semantic).
 
 ### 4.1 orama-db.js
 
@@ -767,20 +835,22 @@ export async function ingestDocument(file, db, progressCallback) {
 
 **Key Decision:** Batch embedding generation (32 chunks per batch). This balances memory usage with throughput. The embedding model processes batches efficiently, and 32 chunks × ~512 tokens × 1024 dims stays within comfortable memory limits.
 
-### 4.4 Validation Criteria (Phase 2)
+### 4.4 Validation Criteria (Phase 2) ✅ IMPLEMENTED
 
-- [ ] Upload a 10KB `.txt` file → chunks created with correct metadata
-- [ ] Upload a 1MB `.txt` file → chunks created, no memory errors
-- [ ] Embeddings are 1024-dimensional arrays
-- [ ] Orama index contains all chunks
-- [ ] IndexedDB persistence survives page reload
-- [ ] Progress callback fires at each step
+- [x] Upload supported formats (.txt, .md, .csv, .xls, .xlsx, .docx, .pptx, .odt, .ods, .odp, .pdf) → chunks created with correct metadata
+- [x] Upload a 1MB document → chunks created, no memory errors
+- [x] Embeddings are 1024-dimensional arrays
+- [x] Orama index contains all chunks
+- [x] IndexedDB persistence survives page reload
+- [x] Database export/import as versioned JSON (v1/v2 backward compatible)
+- [x] Progress callback fires at each step
+- [x] Markdown syntax stripped from .md files before embedding
 
 ---
 
 ## 5. Phase 3: RAG Retrieval & Generation
 
-**Goal:** Users can ask questions and receive context-aware responses with streaming.
+**Goal (Implemented):** Users can ask questions and receive context-aware responses. Generation uses batch decode (not streaming) to avoid incremental BPE decoding bugs. Thinking mode available on both backends.
 
 ### 5.1 rag-pipeline.js (Retrieval & Generation)
 
@@ -901,20 +971,25 @@ stoppingCriteria.interrupt();
 
 **Verified behavior:** When `interrupt()` is called, the model stops generating new tokens at the next stopping criterion check point. This is the officially supported mechanism for cancellation in Transformers.js.
 
-### 5.4 Validation Criteria (Phase 3)
+### 5.4 Validation Criteria (Phase 3) ✅ IMPLEMENTED
 
-- [ ] Query returns relevant chunks from indexed documents
-- [ ] Response incorporates retrieved context
-- [ ] Response is streamed token-by-token to UI
-- [ ] Source citations are displayed with chunk metadata
-- [ ] Conversation history is maintained across turns
-- [ ] Stop button halts streaming
+- [x] Query returns relevant chunks from indexed documents
+- [x] Hybrid search (BM25 + semantic) with configurable weights (default 70/30)
+- [x] Search mode toggle (Hybrid vs Vector-only)
+- [x] Response incorporates retrieved context
+- [x] Response rendered with markdown (marked) and LaTeX (KaTeX)
+- [x] Thinking mode works on both backends (native chat template WebGPU, `/think` suffix WASM)
+- [x] Thinking output renders as collapsible `<details>` blocks
+- [x] Adjustable thinking budget (1024–8192 tokens)
+- [x] Generation parameters configurable with auto-applied presets
+- [x] Conversation history is maintained across turns (up to 10 recent messages)
+- [x] Stop button cancels generation
 
 ---
 
 ## 6. Phase 4: UI & UX Polish
 
-**Goal:** Complete, polished user interface with all functional requirements.
+**Goal (Implemented):** Complete, polished user interface with all functional requirements including i18n, dark mode, onboarding tour, token tracking, generation presets, and info bar.
 
 ### 6.1 index.html
 
@@ -1118,21 +1193,25 @@ async function handleLoadModels() {
 }
 ```
 
-### 6.5 Validation Criteria (Phase 4)
+### 6.5 Validation Criteria (Phase 4) ✅ IMPLEMENTED
 
-- [ ] Application loads and displays status bar with hardware info
-- [ ] Models load on demand with progress indicators
-- [ ] File upload triggers ingestion pipeline
-- [ ] Chat interface accepts queries and displays streaming responses
-- [ ] Citations displayed with source file and chunk index
-- [ ] Responsive on mobile (320px) and desktop (1920px+)
-- [ ] Conversation history persists in UI across turns
+- [x] Application loads and displays status bar with hardware info, memory, token usage
+- [x] Models load on demand with progress indicators
+- [x] File upload triggers ingestion pipeline for all supported formats
+- [x] Chat interface accepts queries and displays responses with markdown + LaTeX rendering
+- [x] Onboarding tour (8 steps, localized, persisted completion state)
+- [x] Internationalization (5 languages, auto-detection, localStorage persistence)
+- [x] Dark/light mode toggle with persistence
+- [x] Help & About modal with architecture overview, cache management, WebGPU guides
+- [x] Token usage tracking with 5 warning levels and one-click "Clear Chat"
+- [x] Responsive on mobile (320px) and desktop (1920px+)
+- [x] Info bar with privacy reminder, Transformers.js link, GitHub link
 
 ---
 
 ## 7. Phase 5: Optimization & Hardening
 
-**Goal:** Performance optimization, offline support, and cross-browser testing.
+**Goal (Implemented):** Performance optimization, offline support, cross-browser testing, and Cypress E2E test suite (45 tests). COOP/COEP headers for multi-threaded WASM.
 
 ### 7.1 Memory Management
 
@@ -1291,18 +1370,22 @@ if ('serviceWorker' in navigator) {
 | LLM token generation (WebGPU, q4) | > 10 tokens/sec | Token count / time |
 | LLM token generation (WASM, q4fp16) | > 3 tokens/sec | Token count / time |
 
-### 7.5 Validation Criteria (Phase 5)
+### 7.5 Validation Criteria (Phase 5) ✅ IMPLEMENTED
 
-- [ ] Application works offline after initial load (service worker)
-- [ ] IndexedDB persistence survives page reload
-- [ ] Memory usage stays within browser tab limits during large document ingestion
-- [ ] Performance targets met on WebGPU hardware
-- [ ] WASM fallback works on non-WebGPU browsers
-- [ ] No console errors in production mode
+- [x] Application works offline after initial load (service worker)
+- [x] IndexedDB persistence survives page reload
+- [x] Memory usage stays within browser tab limits during large document ingestion
+- [x] WASM fallback works on non-WebGPU browsers (Qwen3-0.6B-Instruct)
+- [x] Multi-threaded WASM with COOP/COEP headers (SharedArrayBuffer)
+- [x] WASM warm-up pass eliminates first-query latency
+- [x] Cypress E2E test suite: 45 tests across 7 specs (UI structure, no models required)
+- [x] Code coverage via Istanbul (nyc) with HTML reports
+- [x] Mochawesome test reports with merged HTML dashboard
+- [x] No console errors in production mode
 
 ---
 
-## 8. Critical Design Decisions
+## 8. Critical Design Decisions (Updated)
 
 ### 8.1 Embedding: last_token Pooling
 
@@ -1354,22 +1437,70 @@ if ('serviceWorker' in navigator) {
 - Transformers.js: `https://cdn.jsdelivr.net/npm/@huggingface/transformers@4.2.0`
 - Orama: `https://cdn.jsdelivr.net/npm/@orama/orama@3.1.18/+esm`
 
+### 8.7 Inference Facade (NEW)
+
+**Decision:** Introduce `inference.js` as a unified facade that routes all model operations to the correct backend (WebGPU or WASM).
+
+**Rationale:** The dual-backend architecture requires different code paths for embedding and generation. A facade pattern ensures:
+- All consumers import from a single module
+- Backend selection is transparent
+- Lazy-loading is handled at the facade level
+- Readiness tracking (`isEmbeddingLoaded()`, `isLLMLoaded()`) works even before the backend is imported
+
+**Implication:** `embedding.js`, `llm.js`, and `wasmWorkerProxy.js` are implementation details hidden behind the facade. Direct imports of these modules are restricted to the facade itself.
+
+### 8.8 WASM Worker (NEW)
+
+**Decision:** Run WASM inference in a dedicated Web Worker with SIMD + multi-threaded WASM.
+
+**Rationale:** CPU-bound WASM inference would block the main thread, making the UI unresponsive. A Web Worker with SIMD and SharedArrayBuffer enables:
+- 2-4x performance boost from SIMD
+- Up to 8 threads for parallel computation
+- Responsive UI during generation
+
+**Implication:** Requires COOP/COEP headers for SharedArrayBuffer. Without these headers, multi-threaded WASM falls back to single-threaded (3-4x slower). The dev server (`server.js`) sets these headers automatically.
+
+### 8.9 Batch Decode Instead of Streaming (NEW)
+
+**Decision:** Use batch decode (collect all tokens, then decode once) instead of streaming with `TextStreamer`.
+
+**Rationale:** TextStreamer in Transformers.js v4 has incremental BPE decoding bugs that produce garbled output. Batch decode:
+- Avoids incremental BPE bugs
+- Produces correct output
+- Still provides stop generation via `InterruptableStoppingCriteria`
+- Only minor UX impact (response appears at once, not token-by-token)
+
+**Implication:** Users see the full response at once rather than a streaming effect. For WASM at 2-5 tok/s, this means 5-20 seconds wait for typical responses. The UI shows a loading indicator during generation.
+
+### 8.10 Hybrid Search Default (NEW)
+
+**Decision:** Make hybrid search (BM25 + semantic) the default, not vector-only.
+
+**Rationale:** Pure vector search can miss exact keyword matches. BM25 keyword matching complements semantic similarity:
+- BM25 catches exact term matches
+- Vector search catches semantic synonyms
+- Combined scoring (70/30 default) produces better retrieval quality
+- A vector quality gate (min 0.35) filters low-relevance keyword-only hits
+
+**Implication:** Search is more accurate but slightly slower (BM25 + vector vs. vector-only). The performance difference is negligible for typical document sizes.
+
 ---
 
-## 9. Risk Register
+### 9. Risk Register (Updated)
 
 | Risk | Impact | Likelihood | Mitigation | Status |
 |------|--------|------------|------------|--------|
-| WebGPU not available | High | Medium | WASM fallback with q8/q4fp16 quantization. Clear hardware requirements in UI. | Accepted |
-| Model download fails (large files ~2GB total) | High | Medium | Progress indicators. Allow resume via browser cache. Service worker for offline caching. | Mitigated |
-| Out-of-memory during large document ingestion | High | Medium | Batch processing. Memory warnings at 80% capacity. Graceful error handling. | Mitigated |
-| Slow inference on low-end hardware (WASM) | Medium | Medium | Set performance expectations. Allow configuration of max_new_tokens. | Accepted |
+| WebGPU not available | High | Medium | WASM fallback with Qwen3-0.6B-Instruct (SIMD, multi-threaded). Clear hardware requirements in UI. | Mitigated |
+| Model download fails (large files ~2GB total) | High | Medium | Progress indicators. Browser cache resume. Service worker for offline caching. | Mitigated |
+| Out-of-memory during large document ingestion | High | Medium | Batch processing. Memory warnings at 80% capacity. Graceful error handling. Model unload option. | Mitigated |
+| Slow inference on low-end hardware (WASM) | Medium | Medium | Set performance expectations. Configurable max_new_tokens. 4096 token cap for WASM. | Accepted |
 | last_token pooling sensitivity to chunk boundaries | Medium | Medium | Paragraph-aware chunking. Avoid splitting in the middle of sentences. | Mitigated |
-| Transformers.js v4 API changes | Medium | Low | Pin to v4.2.0. Abstraction layer around model loading. | Mitigated |
+| Transformers.js v4 API changes | Medium | Low | Pin to v4.2.0. Abstraction layer around model loading (inference.js facade). | Mitigated |
 | Browser tab suspension kills model state | Medium | Low | IndexedDB persistence for index. Reload prompt on resume. | Mitigated |
 | Qwen3.5-2B produces hallucinated answers | Medium | Medium | System prompt constraints. Source citations. "I don't know" fallback in prompt. | Mitigated |
 | IndexedDB quota exceeded for large indexes | Low | Low | Monitor quota. Warn user. Allow index reset. | Mitigated |
 | Qwen3-Embedding-0.6B-ONNX model broken | Low | Low | Discussion #4 resolved (cache issue). Model works correctly. | Resolved |
+| COOP/COEP headers not available (hosting) | Medium | Low | server.js sets required headers. Without them, WASM falls back to single-threaded (3-4x slower). | Mitigated |
 
 ---
 
@@ -1391,7 +1522,7 @@ The Orama schema must match the chosen dimension:
 embedding: 'vector[1024]'  // or 'vector[256]' for memory-constrained mode
 ```
 
-## Appendix B: Model Size Estimates
+## Appendix B: Model Size Estimates (Updated)
 
 | Model | Precision | Approximate Size |
 |-------|-----------|-----------------|
@@ -1399,11 +1530,12 @@ embedding: 'vector[1024]'  // or 'vector[256]' for memory-constrained mode
 | Qwen3-Embedding-0.6B | fp16 | ~1.2 GB |
 | Qwen3-Embedding-0.6B | q8 | ~0.6 GB |
 | Qwen3.5-2B | fp16 | ~4.5 GB |
-| Qwen3.5-2B | q4 | ~1.2 GB |
+| Qwen3.5-2B | q4 | ~2.5 GB |
 | Qwen3.5-2B | q4fp16 | ~1.5 GB |
+| Qwen3-0.6B-Instruct | q4 (WASM) | ~0.6 GB |
 
-| **Total download (fp16 embedding + q4 LLM):** ~2.4 GB
-| **Total download (q8 embedding + q4 LLM):** ~1.8 GB
+| **Total download (WebGPU: fp16 embedding + q4 LLM):** ~3.7 GB
+| **Total download (WASM: q8 embedding + q4 LLM):** ~1.2 GB
 
 **Refinement — Pipeline vs Direct Model API:** The implementation plan uses `pipeline("text-generation")` as the primary API for the LLM, which is the officially recommended approach per [Transformers.js pipeline docs](https://huggingface.co/docs/transformers.js/en/pipelines). This simplifies the code because the pipeline handles:
 - Chat template application (via `apply_chat_template`)
@@ -1413,20 +1545,25 @@ embedding: 'vector[1024]'  // or 'vector[256]' for memory-constrained mode
 
 The direct `Qwen3_5ForConditionalGeneration.from_pretrained()` approach (from the model card) is a lower-level alternative that gives more control but requires manual handling of all the above steps.
 
+**Note on Batch Decode:** The WASM path uses the pipeline API, but the WebGPU path uses the direct model API with batch decode (no TextStreamer) to avoid incremental BPE decoding bugs. Both paths collect all generated tokens and decode them once at the end.
+
 ## Appendix C: Browser Compatibility Matrix
 
 | Browser | Version | WebGPU | WASM | Status |
 |---------|---------|--------|------|--------|
 | Chrome | 113+ | Yes | Yes | Primary |
 | Edge | 113+ | Yes | Yes | Primary |
-| Safari | 18+ | Yes | Yes | Secondary |
-| Firefox | 134+ | Yes | Yes | Secondary |
+| Firefox | 141+ (Win) | Yes | Yes | Implemented |
+| Firefox | 145+ (macOS Apple Silicon) | Yes | Yes | Implemented |
+| Safari | 26+ (macOS Tahoe, iOS 26) | Yes | Yes | Implemented |
+| Safari | < 26 | No | Yes | WASM fallback |
+| Opera | 99+ | Yes | Yes | Implemented |
 | Chrome Android | 113+ | Yes | Yes | Mobile |
-| Safari iOS | 18+ | Yes | Yes | Mobile |
+| Firefox Linux/Android | — | In Progress | Yes | Expected 2026 |
 
 ---
 
-*This implementation plan was verified against primary sources as of 2026-06-13. All API patterns, model configurations, and CDN URLs have been confirmed working.*
+*This implementation plan was verified against primary sources and updated to reflect the fully implemented application as of 2026-06-29. All 5 phases are complete.*
 
 ### Verification Sources Used
 

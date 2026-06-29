@@ -70,9 +70,11 @@ All consumers import from this single module; the facade routes calls transparen
 - **Token Usage Tracking** — Real-time context window consumption with five warning levels: OK (≤75%), Caution (>75%), Warning (>90%), Critical (>95%), Exceeded (full). Color-coded indicator with a banner and one-click "Clear Chat" when context is nearly full
 - **Generation Parameters** — Configurable temperature, top-p, top-k, min-p, presence penalty, and repetition penalty with auto-applied presets for thinking vs. non-thinking modes
 - **Internationalization (i18n)** — Full UI localization in English, German, Italian, Spanish, and French. Browser language auto-detected on first visit; language switcher persisted in `localStorage`
+- **Onboarding Tour** — Click the compass button (🧭) in the status bar to launch an interactive, 8-step guided tour. Covers the full workflow: status bar, model loading, document upload, document list, database actions, query input, and search settings. Fully localized in all 5 languages; completion is persisted in `localStorage` so the tour button is only offered to new users
 - **Help & About Modal** — Click the "?" button in the status bar to open a help panel with architecture overview, model storage and cache management instructions, and step-by-step WebGPU enablement guides for all major browsers
 - **Dark Mode** — Toggle between light and dark themes via the theme button in the status bar. Theme preference is persisted in `localStorage`
 - **Memory Monitoring** — Real-time memory usage displayed in the status bar, showing consumed memory and total device memory when available
+- **Info Bar** — Persistent footer bar showing a privacy reminder ("100% Private"), a "Powered by Transformers.js" link, and a link to the GitHub repository
 
 ## Technology Stack
 
@@ -118,7 +120,13 @@ rag-v2-qwen3.6-27b/
 │   ├── rag-pipeline.js  # Ingestion, retrieval & generation pipeline
 │   ├── renderer.js      # Markdown + LaTeX rendering for chat messages
 │   ├── ui.js            # DOM rendering & general UI updates
+│   ├── tour.js          # Onboarding tour (driver.js, 8 localized steps)
 │   └── utils.js         # Helpers (UUID, token estimation, formatting)
+├── cypress/
+│   ├── README.md        # E2E test user guide (setup, coverage, reports)
+│   ├── e2e/             # Cypress spec files (45 tests)
+│   ├── support/         # Custom commands and global setup
+│   └── fixtures/        # Test data files
 ├── docs/
 │   └── DEVELOPER.md     # Comprehensive developer guide
 ├── examples/
@@ -160,6 +168,8 @@ rag-v2-qwen3.6-27b/
 | `renderer.js`        | Markdown rendering (marked), LaTeX rendering (KaTeX),    |
 |                      | collapsible thinking blocks                              |
 | `ui.js`              | DOM rendering & general UI updates                       |
+| `tour.js`            | Interactive onboarding tour (driver.js); 8 localized     |
+|                      | steps; completion persisted in localStorage              |
 | `app.js`             | Wire everything together; event handlers                 |
 | `utils.js`           | Shared utilities; token estimation with chat template    |
 |                      | overhead; warning level logic                            |
@@ -195,18 +205,19 @@ npx http-server .
 
 ### Usage
 
-1. **Load Models** — Click "Load Models" to download and initialize the embedding model and LLM. The app auto-selects Qwen3.5-2B (WebGPU) or Qwen3-0.6B-Instruct (WASM) based on hardware detection
-2. **Upload Documents** — Select files (`.txt`, `.md`, `.csv`, `.xls`, `.xlsx`, `.docx`, `.pptx`, `.odt`, `.ods`, `.odp`, `.pdf`) via the file input (supports multiple uploads)
-3. **Configure Search** — Use the Search Settings panel in the sidebar to adjust BM25/semantic weights, similarity thresholds, and top-N results
-4. **Toggle Thinking Mode** — Use the LLM Settings panel to enable reasoning mode. When on, the model outputs a collapsible thinking block before its answer. Use the "Max Thinking Tokens" slider to control the reasoning budget (1024–8192 tokens, default 4096)
-5. **Adjust Generation** — Fine-tune temperature, top-p, top-k, min-p, presence penalty, and repetition penalty. Click "Reset to Preset" to restore the recommended settings for your current thinking mode
-6. **Ask Questions** — Type a query in the chat panel and press Send
-7. **Monitor Token Usage** — The status bar shows real-time context window consumption. When tokens run low, a color-coded indicator warns you and a banner offers a one-click "Clear Chat" to reset the context
-8. **Change Language** — Select your preferred UI language from the language switcher (English, German, Italian, Spanish, French)
-9. **Manage Indexes** — Export your document index as JSON or import an existing index
-10. **Control Memory** — Unload individual models (embedding or LLM) independently via sidebar controls
-11. **Stop Generation** — Click "Stop" to cancel a running response
-12. **Clear Chat** — Reset the conversation and token usage from the sidebar or the warning banner
+1. **Take the Guided Tour** — Click the compass button (🧭) in the status bar to launch an interactive walkthrough of the key features
+2. **Load Models** — Click "Load Models" to download and initialize the embedding model and LLM. The app auto-selects Qwen3.5-2B (WebGPU) or Qwen3-0.6B-Instruct (WASM) based on hardware detection
+3. **Upload Documents** — Select files (`.txt`, `.md`, `.csv`, `.xls`, `.xlsx`, `.docx`, `.pptx`, `.odt`, `.ods`, `.odp`, `.pdf`) via the file input (supports multiple uploads)
+4. **Configure Search** — Use the Search Settings panel in the sidebar to adjust BM25/semantic weights, similarity thresholds, and top-N results
+5. **Toggle Thinking Mode** — Use the LLM Settings panel to enable reasoning mode. When on, the model outputs a collapsible thinking block before its answer. Use the "Max Thinking Tokens" slider to control the reasoning budget (1024–8192 tokens, default 4096)
+6. **Adjust Generation** — Fine-tune temperature, top-p, top-k, min-p, presence penalty, and repetition penalty. Click "Reset to Preset" to restore the recommended settings for your current thinking mode
+7. **Ask Questions** — Type a query in the chat panel and press Send
+8. **Monitor Token Usage** — The status bar shows real-time context window consumption. When tokens run low, a color-coded indicator warns you and a banner offers a one-click "Clear Chat" to reset the context
+9. **Change Language** — Select your preferred UI language from the language switcher (English, German, Italian, Spanish, French)
+10. **Manage Indexes** — Export your document index as JSON or import an existing index
+11. **Control Memory** — Unload individual models (embedding or LLM) independently via sidebar controls
+12. **Stop Generation** — Click "Stop" to cancel a running response
+13. **Clear Chat** — Reset the conversation and token usage from the sidebar or the warning banner
 
 ## System Requirements
 
@@ -298,6 +309,25 @@ The preset is auto-applied when toggling thinking mode. For WASM, `max_new_token
 | Safari 26+     | ✅ Full  | WebGPU enabled by default (macOS Tahoe 26, iOS 26) |
 | Safari < 26    | ⚠️ WASM  | WebGPU not available; WASM fallback |
 | Opera 99+      | ✅ Full  | Chromium-based, WebGPU enabled |
+
+### Testing
+
+The application includes a comprehensive Cypress E2E test suite (45 tests) that validates UI structure and interactions without requiring AI models or WebGPU:
+
+| Script | Description |
+|--------|-------------|
+| `npm run test:all` | **All-in-one:** clean → instrument → serve → test → HTML reports (auto-opens in browser) |
+| `npm run test:all <spec>` | Run a single spec with full workflow |
+| `npm run test:e2e` | Run tests headlessly (generates Mochawesome JSON reports) |
+| `npm run test:e2e:open` | Open Cypress Test Runner GUI |
+| `npm run test:e2e:report` | Run tests and merge into a single HTML report |
+| `npm run serve:coverage` | Start server in coverage mode (serves instrumented JS) |
+| `npm run test:coverage` | Full coverage pipeline: clean → instrument → test → report |
+
+- **45 tests** across 7 specs: app loading, sidebar, chat interface, theme, language selector, help modal, and settings
+- **Code coverage** via Istanbul (nyc) with HTML reports in `cypress/coverage/`
+- **Test reports** via Mochawesome with merged HTML dashboard in `cypress/results/`
+- Tests run in **seconds** — no models or GPU required. See `cypress/README.md` for full documentation
 
 ## Intended Use
 
