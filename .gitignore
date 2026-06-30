@@ -49,7 +49,6 @@ data/
 # Cypress
 cypress/screenshots/
 cypress/videos/
-# cypress/results/
 cypress/downloads/
 cypress/.http-mitm-proxy/
 cypress/fixtures/example.json

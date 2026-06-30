@@ -796,6 +796,57 @@
                 </section>
 
                 <section class="help-section">
+                    <h3>Processing Times</h3>
+                    <p>
+                        Estimated processing time on different machines and with
+                        different technologies, using the pre-loaded default
+                        database to answer the question:
+                        <em
+                            >&ldquo;When is it possible to talk about the
+                            law?&rdquo;</em
+                        >
+                    </p>
+                    <table class="help-table">
+                        <thead>
+                            <tr>
+                                <th>Machine</th>
+                                <th>Technology</th>
+                                <th>Time</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>
+                                    <strong>Laptop</strong><br />
+                                    <small style="color: var(--text-tertiary)"
+                                        >CPU: i5&ndash;1245U &bull; RAM:
+                                        16&nbsp;GB</small
+                                    >
+                                </td>
+                                <td>WebGPU</td>
+                                <td>&asymp;&nbsp;3 minutes</td>
+                            </tr>
+                            <tr>
+                                <td rowspan="2">
+                                    <strong>Desktop</strong><br />
+                                    <small style="color: var(--text-tertiary)"
+                                        >CPU: AMD Ryzen 9 9900X &bull; RAM:
+                                        192&nbsp;GB &bull; GPU: AMD Radeon Pro
+                                        W7900 Dual Slot</small
+                                    >
+                                </td>
+                                <td>WebGPU</td>
+                                <td>&asymp;&nbsp;1 minute</td>
+                            </tr>
+                            <tr>
+                                <td>WASM</td>
+                                <td>&asymp;&nbsp;2 minutes</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </section>
+
+                <section class="help-section">
                     <h3>Model Storage &amp; Cache</h3>
                     <div class="help-info-block">
                         <h4>Where is the model stored?</h4>
@@ -1065,6 +1116,33 @@
                             for full terms.
                         </p>
                     </div>
+                </section>
+
+                <section class="help-section">
+                    <h3>Search Engine &amp; RAG Pipeline</h3>
+                    <p>
+                        This application incorporates the following search
+                        engine and RAG pipeline, licensed under the Apache
+                        License 2.0:
+                    </p>
+                    <ul>
+                        <li>
+                            <strong>Orama</strong> &mdash;
+                            <a
+                                href="https://github.com/oramasearch/orama"
+                                target="_blank"
+                                rel="noopener"
+                                >https://github.com/oramasearch/orama</a
+                            >
+                            Licensed under the
+                            <a
+                                href="https://www.apache.org/licenses/LICENSE-2.0"
+                                target="_blank"
+                                rel="noopener"
+                                >Apache License 2.0</a
+                            >.
+                        </li>
+                    </ul>
                 </section>
             </div>
         </div>
