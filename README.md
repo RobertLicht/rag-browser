@@ -236,6 +236,16 @@ npx http-server .
 | WASM multi-threaded | Moderate | 4K tokens | Requires COOP/COEP headers; SIMD + up to 8 cores; supports thinking mode |
 | WASM single-threaded | Slow | 4K tokens | Fallback when SharedArrayBuffer unavailable; 3–4× slower; supports thinking mode |
 
+### Processing Time Benchmarks
+
+Utilizing the pre-loaded default database to answer the question: *"When is it possible to talk about the law?"*
+
+| Configuration | Time | CPU | RAM | GPU |
+|---------------|------|-----|-----|-----|
+| Laptop (WebGPU) | ~3 min | i5-1245U | 16 GB | integrated |
+| Desktop (WebGPU) | ~1 min | AMD Ryzen 9 9900X | 192 GB | AMD Radeon Pro W7900 Dual Slot |
+| Desktop (WASM) | ~2 min | AMD Ryzen 9 9900X | 192 GB | AMD Radeon Pro W7900 Dual Slot |
+
 ## Privacy & Security
 
 - All inference runs locally in your browser
